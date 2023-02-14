@@ -1,0 +1,383 @@
+package mngwserc.co.itcpt;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import mngwserc.co.cob.service.COBLgnService;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.ModelAndViewDefiningException;
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+
+import egovframework.com.cmm.util.EgovUserDetailsHelper;
+import egovframework.com.utl.fcc.service.EgovDateUtil;
+import egovframework.com.utl.sim.service.EgovNetworkState;
+import emf.core.vo.EmfMap;
+
+/**
+ * <pre> 
+ * 인증체크 여부 확인 Interceptor
+ * </pre>
+ * 
+ * @ClassName		: AuthenticInterceptor.java
+ * @Description		: 인증체크 여부 확인 Interceptor
+ * @author 박주석
+ * @since 2015.11.22
+ * @version 1.0
+ * @see
+ * @Modification Information
+ * <pre>
+ * 		since			author					description
+ *   ===========    ==============    =============================
+ *    2015.11.22		박주석					최초생성
+ * </pre>
+ */
+public class AuthenticInterceptor extends HandlerInterceptorAdapter {
+	
+	protected Log log = LogFactory.getLog(AuthenticInterceptor.class);
+	
+	//외부 주입용 URL
+	private String[] permittedURL;
+	
+	//로그인 경로
+	private String loginUrl = "/mngwsercgateway/getLogin.do";
+	
+	/** EgovLoginService */
+	@Resource(name = "cOBLgnService")
+    private COBLgnService cOBLgnService;
+	
+	public void setPermittedURL(String strpermittedURL) 
+	{
+		this.permittedURL = strpermittedURL.split(",");
+	}
+	
+	/**
+	 * 세션에 계정정보(LoginVO)가 있는지 여부로 인증 여부를 체크한다.
+	 * 계정정보(LoginVO)가 없다면, 로그인 페이지로 이동한다.
+	 */
+	@Override
+	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception 
+	{
+
+		String reqUrl = request.getRequestURL().toString();
+		log.info(reqUrl);
+		
+		if (reqUrl.contains("/mngwserc/coc/adm/setLogout")) { //해당 URL은 바이패스
+			return true;
+		}
+
+//		if (!reqUrl.contains("/mngwserc/cna/limited")) {
+			//로그인 정보 체크
+			if(!EgovUserDetailsHelper.isAuthenticated())
+			{
+				ModelAndView modelAndView = new ModelAndView("redirect:" + loginUrl);
+				throw new ModelAndViewDefiningException(modelAndView);
+			}
+
+			String currentUri = request.getRequestURI();
+			String[] array = currentUri.split("/");
+			currentUri = "";
+
+			for (int i = 0; i < array.length - 1; i++)
+			{
+				currentUri = currentUri + array[i] + "/";
+			}
+
+			request.setAttribute("currentUri", currentUri);
+
+			EmfMap loginMap = (EmfMap)EgovUserDetailsHelper.getAuthenticatedUser();
+
+			//IP 접근 제한
+			String allwIp = loginMap.getString("allwIp");
+
+			if(!"".equals(allwIp))
+			{
+				String[] allwIpArr = allwIp.split(",");
+
+				String clientIp = EgovNetworkState.getMyIPaddress(request);
+				
+				boolean isAllw = false;
+
+				for(int i = 0; i < allwIpArr.length; i++)
+				{
+					if(clientIp.equals(allwIpArr[i].trim()))
+					{
+						isAllw = true;
+						break;
+					}
+				}
+
+				if("0:0:0:0:0:0:0:1".equals(clientIp) || "127.0.0.1".equals(clientIp)){
+					isAllw = true;
+				}
+				
+				if(!isAllw)
+				{
+					ModelAndView modelAndView = new ModelAndView("error/blank.error");
+					modelAndView.addObject("msg", "접속 IP가 다릅니다. 관리자에게 문의바랍니다.");
+					modelAndView.addObject("url", loginUrl);
+					throw new ModelAndViewDefiningException(modelAndView);
+				}
+			}
+
+		if(!"Y".equals(loginMap.getString("intra")))
+		{
+			//3개월 비번 주기 확인
+	    	String lastUpdPassDate = loginMap.getString("lastPwdModDtm");
+
+	    	if("".equals(lastUpdPassDate))
+			{
+				lastUpdPassDate = EgovDateUtil.convertDate(loginMap.getString("regDtm"), "yyyy-MM-dd", "yyyyMMdd", "");
+			}
+			else
+			{
+				lastUpdPassDate = EgovDateUtil.convertDate(lastUpdPassDate, "yyyy-MM-dd", "yyyyMMdd", "");
+			}
+
+	    	if(EgovDateUtil.getDaysDiff(lastUpdPassDate, EgovDateUtil.getToday()) > 90)
+			{
+	    		ModelAndView modelAndView = new ModelAndView("error/blank.error");
+				//modelAndView.addObject("msg", "개인정보 보호를 위해 3개월 마다\\n비밀번호 변경을 하셔야 이용이 가능합니다.");
+				modelAndView.addObject("msg", "회원님의 개인정보보호를 위하여 비밀번호를 변경해 주시기 바랍니다.\\n\\n"
+						+ "개인정보 유출로 인한 피해 사례를 방지하기 위해 회원님의 소중한 개인정보를 보호하고자 비밀번호 변경 안내를 시행하고 있습니다.\\n\\n"
+						+ "타 사이트와 동일한 비밀번호 사용을 할 경우, 개인정보 도용에 노출될 가능성이 높습니다.\\n\\n"
+						+ "불편하시더라도 비밀번호를 자주 변경해 주시기 바랍니다.");
+				modelAndView.addObject("url", "/mngwsercgateway/getPwdChng.do");
+				throw new ModelAndViewDefiningException(modelAndView);
+			}
+		}
+
+			//접근허용 URL인지 확인
+			String requestURI = request.getRequestURI();	//요청 URI
+			Pattern p;
+			Matcher m;
+			boolean isPermittedURL = false;
+
+			for(int q = 0; q < permittedURL.length; q++)
+			{
+				String regex = (String) permittedURL[q].trim();
+				p = Pattern.compile(regex);
+				m = p.matcher(requestURI);
+
+				if(m.matches())
+				{
+					// 정규표현식을 이용해서 요청 URI가 허용된 URL에 맞는지 점검함.
+					isPermittedURL = true;
+				}
+			}
+
+			if(!isPermittedURL)
+			{
+				int pageNo = -1;
+				int pageParentTreeId = -1;
+				String pageTitle = "";
+				String pageAdminLink = "";
+				String pageLink = "";
+				EmfMap gnbEmfMap = null;
+
+				String firstUrl = String.valueOf(RequestContextHolder.getRequestAttributes().getAttribute("firstUrl", RequestAttributes.SCOPE_SESSION));
+
+				List<EmfMap> gnbMenuList = new ArrayList<EmfMap>();
+
+				gnbMenuList = (List<EmfMap>)RequestContextHolder.getRequestAttributes().getAttribute("menuList", RequestAttributes.SCOPE_SESSION);
+
+				if(gnbMenuList == null)
+				{
+					gnbMenuList = cOBLgnService.getMenuList(loginMap);
+
+					RequestContextHolder.getRequestAttributes().setAttribute("menuList", gnbMenuList, RequestAttributes.SCOPE_SESSION);
+				}
+
+				request.setAttribute("gnbMenuList", gnbMenuList);
+
+				for(int i = 0; i < gnbMenuList.size(); i++)
+				{
+					gnbEmfMap = (EmfMap)gnbMenuList.get(i);
+
+					pageAdminLink = getUrlFolder(gnbEmfMap.getString("admLink"));
+
+					if(!"".equals(pageAdminLink) && requestURI.indexOf(pageAdminLink) > -1)
+					{
+						pageNo = Integer.parseInt(gnbEmfMap.getString("menuSeq"));
+						pageLink = gnbEmfMap.getString("admLink");
+						pageTitle = gnbEmfMap.getString("menuNm");
+						pageParentTreeId = Integer.parseInt(gnbEmfMap.getString("parntSeq"));
+					}
+
+					if("null".equals(firstUrl) && !"".equals(pageAdminLink.trim()))
+					{
+						firstUrl = gnbEmfMap.getString("admLink");
+						RequestContextHolder.getRequestAttributes().setAttribute("firstUrl", firstUrl, RequestAttributes.SCOPE_SESSION);
+					}
+				}
+
+				//메뉴 접근 권한이 없다.
+				if(pageNo == -1)
+				{
+					if("null".equals(firstUrl))
+					{
+						firstUrl = loginUrl;
+					}
+
+					ModelAndView modelAndView = new ModelAndView("error/blank.error");
+					modelAndView.addObject("msg", "잘못된 접근입니다.");
+					modelAndView.addObject("url", firstUrl);
+					throw new ModelAndViewDefiningException(modelAndView);
+				}
+
+				request.setAttribute("pageParentTreeId", pageParentTreeId);
+				request.setAttribute("pageNo", pageNo);
+				request.setAttribute("pageLink", pageLink);
+				request.setAttribute("pageTitle", pageTitle);
+
+				//페이지 인디게이터
+				List<EmfMap> parentMenuList = cOBLgnService.getParentMenuList(pageNo);
+
+				String parentTitle = "";
+
+				EmfMap leftMenuMap = null;
+				for(int q = 1; q < parentMenuList.size(); q++)
+				{
+					leftMenuMap = (EmfMap) parentMenuList.get(q);
+
+					if("".equals(parentTitle))
+					{
+						parentTitle = leftMenuMap.getString("menuNm");
+					}
+					else
+					{
+						parentTitle = parentTitle + "&gt;" + leftMenuMap.getString("menuNm");
+					}
+				}
+
+				RequestContextHolder.getRequestAttributes().setAttribute("pageIndicator", parentTitle, RequestAttributes.SCOPE_SESSION);
+				RequestContextHolder.getRequestAttributes().setAttribute("pageNo", pageNo, RequestAttributes.SCOPE_SESSION);
+				request.setAttribute("parentMenuList", parentMenuList);
+			}
+//		}
+		return true;
+	}
+	
+	/**
+	 * 현재 페이지 정보를 넘겨준다
+	 * @Param  HttpServletRequest request
+	 * @Param  HttpServletResponse response
+	 * @Param  Object handler
+	 * @Param  ModelAndView modelAndView
+	 */
+	@Override
+	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception
+	{
+		boolean isPermittedURL = false; 
+		
+		String requestURI = request.getRequestURI();
+		
+		try
+		{
+			Pattern p;
+			Matcher m;
+			
+			for(int q = 0; q < permittedURL.length; q++)
+			{
+				String regex = (String) permittedURL[q].trim();	
+				p = Pattern.compile(regex);
+				m = p.matcher(requestURI);
+				
+				if(m.matches())
+				{
+					// 정규표현식을 이용해서 요청 URI가 허용된 URL에 맞는지 점검함.
+					isPermittedURL = true;
+				}
+			}
+			
+			if(!isPermittedURL)
+			{
+				requestURI = getUrlFolder(requestURI);
+				
+				List<EmfMap> gnbMenuList = (List<EmfMap>) request.getAttribute("gnbMenuList");
+				List<EmfMap> lnbMenuList = new ArrayList();
+				
+				EmfMap emfMap = null;
+				
+				int votLeft = 0;
+				int firtLeft = 0;
+				int votRight = 0;
+				int firtRight = 0;
+				
+				if(gnbMenuList != null && gnbMenuList.size() > 0)
+				{
+					if(modelAndView != null)
+					{	
+						List<EmfMap> parentMenuList = (List<EmfMap>) request.getAttribute("parentMenuList");
+						
+						EmfMap lnbFirstMap = (EmfMap)parentMenuList.get(1);
+						
+						for(int i = 0; i < gnbMenuList.size(); i++)
+						{
+							emfMap = (EmfMap)gnbMenuList.get(i);
+							votLeft = Integer.parseInt(emfMap.getString("lftVal"));
+							firtLeft = Integer.parseInt(lnbFirstMap.getString("lftVal"));
+							votRight = Integer.parseInt(emfMap.getString("rhtVal"));
+							firtRight = Integer.parseInt(lnbFirstMap.getString("rhtVal"));
+							
+							if(votLeft >= firtLeft && votRight <= firtRight)
+							{
+								lnbMenuList.add(emfMap);
+							}
+						}
+
+						modelAndView.addObject("parentMenuList", parentMenuList);
+						modelAndView.addObject("lnbMenuList", lnbMenuList);
+					}
+				}
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage());
+		}
+	}
+	
+	/**
+	 * 메뉴의 링크를 파싱한다.
+	 * @param String
+	 * @return String
+	 * @exception Exception
+	 */
+	private String getUrlFolder(String str)
+	{		
+		String rtn = "";
+		String val = "";
+		
+		if(str.indexOf(".do") > -1)
+		{
+			String[] arrFolder = str.split("/");
+			
+			for(int i = 0; i < arrFolder.length - 1; i++)
+			{
+				val = arrFolder[i];
+				
+				if(!"".equals(val))
+				{
+					rtn = rtn  + "/" + arrFolder[i];
+				}
+			}
+		}
+		else
+		{
+			rtn = str;
+		}
+		
+		return rtn;
+	}
+}

@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CMBChngRqstDAO">
+    
+    <resultMap id="emfMap" type="emfMap">
+		<result property="reqnCntn" column="REQN_CNTN" javaType="java.lang.String" jdbcType="CLOB" />
+		<result property="cnslCntn" column="CNSL_CNTN" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+	
+    <!--
+         쿼리명 : CMBChngRqstDAO.selectChngRqstList
+         설  명 : 전환서비스 신청 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.24   허진영      최초생성
+    -->
+	<select id="CMBChngRqstDAO.selectChngRqstList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CMBChngRqstDAO.selectChngRqstList */
+			   TBL.*
+			   , (SELECT UNQ_NO FROM MB_MEM_MST WHERE ID = TBL.ID) AS MEM_NO
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = TBL.ID) AS MEM_NM
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRDCT_GB' AND CD = (SELECT PRDCT_CD FROM CM_PRDCT_MST WHERE PRDCT_SEQ = TBL.PRDCT_SEQ)) AS PRDCT_GB
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.*
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , RQST_SEQ
+					   , ID
+					   , ACCNT_NO
+             		   , USER_NM
+             		   , USER_CTEL
+					   , PRDCT_SEQ
+					   , PRCS_CD
+					   , REG_DTM
+			      FROM CM_CHNG_RQST_MST
+			     WHERE 1=1
+				<if test="prcsCd != null and prcsCd != ''">
+					AND PRCS_CD = #{prcsCd}
+			 	</if>
+		      	<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND ACCNT_NO LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND ID IN(SELECT ID FROM MB_MEM_MST WHERE NAME LIKE '%' || #{q} || '%')	]]>
+					</if>
+					<if test="f == 3">
+						<![CDATA[	AND USER_NM LIKE '%' || #{q} || '%'	]]>
+					</if>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) T1
+	    ) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+	
+	<!--
+         쿼리명 : CMBChngRqstDAO.selectChngRqst
+         설  명 : 전환서비스 신청 상세를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.24   허진영      최초생성
+    -->
+	<select id="CMBChngRqstDAO.selectChngRqst" parameterType="emfMap" resultMap="emfMap">	
+		SELECT /* CMBChngRqstDAO.selectChngRqst */
+			   RQST_SEQ
+			   , ID
+			   , (SELECT UNQ_NO FROM MB_MEM_MST WHERE ID = A.ID) AS MEM_NO
+			   , ACCNT_NO
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = A.ID) AS NAME
+			   , MEM_EMAIL
+			   , USER_NM
+			   , USER_REL_CD
+			   , USER_CTEL
+			   , USER_EMAIL
+			   , PRDCT_USE_REQN_DT
+			   , REQN_CNTN
+			   , PRDCT_SEQ
+			   , PRDCT_DTL_SEQ
+			   , CNSL_CNTN
+			   , ITMDT_PAY
+			   , PRCS_CD
+			   , (SELECT COUNT(*) FROM CM_CHNG_RQST_LOG WHERE RQST_SEQ = A.RQST_SEQ AND PRCS_CD = '05') AS PAY_COMP_CNT
+		  FROM CM_CHNG_RQST_MST A
+		 WHERE RQST_SEQ = #{rqstSeq}
+	</select>
+	
+	<!--
+         쿼리명 : CMBChngRqstDAO.selectChngPrdctInf
+         설  명 : 전환서비스 상품정보를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.24   허진영      최초생성
+    -->
+	<select id="CMBChngRqstDAO.selectChngPrdctInf" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* CMBChngRqstDAO.selectChngPrdctInf */
+			   (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRDCT_GB' AND CD = A.PRDCT_CD) AS PRDCT_GB
+			   , PRDCT_NM
+			<if test="userInfo.prdctDtlSeq != null and userInfo.prdctDtlSeq != ''">
+				, (SELECT PRDCT_TITL FROM CM_PRDCT_DTL WHERE PRDCT_DTL_SEQ = #{userInfo.prdctDtlSeq}) AS PRDCT_DTL_NM
+			</if>
+		  FROM CM_PRDCT_MST A
+		 WHERE PRDCT_SEQ = #{userInfo.prdctSeq}
+	</select>
+    
+    <!--
+         쿼리명 : CMBChngRqstDAO.updateChngRqst
+         설  명 : 전환서비스 신청을 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.24   허진영      최초생성
+    -->
+    <update id="CMBChngRqstDAO.updateChngRqst" parameterType="emfMap">
+		UPDATE /* CMBChngRqstDAO.updateChngRqst */ CM_CHNG_RQST_MST
+	       SET USER_NM = #{userNm}
+	    	   , USER_REL_CD = #{userRelCd}
+	    	   , USER_CTEL = #{userCtel, jdbcType=VARCHAR}
+	    	   , USER_EMAIL = #{userEmail, jdbcType=VARCHAR}
+	    	   , PRDCT_USE_REQN_DT = #{prdctUseReqnDt}
+	    	   , REQN_CNTN = #{reqnCntn, jdbcType=VARCHAR}
+	    	   , CNSL_CNTN = #{cnslCntn, jdbcType=VARCHAR}
+	    	   , ITMDT_PAY = #{itmdtPay, jdbcType=VARCHAR}
+	    	   , PRCS_CD = #{prcsCd}
+    	       , MOD_ID = #{modId}
+    	       , MOD_IP = #{modIp}
+    	       , MOD_DTM = SYSDATE
+    	 WHERE RQST_SEQ = #{rqstSeq}
+    </update>
+    
+    <!--
+         쿼리명 : CMBChngRqstDAO.deleteChngRqst
+         설  명 : 전환서비스 신청을 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.24   허진영     최초 생성
+    -->
+    <delete id="CMBChngRqstDAO.deleteChngRqst" parameterType="emfMap">
+    	DELETE /* CMBChngRqstDAO.deleteChngRqst */
+    	  FROM CM_CHNG_RQST_MST
+    	 WHERE RQST_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+    </delete>
+    
+    <!--
+         쿼리명 : CMBChngRqstDAO.updateChngRqstPrcsCd
+         설  명 : 전환서비스 신청 처리현황을 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.24   허진영      최초생성
+    -->
+    <update id="CMBChngRqstDAO.updateChngRqstPrcsCd" parameterType="emfMap">
+    	UPDATE /* CMBChngRqstDAO.updateChngRqstPrcsCd */ CM_CHNG_RQST_MST
+    	   SET PRCS_CD = #{prcsCd}
+    	 WHERE RQST_SEQ = #{rqstSeq}
+    </update>
+    
+    <!--
+         쿼리명 : CMBChngRqstDAO.selectRqstPrcsLog
+         설  명 : 전환서비스 신청 처리현황 로그를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.04   김대환     최초 생성
+    -->
+    <select id="CMBChngRqstDAO.selectRqstPrcsLog" parameterType="emfMap" resultType="emfMap">
+    	SELECT /* CMBChngRqstDAO.selectRqstPrcsLog */
+    		   TBL.*
+    		   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'CHNG_PRCS_STTS' AND CD = TBL.PRCS_CD) AS PRCS_STTS
+    	FROM (
+    		SELECT ROW_NUMBER() OVER(PARTITION BY PRCS_CD ORDER BY MOD_DTM DESC) RNK
+			   	   , PRCS_CD
+			   	   , MOD_DTM
+		  	  FROM CM_CHNG_RQST_LOG
+             WHERE RQST_SEQ = #{rqstSeq}
+    	) TBL
+    	WHERE RNK = 1
+    	ORDER BY MOD_DTM
+   	</select>
+ 	
+	<!--
+         쿼리명 : CMBChngRqstDAO.insertRqstPrcsLog
+         설  명 : 전환서비스 신청 처리현황 로그를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.24   허진영      최초생성
+    -->   
+   	<insert id="CMBChngRqstDAO.insertRqstPrcsLog" parameterType="emfMap">
+        INSERT /* CMBChngRqstDAO.insertRqstPrcsLog */ INTO CM_CHNG_RQST_LOG
+        	(RQST_SEQ
+			, PRCS_CD
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+        	)
+        SELECT #{rqstSeq}
+	           , #{prcsCd}
+	           , #{modId}
+	           , #{modIp}
+	           , SYSDATE
+	      FROM DUAL
+		 WHERE EXISTS (SELECT 'X' FROM CM_CHNG_RQST_MST WHERE RQST_SEQ = #{rqstSeq} AND PRCS_CD != #{prcsCd})
+   </insert>
+   
+   <!--
+         쿼리명 : CMBChngRqstDAO.excelChngRqstList
+         설  명 : 전환서비스 신청 목록을 조회한다. (엑셀 다운로드)
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.20   허진영      최초생성
+    -->
+	<select id="CMBChngRqstDAO.excelChngRqstList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CMBChngRqstDAO.excelChngRqstList */
+			   TBL.*
+			   , (SELECT UNQ_NO FROM MB_MEM_MST WHERE ID = TBL.ID) AS MEM_NO
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = TBL.ID) AS MEM_NM
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRDCT_GB' AND CD = (SELECT PRDCT_CD FROM CM_PRDCT_MST WHERE PRDCT_SEQ = TBL.PRDCT_SEQ)) AS PRDCT_GB
+		FROM (
+			SELECT COUNT(*) OVER() AS TOT_CNT
+				   , RQST_SEQ
+				   , ID
+				   , ACCNT_NO
+            	   , USER_NM
+            	   , USER_CTEL
+            	   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'MEM_REL_GB' AND CD = A.USER_REL_CD) AS USER_REL_GB
+				   , PRDCT_SEQ
+				   , PRCS_CD
+				   , REG_DTM
+		      FROM CM_CHNG_RQST_MST A
+		     WHERE 1=1
+			<if test="prcsCd != null and prcsCd != ''">
+				AND PRCS_CD = #{prcsCd}
+			</if>
+	      	<if test="q != null and q != ''">
+				<if test="f == 1">
+					<![CDATA[	AND ACCNT_NO LIKE '%' || #{q} || '%'	]]>
+				</if>
+				<if test="f == 2">
+					<![CDATA[	AND ID IN(SELECT ID FROM MB_MEM_MST WHERE NAME LIKE '%' || #{q} || '%')	]]>
+				</if>
+				<if test="f == 3">
+					<![CDATA[	AND USER_NM LIKE '%' || #{q} || '%'	]]>
+				</if>
+			</if>
+			 ORDER BY REG_DTM DESC
+	    ) TBL
+	</select>
+
+</mapper>

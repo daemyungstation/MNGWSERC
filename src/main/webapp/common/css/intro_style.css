@@ -1,0 +1,10 @@
+.ceomessDiv{position:relative; width:670px; margin-left:17px;}
+.ceomessDiv .topBg{position:absolute; top:0; left:3px; width:3px; height:3px; background:url('/common/images/icon/ceomess_topbg.gif') no-repeat 0 0}
+.ceomessDiv .botBg{position:absolute; bottom:0; left:3px; width:3px; height:3px; background:url('/common/images/icon/ceomess_botbg.gif') no-repeat 0 0}
+.ceomessDiv dl{width:100%; overflow:hidden; background:url('/common/images/icon/ceomess_bg.gif') repeat-y 3px 0}
+.ceomessDiv dt{width:147px; float:left; padding-left:23px; margin-top:15px; background:url('/common/images/icon/ceomess_point.png') no-repeat 0 5px; color:#444}
+.ceomessDiv dt .type2{font-weight:bold;}
+.ceomessDiv dd{position:relative; width:480px; float:left; margin:0 0 30px 0; padding:0 0 0 20px;}
+.ceomessDiv dd .bgIcon{position:absolute; top:0; left:1px; width:20px; height:15px; background:url('/common/images/icon/ceomess_boxbg.gif') no-repeat 0 0;}
+.ceomessDiv dd div{padding:16px 19px; border:1px solid #e8e8e8; line-height:24px;}
+.ceomessDiv dd div .type1{font-weight:bold; color:#0075e2}

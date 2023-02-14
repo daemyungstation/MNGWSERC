@@ -1,0 +1,58 @@
+.documentTxt{margin-top:15px; height:642px; background:url('/common/images/txt/document_txt.gif') no-repeat 0 0; text-indent:-9999px;}
+.dicSrch{padding:20px 0; border:1px solid #eee; background:#f7f7f7; text-align:center}
+.dicSrch .srchPart{width:304px; margin:auto; overflow:hidden}
+.dicSrch .srchPart input{width:242px; height:20px; float:left}
+.txtBox{padding:16px 19px; border:1px solid #eee; background:#f7f7f7; line-height:24px;}
+.txtBox .tit{font-weight:bold; color:#333}
+.termBox{padding:15px 19px; border:1px solid #eaeaea; height:220px; overflow-y:scroll; font-size:12px; line-height:24px;}
+.termQtxt{font-weight:bold;}
+.termAtxt input{margin:0 0 0 12px;}
+.termAtxt span{vertical-align:middle}
+.ideaIntroTxt{width:; height:170px; background:url('/common/images/txt/idea_intro_txt.gif') no-repeat 0 0; text-indent:-9999px;}
+.txtCheckbox{padding:13px 15px; border:1px solid #eee; margin-left:20px;}
+.txtCheckbox dt{padding:0 0 5px 24px; background:url('/common/images/icon/txt_check_icon.gif') no-repeat 0 1px; font-weight:bold;}
+.txtCheckbox dd{padding:0 0 5px 10px; background:url('/common/images/icon/dot5x3.gif') no-repeat 0 8px;}
+.infoTxt{padding:20px; border:1px solid #eee; background:#f7f7f7}
+.infoTxt dt{padding:0 0 10px 55px; margin-bottom:12px; background:url('/common/images/icon/txt_infoicon.gif') no-repeat 0 7px; color:#333; line-height:22px; border-bottom:1px dashed #d8d8d8;}
+.infoTxt dd{padding:0 0 5px 5px;}
+dl.evalueQ{border-top:2px solid #6a8fb4; border-left:1px solid #eee;}
+dl.evalueQ dt{padding-left:19px; color:#1f609c; line-height:42px; background:url('/common/images/icon/subtxt_boxbg.gif') repeat-x 0 0; border-right:1px solid #eee; border-bottom:1px solid #eee; font-weight:bold;}
+dl.evalueQ dt.multiLine{height:42px; padding:10px 19px; line-height:20px; background:url('/common/images/icon/subtxt_boxbg2.gif') repeat-x 0 0;}
+dl.evalueQ dd{padding:13px 19px; border-right:1px solid #eee; border-bottom:1px solid #eee;}
+dl.evalueQ dd li{padding-bottom:8px;}
+.ipinWarn{border:1px solid #eaeaea}
+.ipinWarn .bgDiv{padding:4px; background:#f5f5f4}
+.ipinWarn .bgDiv dl{background:#fff; padding:20px}
+.ipinWarn .bgDiv dt{padding:0 0 15px 85px; border-bottom:1px dashed #e2e2e2; background:url('/common/images/icon/warn_icon.gif') no-repeat 0 0;}
+.ipinWarn .bgDiv dt .titCopy{margin:8px 0; font-size:15px; font-weight:bold; color:#555}
+.ipinWarn .bgDiv dd{padding:10px 0 0; line-height:25px; letter-spacing:-1px;}
+.ipinWarn .bgDiv dd span{font-weight:bold; color:#648018}
+.ipinWarn .bgDiv dd strong{color:#333; text-decoration:underline;}
+.clnReptTxt{width:; height:226px; background:url('/common/images/txt/clean_report_intro_txt.gif') no-repeat 0 0; text-indent:-9999px;}
+.clnReptTxt2{width:100%; overflow:hidden}
+.clnReptTxt2 .txt1{width:90px; height:42px; float:left; background:url('/common/images/txt/clean_report_intro_txt2.gif') no-repeat 0 0; text-indent:-9999px;}
+.clnReptTxt2 .txt2{width:472px; height:40px; float:left; padding:0 0 0 5px; line-height:40px; border-top:1px solid #eee; border-bottom:1px solid #eee;}
+.clnReptTxt2 .txt2 span{color:#0075e2}
+.clnReptTxt2 .txt2 a:hover{text-decoration:underline;}
+.clnReptTxt2 .txt3{width:123px; height:42px; float:left; background:url('/common/images/txt/clean_report_intro_txt2.gif') no-repeat -567px 0; text-indent:-9999px;}
+.workSelIntTxt{width:512px; height:148px; background:url('/common/images/txt/work_selfrpt_intro_txt.gif') no-repeat 0 0; text-indent:-9999px;}
+.budgetRptTxt{width:; height:178px; background:url('/common/images/txt/budget_report_intro_txt.gif') no-repeat 0 0; text-indent:-9999px;}
+.irraReportIntTxt{width:; height:188px; background:url('/common/images/txt/irra_report_intro_txt.gif') no-repeat 0 0; text-indent:-9999px;}
+.dcRptTxt{width:; height:195px; background:url('/common/images/txt/decome_report_intro_txt.gif') no-repeat 0 0; text-indent:-9999px;}
+.pubRptIntTxt{width:670px; height:185px; background:url('/common/images/txt/public_report_intro_txt.gif') no-repeat 0 0; text-indent:-9999px;}
+.pubRptBt{width:100%; height:42px; overflow:hidden}
+.pubRptBt a{display:block; width:223px; height:42px; float:left; margin-right:10px; text-indent:-5000px}
+.pubRptBt a.bt1{background:url('/common/images/btn/public_report_intro_bt.gif') no-repeat 0 0;}
+.pubRptBt a.bt2{background:url('/common/images/btn/public_report_intro_bt.gif') no-repeat -232px 0;}
+.pubRptBt a.bt3{background:url('/common/images/btn/public_report_intro_bt.gif') no-repeat -464px 0; margin-right:0}
+.atitListDiv{width:; border:2px solid #c5d8e9; padding:19px 19px 0; overflow:hidden}
+.atitListDiv a{width:190px; height:16px; line-height:14px; float:left; margin:0 0 19px; padding-left:20px; background:url('/common/images/icon/action_guide_icon.gif') no-repeat 0 -35px;}
+.atitListDiv a:hover{background:url('/common/images/icon/action_guide_icon.gif') no-repeat 0 0; color:#333; text-decoration:underline;}
+.notiTxt{padding:30px 0; font-size:15px; color:#333; text-align:center}
+.atitBigTxt{font-size:15px; color:#333; font-weight:bold}
+.atitDotTxt{padding-left:9px; color:#333; line-height:24px; background:url('/common/images/icon/dot4x3.gif') no-repeat 0 11px;}
+.atitSmTxt{width:; overflow:hidden; padding-left:0; line-height:24px}
+.atitSmTxt .add{display:block; width:25px; float:left; text-align:right; margin-right:5px}
+.atitSmTxt .nor{display:block; width:660px; float:left;}
+.inOpenGuide3Txt{width:; height:551px; background:url('/common/images/txt/info_open_guide3_txt.gif') no-repeat 0 0; text-indent:-9999px;}
+.pubData1Txt{width:; height:604px; background:url('/common/images/txt/public_data1_txt.gif') no-repeat 0 0; text-indent:-9999px;}

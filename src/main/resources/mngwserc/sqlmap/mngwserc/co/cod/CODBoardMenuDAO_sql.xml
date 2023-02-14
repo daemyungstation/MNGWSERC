@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CODBoardMenuDAO">	
+	
+	<!--
+         쿼리명 : CODBoardMenuDAO.selectMenuAsgnr
+         설  명 : 게시판 카테고리별 담당자 
+         	수정일    		 	수정자			     수정내용 
+        ==========  =========  ============== 
+        2016.02.24 			김대환     			최초 생성
+    -->
+	<select id="CODBoardMenuDAO.selectMenuAsgnr" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CODBoardMenuDAO.selectMenuAsgnr */ 
+			 A.SMS_RCV_YN
+			,A.MENU_SEQ
+			,B.ID
+	        ,B.ADM_SEQ
+		FROM
+			CO_MENU_ASGNR_INF A,CO_ADM_MST B
+		WHERE A.ADM_SEQ = B.ADM_SEQ(+)
+			AND A.MENU_SEQ = #{menuSeq}
+	</select>
+	
+	<!--
+         쿼리명 : CODBoardMenuDAO.selectMenuAsgnrList
+         설  명 : 카테고리별 담당자 목록
+         	수정일    		 	수정자			     수정내용 
+        ==========  =========  ============== 
+        2016.02.24 			김대환     			최초 생성
+    -->
+	<select id="CODBoardMenuDAO.selectMenuAsgnrList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CODBoardMenuDAO.selectMenuAsgnrList */  
+			TBL.*  
+		FROM(
+			SELECT ROWNUM AS RNUM,A.*
+        		,(SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'USER_TYPE' AND CD = A.ROLE_CD)AS ROLE_NM
+			FROM(
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					,ADM_SEQ
+					,ID
+					,PWD
+					,NAME
+					,EMAIL
+					,TEL
+					,USE_YN
+					,LAST_LGN_DTM
+					,LAST_PWD_MOD_DTM
+					,ALLW_IP
+					,AUTH_CD
+					,ROLE_CD
+					,REG_ID
+					,REG_IP
+					,REG_DTM
+					,MOD_ID
+					,MOD_IP
+					,MOD_DTM
+				FROM
+					CO_ADM_MST
+				WHERE 1=1
+				
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND ID LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND NAME LIKE '%' || #{q} || '%'	]]>
+					</if>
+				</if>	
+				
+			)A
+		)TBL WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+			
+	</select>
+	
+	<!--
+         쿼리명 : CODBoardMenuDAO.selectAsgnr
+         설  명 : 카테고리별 담당자 선택한다.
+         	수정일    		 	수정자			     수정내용 
+        ==========  =========  ============== 
+        2016.02.24 			김대환     			최초 생성
+    -->	
+	<select id="CODBoardMenuDAO.selectAsgnr" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CODBoardMenuDAO.selectAsgnr */
+			 ADM_SEQ
+			,ID
+			,PWD
+			,NAME
+			,EMAIL
+			,TEL
+			,USE_YN
+			,LAST_LGN_DTM
+			,LAST_PWD_MOD_DTM
+			,ALLW_IP
+			,AUTH_CD
+			,ROLE_CD
+			,REG_ID
+			,REG_IP
+			,REG_DTM
+			,MOD_ID
+			,MOD_IP
+			,MOD_DTM
+		FROM
+			CO_ADM_MST
+		WHERE ADM_SEQ = #{admSeq}
+	</select>
+	
+	<!--
+         쿼리명 : CODBoardMenuDAO.insertMenuAsgnr
+         설  명 : 카테고리별 담당자를 등록한다.
+         	수정일    		 	수정자			     수정내용 
+        ==========  =========  ============== 
+        2016.02.24 			김대환     			최초 생성
+    -->	
+	<insert id="CODBoardMenuDAO.insertMenuAsgnr" parameterType="emfMap">
+	     MERGE /* CODBoardMenuDAO.insertMenuAsgnr */ INTO CO_MENU_ASGNR_INF 
+        	 USING DUAL ON ( MENU_SEQ = #{menuSeq} ) 
+              WHEN MATCHED THEN
+       		UPDATE  
+			 SET 
+			 ADM_SEQ			= #{admSeq	 ,jdbcType=INTEGER}
+			,SMS_RCV_YN     	= #{smsRcvYn	 ,jdbcType=VARCHAR}
+			,MOD_ID				= #{regId        ,jdbcType=VARCHAR}
+			,MOD_IP				= #{regIp        ,jdbcType=VARCHAR}
+			,MOD_DTM			= SYSDATE
+      
+       	     WHEN NOT MATCHED THEN
+		INSERT   
+		(
+   			 MENU_SEQ
+			,ADM_SEQ
+			,SMS_RCV_YN
+			,REG_ID
+			,REG_IP
+			,REG_DTM
+         )
+       	 VALUES        
+		 (
+ 			 #{menuSeq 	,jdbcType=INTEGER}
+			,#{admSeq		,jdbcType=INTEGER}
+			,#{smsRcvYn  ,jdbcType=VARCHAR}
+			,#{regId 		,jdbcType=VARCHAR}
+			,#{regIp 		,jdbcType=VARCHAR}
+			,SYSDATE
+		 )
+	</insert>
+
+</mapper>
+
+

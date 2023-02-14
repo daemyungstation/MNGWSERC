@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="COHBoardMngDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+		<result property="POOR_WORD_NM" column="POOR_WORD_NM" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+	
+	<!--
+         쿼리명 : COHBoardMngDAO.selectBoardConfigList
+         설  명 : 게시판 속성 정보 목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.17   김필기    	 최초생성
+    -->	
+	<select id="COHBoardMngDAO.selectBoardConfigList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COHBoardMngDAO.selectBoardConfigList */
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.* 
+			  FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		               , A.COMMUNITY_ID
+		               , A.COMMUNITY_TYPE
+		               , B.CD_NM
+		               , A.COMMUNITY_NAME
+		               , A.REGDATE
+					   , A.USE_YN
+		               , A.TABLENM
+		          FROM TN_BOARD_CONFIG A JOIN CO_CD_DTL B ON A.COMMUNITY_TYPE = B.CD  
+		         WHERE A.DEL_YN = 'N'
+				<if test="communityType != null and communityType != ''">
+					AND A.COMMUNITY_TYPE = #{communityType}
+				</if>
+				<if test="useYn != null and useYn != ''">
+					AND A.USE_YN = #{useYn}
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND A.COMMUNITY_ID LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND A.COMMUNITY_NAME LIKE '%' || #{q} || '%'	]]>
+					</if>
+				</if>
+				 ORDER BY A.REGDATE DESC   
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}           
+	</select>	
+	
+	<!--
+         쿼리명 : COHBoardMngDAO.selectBoardConfig
+         설  명 : 게시판 속성 정보 상세를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.17   김필기    	 최초생성
+    -->	
+	<select id="COHBoardMngDAO.selectBoardConfig" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* COHBoardMngDAO.selectBoardConfig */
+			   A.*
+		  FROM TN_BOARD_CONFIG A
+		 WHERE DEL_YN = 'N'
+		   AND COMMUNITY_ID = #{communityId}
+	</select>
+	
+	<!--
+         쿼리명 : COHBbsMngDAO.insertBoardConfig
+         설  명 : 게시판 속성 정보를 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.20   김필기    	 최초생성
+    -->	
+	<insert id="COHBoardMngDAO.insertBoardConfig" parameterType="emfMap">
+		INSERT INTO TN_BOARD_CONFIG
+			(COMMUNITY_ID
+			, COMMUNITY_NAME
+			, COMMUNITY_TYPE
+			, USE_YN
+			, NOTIFY_YN
+			, APPROVAL_AUTHORITY
+			, CATEGORY_YN
+			, CATEGORY_ID
+			, COMMENT_YN
+			, LIST_USER_AUTHORITY
+			, VIEW_USER_AUTHORITY
+			, WRITE_USER_AUTHORITY
+			, OPEN_YN
+			, PAGE_ROW_CNT
+			, LIST_TITLE_CNT
+			, NEW_CNT
+			, FILE_POSSIBLE_EXT_NM
+			, FILE_APPD_CNT
+			, FILE_SIZE
+			, CONTENTS_FILE_APPD_CNT
+			, CONTENTS_FILE_SIZE
+			, CONTENTS_INIT
+			, POOR_WORD_NM
+			, CHANGE_REGNM_YN
+			, CHANGE_REGNM_NM
+			, PERIOD_YN
+			, TABLENM
+			, DEL_YN
+			, REGID
+			, REGNAME
+			, REGDATE
+			, MODID
+			, MODNAME
+			, MODDATE
+			)
+		VALUES
+			(#{communityId, jdbcType=VARCHAR}
+			, #{communityName, jdbcType=VARCHAR}
+			, #{communityType, jdbcType=VARCHAR}
+			, #{useYn, jdbcType=VARCHAR}
+			, #{notifyYn, jdbcType=VARCHAR}
+			, #{approvalAuthority, jdbcType=VARCHAR}
+			, #{categoryYn, jdbcType=VARCHAR}
+			, #{categoryId, jdbcType=VARCHAR}	
+			, #{commentYn, jdbcType=VARCHAR}
+			, #{listUserAuthority, jdbcType=VARCHAR}
+			, #{viewUserAuthority, jdbcType=VARCHAR}
+			, #{writeUserAuthority, jdbcType=VARCHAR}
+			, #{openYn, jdbcType=VARCHAR}
+			, #{pageRowCnt, jdbcType=VARCHAR}
+			, #{listTitleCnt, jdbcType=VARCHAR}
+			, #{newCnt, jdbcType=VARCHAR}
+			, #{filePossibleExtNm, jdbcType=VARCHAR}
+			, #{fileAppdCn, jdbcType=VARCHAR}
+			, #{fileSize, jdbcType=VARCHAR}
+			, #{contentsFileAppdCnt, jdbcType=VARCHAR}
+			, #{contentsFileSize, jdbcType=VARCHAR}
+			, #{contentsInit, jdbcType=VARCHAR}
+			, #{poorWordNm, jdbcType=VARCHAR}
+			, #{changeRegnmYn, jdbcType=VARCHAR}
+			, #{changeRegnmNm, jdbcType=VARCHAR}
+			, #{periodYn, jdbcType=VARCHAR}
+			, #{tableNm, jdbcType=VARCHAR}
+			, 'N'
+			, #{regId, jdbcType=VARCHAR}
+			, #{regNm, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{modId, jdbcType=VARCHAR}
+			, #{modNm, jdbcType=VARCHAR}
+			, SYSDATE
+			)					
+	</insert>
+	
+	<!--
+         쿼리명 : COHBbsMngDAO.createBoardTbl
+         설  명 : 게시판을 생성한다.
+          수정일     수정자     수정내용 
+        ==========   ======   ============== 
+        2015.11.17   김필기    	최초생성
+    -->	
+	<insert id="COHBoardMngDAO.createBoardTbl" parameterType="emfMap">
+		<![CDATA[
+			CREATE TABLE ${tableNm}
+	  		(
+	  			"IDX" NUMBER(10,0) NOT NULL
+			    , "COMMUNITY_ID" NUMBER(10,0)
+			    , "CATEGORY_ID"NUMBER(10,0)
+			    , "NOTIFY_YN" CHAR(1 BYTE)
+				, "TITLE" VARCHAR2(500 BYTE)
+				, "MOVIE_URL" VARCHAR2(1000 BYTE)
+				, "MOVIE_CONTENTS" CLOB
+				, "LINK_URL" VARCHAR2(1000 BYTE)
+				, "CONTENTS" CLOB
+				, "THUMNAIL_FILE_ID" CHAR(20 BYTE)
+				, "ATCH_FILE_ID" CHAR(20 BYTE)
+				, "CONTENTS_FILE_ID" CHAR(20 BYTE)
+				, "USE_YN" CHAR(1 BYTE)
+				, "OPEN_YN" CHAR(1 BYTE)
+				, "START_DT" DATE
+				, "END_DT" DATE
+				, "ODTM_YN" CHAR(1 BYTE)
+				, "READ_CNT" NUMBER(10,0)
+				, "ADMINISTRATOR_WRITE_YN" CHAR(1 BYTE)
+				, "USER_AUTHORITY" VARCHAR2(20 BYTE)	
+				, "DEL_YN" CHAR(1 BYTE)
+				, "REGID" VARCHAR2(20 BYTE)
+				, "REGNAME" VARCHAR2(50 BYTE)
+				, "REGIP" VARCHAR2(15 BYTE)
+				, "REGDATE" DATE
+				, "MODID" VARCHAR2(20 BYTE)
+				, "MODNAME" VARCHAR2(50 BYTE)
+				, "MODIP" VARCHAR2(15 BYTE)
+				, "MODDATE" DATE
+			)
+		]]>
+	</insert>
+	
+	<!--
+         쿼리명 : COHBbsMngDAO.createBoardIndex
+         설  명 : 게시판 인덱스 생성한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  김필기    	 최초 생성
+    -->	
+	<insert id="COHBoardMngDAO.createBoardIndex" parameterType="emfMap">
+		<![CDATA[
+			  CREATE UNIQUE INDEX "PK_${tableNm}" ON "${tableNm}" ("IDX")
+			  PCTFREE 10 INITRANS 2 MAXTRANS 255 COMPUTE STATISTICS 
+			  STORAGE(INITIAL 65536 NEXT 1048576 MINEXTENTS 1 MAXEXTENTS 2147483645
+			  PCTINCREASE 0 FREELISTS 1 FREELIST GROUPS 1 BUFFER_POOL DEFAULT FLASH_CACHE DEFAULT CELL_FLASH_CACHE DEFAULT)
+			  TABLESPACE "USERS"
+		]]>
+	</insert>
+	
+	<!--
+         쿼리명 : COHBbsMngDAO.createBoardPk
+         설  명 : 게시판 PK를 생성한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  김필기    	 최초 생성
+    -->	
+	<insert id="COHBoardMngDAO.createBoardPk" parameterType="emfMap">
+		<![CDATA[
+			ALTER TABLE "${tableNm}" ADD CONSTRAINT "PK_${tableNm}" PRIMARY KEY ("IDX")
+			USING INDEX PCTFREE 10 INITRANS 2 MAXTRANS 255 COMPUTE STATISTICS 
+		  	STORAGE(INITIAL 65536 NEXT 1048576 MINEXTENTS 1 MAXEXTENTS 2147483645
+		  	PCTINCREASE 0 FREELISTS 1 FREELIST GROUPS 1 BUFFER_POOL DEFAULT FLASH_CACHE DEFAULT CELL_FLASH_CACHE DEFAULT)
+		  	TABLESPACE "USERS"  ENABLE
+		]]>
+	</insert>
+	
+	<!--
+         쿼리명 : COHBoardMngDAO.updateBoardConfig
+         설  명 : 게시판 속성 정보를 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.20   김필기    	 최초생성
+    -->			
+	<update id="COHBoardMngDAO.updateBoardConfig" parameterType="emfMap">
+		UPDATE /* COHBoardMngDAO.updateBoardConfig */ TN_BOARD_CONFIG
+           SET COMMUNITY_NAME = #{communityName, jdbcType=VARCHAR}
+               , COMMUNITY_TYPE = #{communityType, jdbcType=VARCHAR}
+               , USE_YN = #{useYn, jdbcType=VARCHAR}
+               , NOTIFY_YN = #{notifyYn, jdbcType=VARCHAR}
+               , APPROVAL_AUTHORITY = #{approvalAuthority, jdbcType=VARCHAR}
+               , CATEGORY_YN = #{categoryYn, jdbcType=VARCHAR}
+               , CATEGORY_ID = #{categoryId, jdbcType=VARCHAR}
+               , COMMENT_YN = #{commentYn, jdbcType=VARCHAR}
+               , LIST_USER_AUTHORITY = #{listUserAuthority, jdbcType=VARCHAR}
+			   , VIEW_USER_AUTHORITY = #{viewUserAuthority, jdbcType=VARCHAR}
+			   , WRITE_USER_AUTHORITY = #{writeUserAuthority, jdbcType=VARCHAR}
+               , OPEN_YN = #{openYn, jdbcType=VARCHAR}
+               , PAGE_ROW_CNT = #{pageRowCnt, jdbcType=VARCHAR}
+               , LIST_TITLE_CNT = #{listTitleCnt, jdbcType=VARCHAR}
+               , NEW_CNT = #{newCnt, jdbcType=VARCHAR}
+               , FILE_POSSIBLE_EXT_NM = #{filePossibleExtNm, jdbcType=VARCHAR}
+               , FILE_APPD_CNT = #{fileAppdCnt, jdbcType=VARCHAR}
+               , FILE_SIZE = #{fileSize, jdbcType=VARCHAR}
+               , CONTENTS_FILE_APPD_CNT = #{contentsFileAppdCnt, jdbcType=VARCHAR}
+               , CONTENTS_FILE_SIZE = #{contentsFileSize, jdbcType=VARCHAR}
+               , CONTENTS_INIT = #{contentsInit, jdbcType=VARCHAR}		
+               , POOR_WORD_NM = #{poorWordNm, jdbcType=VARCHAR}
+               , CHANGE_REGNM_YN = #{changeRegnmYn, jdbcType=VARCHAR}
+			   , CHANGE_REGNM_NM = #{changeRegnmNm, jdbcType=VARCHAR}
+               , PERIOD_YN = #{periodYn, jdbcType=VARCHAR}
+			   , MODID = #{modId, jdbcType=VARCHAR}
+               , MODNAME = #{modNm, jdbcType=VARCHAR}
+               , MODDATE = SYSDATE
+         WHERE COMMUNITY_ID = #{communityId,jdbcType=NUMERIC}
+	</update>
+
+	<!--
+         쿼리명 : COHBoardMngDAO.deleteBoardConfig
+         설  명 : 게시판 삭제
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.20  김필기    	 최초 생성
+    -->		
+	<update id="COHBoardMngDAO.deleteBoardConfig" parameterType="emfMap">
+		 UPDATE /* COHBoardMngDAO.deleteBoardConfig */ TN_BOARD_CONFIG
+	       SET DEL_YN = 'Y'
+	       	   , DELID = #{delId}
+	       	   , DELNAME = #{delNm}
+	       	   , DELDATE = SYSDATE
+	     WHERE COMMUNITY_ID = #{communityId}
+	</update>
+	
+	<!--
+         쿼리명 : COHBbsMngDAO.updateBanrInfo
+         설  명 : 게시판의 배너 상세정보를 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.17   김필기    	 최초생성
+    -->	
+	<update id="COHBoardMngDAO.updateBanrConfig" parameterType="emfMap">
+		UPDATE TN_BOARD_CONFIG 
+           SET BANNER_TOP_YN = #{bannerTopYn}
+               , BANNER_TOP_CONTENTS = #{bannerTopContents}
+               , BANNER_BOTTOM_YN = #{bannerBottomYn}
+               , BANNER_BOTTOM_CONTENTS = #{bannerBottomContents}
+               , MODID = #{modId}
+               , MODNAME = #{modNm}
+               , MODDATE = SYSDATE
+         WHERE COMMUNITY_ID = #{communityId}
+	</update>
+	
+</mapper>

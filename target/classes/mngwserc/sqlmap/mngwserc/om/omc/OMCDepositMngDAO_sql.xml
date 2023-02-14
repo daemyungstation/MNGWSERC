@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OMCDepositMngDAO">
+
+	<!--
+         쿼리명 : OMCDepositMngDAO.selectDepositMngList
+         설  명 : 외주업체 입금관리 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.16   김필기     최초 생성
+    -->
+    <select id="OMCDepositMngDAO.selectDepositMngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMCDepositMngDAO.selectDepositMngList */
+			   TBL.* 
+			   , FN_PROD_NM(TBL.PROD_CD) AS PROD_NM
+			   , TBL.PROD_CD
+			   , TRUNC(TO_DATE(TBL.JOIN_DT, 'yyyyMMdd') - SYSDATE) + 1 AS MONTH_COUNT
+			   , DECODE(FN_ACCNT_STAT(TBL.ACCNT_NO), 'Y', '정상', 'R', '해약', 'E', '행사', '청약철회') AS ACC_STAT
+			   , DECODE(FN_ACCNT_STAT(TBL.ACCNT_NO), 'Y', FN_YEN_CHE(TBL.ACCNT_NO), '-') AS PAY_STATE
+			   , FN_EVENT_DAY(TBL.ACCNT_NO) AS EVENT_DAY
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.*
+			FROM (
+				SELECT B.ACCNT_NO
+					   , A.MEM_NM
+					   , B.JOIN_DT
+					   , TO_CHAR(B.REG_DM, 'yyyy-MM-dd') AS REG_DM
+					   , B.PROD_CD
+					   , F.NO
+					   , A.HOME_ZIP
+					   , A.HOME_ADDR
+					   , A.CELL
+					   , A.BRTH_MON_DAY
+					   , A.NOTE
+					   , B.ACCNT_NOTE
+					   , B.INSPL_ZIP
+					   , B.INSPL_ADDR
+					   , B.INSPL_ADDR2
+					   , REPLACE(B.INSPL_PHONE, '-', '') AS INSPL_PHONE
+					   , B.PROD_KIND
+					   , E.COM_NM AS B2B_COMP_NM
+					   , B.B2B_EMPLE_NO
+					   , B.KB_NO
+					   , B.ID_NO
+					   , F.APAY_AMT
+					   , F.PAY_AMT
+					   , F.BPAY_AMT
+					   , B.ORDER_NUM 	
+					   , F.PAY_DAY
+					   , (SELECT COUNT(*) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = B.ACCNT_NO) AS TRUE_COUNT
+					   , G.MODEL_CL_NM							
+				  FROM MEMBER A, MEM_PROD_ACCNT B, PRODUCT C, HP_CALL D, B2BCOMCD E, TOTAL_PAY_VIEW F, PRODUCT_MODEL_CL_CD G
+			  	 WHERE A.MEM_NO = B.MEM_NO
+				   AND B.PROD_CD = C.PROD_CD
+				   AND B.ACCNT_NO = D.ACCNT_NO(+) 
+				   AND B.B2B_COMP_CD = E.COM_CD(+)
+				   AND B.ACCNT_NO = F.ACCNT_NO(+)
+				   AND B.PROD_MODEL_KIND = G.MODEL_CL_CD(+)
+				   AND A.DEL_FG = 'N'
+				   AND B.DEL_FG = 'N'
+					<choose>
+						<when test="id == 'lgupay'">
+						   AND B.PROD_CD IN ('M5' , 'M6' , 'M7' , 'M8' , 'N0' , 'P2' , 'T1' , 'X0', 'X4', 'AA' , 'AB', 'AO', 'CB', 'CC', 'CO', 'CP', 'CY', 'FD', 'GT', 'CE', 'LK', 'NH', 'LJ', 'LL', 'ZH', 'QS', 'QT', 'OW', 'OV')
+						</when>
+						<otherwise>
+						   AND B.PROD_CD IN ('M5' , 'M6' , 'M7' , 'M8' , 'N0' , 'P2' , 'T1' , 'X0', 'X4', 'AA' , 'AB', 'AO', 'CB', 'CC', 'CO', 'CP', 'CY')
+						</otherwise>
+					</choose>
+				   AND B.JOIN_DT <![CDATA[>=]]> '20140101'
+				   AND F.TEMP = 'B' 
+				<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+					AND F.PAY_DAY BETWEEN REPLACE(#{strtDt}, '-', '') AND REPLACE(#{endDt}, '-', '')
+				</if>
+				<if test="q != null and q != ''">	
+					<if test="f == 1">	
+						AND A.MEM_NM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 2">	
+						AND B.ACCNT_NO LIKE '%' || #{q} || '%'
+					</if>
+				</if>
+				 ORDER BY B.ACCNT_NO DESC, F.PAY_DAY DESC
+			) T1
+			WHERE
+			<choose>
+				<when test="id == 'lgupay'">
+					(PROD_CD IN ('M5', 'M6', 'M7', 'M8', 'N0', 'P2', 'T1', 'X0', 'X4', 'AA', 'AB', 'AO', 'CO', 'CP', 'CY', 'FD', 'GT', 'CE', 'LK', 'NH', 'LJ', 'LL', 'ZH', 'QS', 'QT', 'OW', 'OV') )
+				</when>
+				<otherwise>
+					(PROD_CD IN (	'M5',	'M6',	'M7',	'M8',	'N0',	'P2',	'T1',	'X0',	'X4',	'AA',	'AB',	'AO', 'CO', 'CP', 'CY' ) )
+				</otherwise>
+			</choose>
+               OR (PROD_CD = 'CB' AND TRUE_COUNT <![CDATA[<]]> 25) 
+               OR (PROD_CD = 'CC' AND TRUE_COUNT <![CDATA[<]]> 49) 
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}	   	     
+	</select>
+
+    <select id="OMCDepositMngDAO.selectDepositMngListCnt" parameterType="emfMap" resultType="emfMap">
+
+		SELECT COUNT(*) AS CNT FROM  
+			(SELECT /* OMCDepositMngDAO.selectDepositMngListCnt */
+				   B.ACCNT_NO, C.PROD_CD, (SELECT COUNT(*) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = B.ACCNT_NO) AS TRUE_COUNT
+		      FROM MEMBER A, MEM_PROD_ACCNT B, PRODUCT C, HP_CALL D, B2BCOMCD E, TOTAL_PAY_VIEW F, PRODUCT_MODEL_CL_CD G
+			 WHERE A.MEM_NO = B.MEM_NO
+			   AND B.PROD_CD = C.PROD_CD
+			   AND B.ACCNT_NO = D.ACCNT_NO(+)
+			   AND B.B2B_COMP_CD = E.COM_CD(+)
+			   AND B.ACCNT_NO = F.ACCNT_NO(+)
+			   AND B.PROD_MODEL_KIND = G.MODEL_CL_CD(+)
+			   AND A.DEL_FG = 'N'
+			   AND B.DEL_FG = 'N'
+				<choose>
+					<when test="id == 'lgupay'">
+					   AND B.PROD_CD IN ('M5' , 'M6' , 'M7' , 'M8' , 'N0' , 'P2' , 'T1' , 'X0', 'X4', 'AA' , 'AB', 'AO', 'CB', 'CC', 'CO', 'CP', 'CY', 'FD', 'GT', 'CE', 'LK', 'NH', 'LJ', 'LL', 'ZH', 'QS', 'QT', 'OW', 'OV')
+					</when>
+					<otherwise>
+					   AND B.PROD_CD IN ('M5' , 'M6' , 'M7' , 'M8' , 'N0' , 'P2' , 'T1' , 'X0', 'X4', 'AA' , 'AB', 'AO', 'CB', 'CC', 'CO', 'CP', 'CY')
+					</otherwise>
+				</choose>
+			   AND B.JOIN_DT <![CDATA[>=]]> '20140101'   
+			   AND F.TEMP = 'B' 		   
+			<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+				AND F.PAY_DAY BETWEEN REPLACE(#{strtDt}, '-', '') AND REPLACE(#{endDt}, '-', '')
+			</if>
+			<if test="q != null and q != ''">	
+				<if test="f == 1">	
+					AND A.MEM_NM LIKE '%' || #{q} || '%'
+				</if>
+				<if test="f == 2">	
+					AND B.ACCNT_NO LIKE '%' || #{q} || '%'
+				</if>
+			</if>
+			) X
+		WHERE
+			<choose>
+				<when test="id == 'lgupay'">
+					(PROD_CD IN (	'M5',	'M6',	'M7',	'M8',	'N0',	'P2',	'T1',	'X0',	'X4',	'AA',	'AB',	'AO', 'CO', 'CP' , 'CY', 'FD', 'GT', 'CE', 'LK', 'NH', 'LJ', 'LL', 'ZH', 'QS', 'QT', 'OW', 'OV') )
+				</when>
+				<otherwise>
+					(PROD_CD IN (	'M5',	'M6',	'M7',	'M8',	'N0',	'P2',	'T1',	'X0',	'X4',	'AA',	'AB',	'AO', 'CO', 'CP' , 'CY') )
+				</otherwise>
+			</choose>
+           OR (PROD_CD = 'CB' AND TRUE_COUNT <![CDATA[<]]> 25) 
+           OR (PROD_CD = 'CC' AND TRUE_COUNT <![CDATA[<]]> 49) 
+	</select>
+
+	<!--
+         쿼리명 : OMCDepositMngDAO.selectDepositMngExcelList
+         설  명 : 외주업체 입금관리 목록을 엑셀 다운로드한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.18   김필기     최초 생성
+    -->
+    <select id="OMCDepositMngDAO.selectDepositMngExcelList" parameterType="emfMap" resultType="emfMap" fetchSize="10000" timeout="600">	
+    	SELECT ROWNUM AS RNUM, X.* FROM 
+			(SELECT  B.ACCNT_NO
+			       , A.MEM_NM
+			       , B.JOIN_DT
+			       , TO_CHAR(B.REG_DM, 'yyyy-MM-dd') AS REG_DM
+			       , B.PROD_CD
+		           , FN_PROD_NM(B.PROD_CD) AS PROD_NM
+		           , TRUNC(TO_DATE(B.JOIN_DT, 'yyyyMMdd') - SYSDATE) + 1 AS MONTH_COUNT
+		           , (SELECT COUNT(*) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = B.ACCNT_NO) AS TRUE_COUNT
+		           , F.NO
+		           , DECODE(FN_ACCNT_STAT(B.ACCNT_NO), 'Y', '정상', 'R', '해약', 'E', '행사', '청약철회') AS ACC_STAT
+				   , DECODE(FN_ACCNT_STAT(B.ACCNT_NO), 'Y', FN_YEN_CHE(B.ACCNT_NO), '-') AS PAY_STATE
+		           , FN_EVENT_DAY(B.ACCNT_NO) AS EVENT_DAY
+		           , A.HOME_ZIP
+		           , A.HOME_ADDR
+		           , A.CELL
+		           , A.BRTH_MON_DAY
+		           , A.NOTE
+		           , B.ACCNT_NOTE
+		           , B.INSPL_ZIP
+		           , B.INSPL_ADDR
+				   , B.INSPL_ADDR2
+		           , REPLACE(B.INSPL_PHONE, '-', '') AS INSPL_PHONE
+		 	       , B.PROD_KIND
+		 	       , E.COM_NM AS B2B_COMP_NM
+		 	       , B.B2B_EMPLE_NO
+		 	       , B.KB_NO
+		 	       , B.ID_NO
+		 	       , F.APAY_AMT
+		 	       , F.PAY_AMT
+		 	       , F.BPAY_AMT
+		 	       , B.ORDER_NUM 	
+		 	       , F.PAY_DAY	
+		 	       , G.MODEL_CL_NM					
+		      FROM MEMBER A, MEM_PROD_ACCNT B, PRODUCT C, HP_CALL D, B2BCOMCD E, TOTAL_PAY_VIEW F, PRODUCT_MODEL_CL_CD G
+			 WHERE A.MEM_NO = B.MEM_NO
+			   AND B.PROD_CD = C.PROD_CD
+			   AND B.ACCNT_NO = D.ACCNT_NO(+)
+			   AND B.B2B_COMP_CD = E.COM_CD(+)
+			   AND B.ACCNT_NO = F.ACCNT_NO(+)
+			   AND B.PROD_MODEL_KIND = G.MODEL_CL_CD(+)
+			   AND A.DEL_FG = 'N'
+			   AND B.DEL_FG = 'N'
+				<choose>
+					<when test="id == 'lgupay'">
+					   AND B.PROD_CD IN ('M5' , 'M6' , 'M7' , 'M8' , 'N0' , 'P2' , 'T1' , 'X0', 'X4', 'AA' , 'AB', 'AO', 'CB', 'CC', 'CO', 'CP', 'CY', 'FD', 'GT', 'CE', 'LK', 'NH', 'LJ', 'LL', 'ZH', 'QS', 'QT', 'OW', 'OV')
+					</when>
+					<otherwise>
+					   AND B.PROD_CD IN ('M5' , 'M6' , 'M7' , 'M8' , 'N0' , 'P2' , 'T1' , 'X0', 'X4', 'AA' , 'AB', 'AO', 'CB', 'CC', 'CO', 'CP', 'CY')
+					</otherwise>
+				</choose>
+			   AND B.JOIN_DT <![CDATA[>=]]> '20140101'
+			   AND F.TEMP = 'B'        		
+			<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+				AND F.PAY_DAY BETWEEN REPLACE(#{strtDt}, '-', '') AND REPLACE(#{endDt}, '-', '')
+			</if>
+			<if test="q != null and q != ''">	
+				<if test="f == 1">	
+					AND A.MEM_NM LIKE '%' || #{q} || '%'
+				</if>
+				<if test="f == 2">	
+					AND B.ACCNT_NO LIKE '%' || #{q} || '%'
+				</if>
+			</if>
+			 ORDER BY B.ACCNT_NO DESC, F.PAY_DAY DESC
+    	)  	X
+		WHERE
+			<choose>
+				<when test="id == 'lgupay'">
+					(PROD_CD IN (	'M5',	'M6',	'M7',	'M8',	'N0',	'P2',	'T1',	'X0',	'X4',	'AA',	'AB',	'AO', 'CO', 'CP', 'CY', 'FD', 'GT', 'CE', 'LK', 'NH', 'LJ', 'LL', 'ZH', 'QS', 'QT', 'OW', 'OV') )
+				</when>
+				<otherwise>
+					(PROD_CD IN (	'M5',	'M6',	'M7',	'M8',	'N0',	'P2',	'T1',	'X0',	'X4',	'AA',	'AB',	'AO', 'CO', 'CP', 'CY') )
+				</otherwise>
+			</choose>
+           OR (PROD_CD = 'CB' AND TRUE_COUNT <![CDATA[<]]> 25) 
+           OR (PROD_CD = 'CC' AND TRUE_COUNT <![CDATA[<]]> 49) 
+	</select>
+</mapper>

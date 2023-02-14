@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PRBNaverTestPromotionMngDAO">
+	
+	<!--
+         쿼리명 : PRBNaverTestPromotionMngDAO.selectConfigList
+         설  명 : 설정을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2019.07.15   이너스    	 최초생성
+    -->	
+	<select id="PRBNaverTestPromotionMngDAO.selectConfigList" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			PNTEC_STIME
+			,PNTEC_ETIME
+			,TO_CHAR(PNTEC_STIME, 'YYYY-MM-DD') AS PNTEC_STIME_DAY
+			,TO_CHAR(PNTEC_STIME, 'HH24') AS PNTEC_STIME_HH
+			,TO_CHAR(PNTEC_STIME, 'MI') AS PNTEC_STIME_MI
+			,TO_CHAR(PNTEC_STIME, 'SS') AS PNTEC_STIME_SS
+			,TO_CHAR(PNTEC_ETIME, 'YYYY-MM-DD') AS PNTEC_ETIME_DAY
+			,TO_CHAR(PNTEC_ETIME, 'HH24') AS PNTEC_ETIME_HH
+			,TO_CHAR(PNTEC_ETIME, 'MI') AS PNTEC_ETIME_MI
+			,TO_CHAR(PNTEC_ETIME, 'SS') AS PNTEC_ETIME_SS
+			,PNTEC_NAVER_CHECK
+			,PNTEC_FROMURL_CHECK
+			,PNTEC_DIVISION
+		FROM PR_NAVER_TEST_EVT_CFG
+		WHERE PNTEC_DIVISION = #{pntecDivision}
+		AND ROWNUM = 1
+	</select>	
+	
+	<!--
+         쿼리명 : PRBNaverTestPromotionMngDAO.updateConfig
+         설  명 : 설정을 업데이트 한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2019.07.15   이너스    	 최초생성
+    -->		
+	<update id="PRBNaverTestPromotionMngDAO.updateConfig" parameterType="emfMap">
+		UPDATE PR_NAVER_TEST_EVT_CFG SET
+			PNTEC_STIME = TO_DATE(#{pntecStime}, 'yyyy/mm/dd hh24:mi:ss'),
+			PNTEC_ETIME = TO_DATE(#{pntecEtime}, 'yyyy/mm/dd hh24:mi:ss'),
+			PNTEC_NAVER_CHECK = #{pntecNaverCheck, jdbcType=VARCHAR},
+			PNTEC_FROMURL_CHECK = #{pntecFromurlCheck, jdbcType=VARCHAR}
+		WHERE PNTEC_DIVISION = #{pntecDivision}
+	</update>
+	
+	<!--
+         쿼리명 : PRBNaverTestPromotionMngDAO.selectList
+         설  명 :목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2019.07.15   이너스    	 최초생성
+    -->	
+	<select id="PRBNaverTestPromotionMngDAO.selectList" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.* 
+			  FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		                ,NTEVT_SEQ
+						,NTEVT_NAME
+						,NTEVT_PHONE
+						,TNEVT_AGREE
+						,NTEVT_MARKETING_AGREE
+						,NTEVT_USERID
+						,NTEVT_REG_DTM
+						,TO_CHAR(NTEVT_REG_DTM, 'YYYY-MM-DD') AS NTEVT_REG_DTM_DAY
+						,NTEVT_REG_IP
+						,NTEVT_FROMURL
+						,NTEVT_AGENT
+						,NTEVT_DIVISION
+		          FROM PR_NAVER_TEST_EVT
+		          WHERE NTEVT_DIVISION = #{ntevtDivision}
+				  ORDER BY NTEVT_SEQ DESC   
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}           
+	</select>	
+	
+	
+	<!--
+         쿼리명 : PRBNaverTestPromotionMngDAO.selectList
+         설  명 :목록을 다운로드 한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2019.07.15   이너스    	 최초생성
+    -->	
+	<select id="PRBNaverTestPromotionMngDAO.selectExcelList" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+                NTEVT_SEQ
+				,NTEVT_NAME
+				,NTEVT_PHONE
+				,TNEVT_AGREE
+				,NTEVT_MARKETING_AGREE
+				,NTEVT_USERID
+				,NTEVT_REG_DTM
+				,TO_CHAR(NTEVT_REG_DTM, 'YYYY-MM-DD') AS NTEVT_REG_DTM_DAY
+				,NTEVT_REG_IP
+				,NTEVT_FROMURL
+				,NTEVT_AGENT
+				,NTEVT_DIVISION
+          FROM PR_NAVER_TEST_EVT
+          WHERE NTEVT_DIVISION = #{ntevtDivision}
+		  ORDER BY NTEVT_SEQ DESC
+	</select>	
+	
+	<!--
+         쿼리명 : PRBNaverTestPromotionMngDAO.selectPvList
+         설  명 :목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2019.07.15   이너스    	 최초생성
+    -->	
+	<select id="PRBNaverTestPromotionMngDAO.selectPvList" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.* 
+			  FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		                ,NTEVTPV_SEQ
+						,NTEVTPV_PAGE
+						,NTEVTPV_REFERER
+						,NTEVTPV_REG_DTM
+						,TO_CHAR(NTEVTPV_REG_DTM, 'YYYY-MM-DD') AS NTEVTPV_REG_DTM_DAY
+						,NTEVTPV_REG_IP
+						,NTEVTPV_FROMURL
+						,NTEVTPV_AGENT
+						,NTEVTPV_TYPE
+						,NTEVTPV_DIVISION
+		          FROM PR_NAVER_TEST_PV
+		          WHERE NTEVTPV_DIVISION = #{ntevtpvDivision}
+				  ORDER BY NTEVTPV_SEQ DESC   
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}           
+	</select>	
+	
+	
+	<!--
+         쿼리명 : PRBNaverTestPromotionMngDAO.selectPvExcelList
+         설  명 :목록을 다운로드 한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2019.07.15   이너스    	 최초생성
+    -->	
+	<select id="PRBNaverTestPromotionMngDAO.selectPvExcelList" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+                NTEVTPV_SEQ
+				,NTEVTPV_PAGE
+				,NTEVTPV_REFERER
+				,NTEVTPV_REG_DTM
+				,TO_CHAR(NTEVTPV_REG_DTM, 'YYYY-MM-DD') AS NTEVTPV_REG_DTM_DAY
+				,NTEVTPV_REG_IP
+				,NTEVTPV_FROMURL
+				,NTEVTPV_AGENT
+				,NTEVTPV_TYPE
+				,NTEVTPV_DIVISION
+          FROM PR_NAVER_TEST_PV
+          WHERE NTEVTPV_DIVISION = #{ntevtpvDivision}
+		  ORDER BY NTEVTPV_SEQ DESC
+	</select>
+</mapper>

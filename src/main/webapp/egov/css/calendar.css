@@ -1,0 +1,47 @@
+
+table{border-collapse:collapse}
+
+.mt5{margin-top:5px}
+.mt10{margin-top:10px}
+.mt15{margin-top:15px}
+.mt20{margin-top:20px}
+.mt25{margin-top:25px}
+.mt30{margin-top:30px}
+.mt35{margin-top:35px}
+.mt40{margin-top:40px}
+.mt45{margin-top:45px}
+.mt50{margin-top:50px}
+.mt55{margin-top:55px}
+.mt70{margin-top:65px}
+.pl10{padding-left:10px;}
+.margT17{margin-top:17px}
+.margT63px{margin-top:63px}
+
+.fatshowsDiv .toparea{width:100%; overflow:hidden; padding-bottom:20px; border-bottom:1px dashed #ddd}
+.fatshowsDiv .noSche{width:100%; overflow:hidden; padding-bottom:20px; border-bottom:1px dashed #ddd}
+.fatshowsDiv .toparea .img{width:270px; height:180px; float:left; overflow:hidden; padding-right:14px}
+.fatshowsDiv .toparea .txt{position:relative; width:415px; float:right;}
+.fatshowsDiv .toparea .tit{padding-bottom:11px; font-size:15px; font-weight:bold; color:#0979b2; border-bottom:1px solid #ddd; line-height:16px;} 
+.fatshowsDiv .toparea a.plusbt{position:absolute; top:0; right:0;} 
+.fatshowsDiv .toparea .txtCon{padding:10px 0; word-wrap: break-word;} 
+.fatshowsDiv .calendarDiv{width:100%;}
+.fatshowsDiv .cal_head{position:relative; width:170px; margin:auto; text-align:center; font-family:"easyOpensansBold"; font-weight:normal; font-size:24px; color:#333; line-height:24px;}
+.fatshowsDiv .cal_head a{display:block; position:absolute; top:0;}
+.fatshowsDiv .cal_head a.leftbt{left:0;}
+.fatshowsDiv .cal_head a.rightbt{right:0;}
+
+.fatshowsDiv table{width:700px;}
+.fatshowsDiv th{border-top:2px solid #65686a; border-bottom:1px solid #e5e5e5; font-family:"easyOpensansBold"; font-weight:normal; color:#2d2d2d; font-size:11px; line-height:30px;}
+.fatshowsDiv td{border-bottom:1px solid #e5e5e5; border-right:1px solid #e5e5e5;}
+.fatshowsDiv td .day_div{display:block; position:relative; width:99px; min-height:60px;}
+.fatshowsDiv td .day_div.today{border:1px solid #7bc1e5; width:97px}
+.fatshowsDiv td a span{display:block;}
+.fatshowsDiv td .date{position:absolute; top:5px; right:5px; font-size:11px;}
+.fatshowsDiv td .txt{font-size:11px; color:#444; padding:25px 0 0 5px; line-height:16px;}
+.fatshowsDiv td.end{border-right:none}
+.fatshowsDiv td  .txtIcon{display:none; position:absolute; bottom:0; right:0;}
+.fatshowsDiv td.on  .txtIcon{display:block;}
+
+.fatshowsDiv .calendarView{font-size:13px; color:#444; line-height:18px; padding-bottom:26px; border-bottom:1px solid #ddd}
+.fatshowsDiv .calendarView .tit{padding-bottom:11px; font-size:15px; font-family:"Nanum Gothic"; font-weight:bold; color:#2d2d2d;line-height:16px; letter-spacing:-0.25px}
+.fatshowsDiv .calendarView .txtCon{padding:5px 0 0; line-height:21px}

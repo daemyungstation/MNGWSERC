@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CMCPfmcRsvtnDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+		<result property="REQN" column="REQN" javaType="java.lang.String" jdbcType="CLOB" />
+		<result property="MEMO" column="MEMO" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+
+	<!--
+         쿼리명 : CMCPfmcRsvtnDAO.selectPfmcRsvtnList
+         설  명 : 공연예약 리스트를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   허진영      최초생성
+        2017.05.10	  이준혁	수정
+    -->
+    <select id="CMCPfmcRsvtnDAO.selectPfmcRsvtnList" parameterType="emfMap" resultType="emfMap">	
+    	SELECT /* CMCPfmcRsvtnDAO.selectPfmcRsvtnList */
+			   TBL.*
+			   , (SELECT PFMC_NM FROM CM_PFMC_MST WHERE PFMC_SEQ = TBL.PFMC_SEQ) AS PFMC_NM
+			   , CASE GUBUN WHEN '1' THEN (SELECT MEM_NM FROM MEMBER@DMLIFE WHERE MEM_NO = TBL.MEM_NO)
+			                ELSE (SELECT NAME FROM MB_MEM_MST WHERE ID = TBL.ID)
+			                 END NAME
+			   , CASE GUBUN WHEN '1' THEN (SELECT CELL FROM MEMBER@DMLIFE WHERE MEM_NO = TBL.MEM_NO)
+			                ELSE (SELECT HP FROM MB_MEM_MST WHERE ID = TBL.ID)
+			                 END HP
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'RSVTN_PRCS_STTS' AND CD = TBL.PRCS_CD) AS PRCS_NM
+		FROM (	
+			SELECT ROWNUM AS RNUM, T1.*
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+				   	   , A.RSVTN_SEQ
+					   , A.PFMC_SEQ
+					   , A.ID
+					   , B.MEM_NO
+					   , A.ACCNT_NO
+					   , A.GUBUN
+					   , A.PRCS_CD
+					   , A.CONF_YN1
+					   , A.CONF_YN2
+					   , A.REG_DTM
+			 	  FROM CM_PFMC_RSVTN_MST A LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON A.ACCNT_NO = B.ACCNT_NO AND B.DEL_FG= 'N'
+			     WHERE A.GBIT = '2'
+				<if test="prcsCd != null and prcsCd != ''">
+					AND A.PRCS_CD = #{prcsCd}
+			  	</if>
+			  	<if test="strtDt != null and strtDt != ''">
+					AND A.REG_DTM <![CDATA[>=]]> TO_DATE(#{strtDt}, 'yyyy-MM-dd')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND A.REG_DTM <![CDATA[<]]> TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1
+				</if>
+			   	<if test="q != null and q != ''">
+			   		<if test="f == 1">
+			   			 AND A.PFMC_SEQ IN (SELECT PFMC_SEQ FROM CM_PFMC_MST WHERE PFMC_NM LIKE '%' || #{q} || '%')
+			   		</if>
+			   		<if test="f == 2">
+			   			 AND A.ID IN (SELECT ID FROM MB_MEM_MST WHERE NAME LIKE '%' || #{q} || '%')
+			   		</if>
+			   		<if test="f == 3">
+			   			 AND A.ACCNT_NO LIKE '%' || #{q} || '%'
+			   		</if>
+			   		<if test="f == 4">
+						AND ( EXISTS(SELECT 'X' FROM MB_MEM_MST WHERE ID = A.ID AND NAME LIKE '%' || #{q} || '%') OR EXISTS(SELECT 'X' FROM MEMBER@DMLIFE WHERE MEM_NO = B.MEM_NO AND MEM_NM LIKE '%' || #{q} || '%') )
+					</if>
+	   				<if test="f == 5">
+						AND ( EXISTS(SELECT 'X' FROM MB_MEM_MST WHERE ID = A.ID AND HP LIKE '%' || #{q} || '%') OR EXISTS(SELECT 'X' FROM MEMBER@DMLIFE WHERE MEM_NO = B.MEM_NO AND CELL LIKE '%' || #{q} || '%') )
+	   				</if>
+				</if> 
+  				 ORDER BY A.REG_DTM DESC
+	      	) T1
+		) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+    </select>
+    
+      <!--
+         쿼리명 : CMCPfmcRsvtnDAO.selectPfmcRsvtn
+         설  명 : 공연예약 상세를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   허진영      최초생성
+    -->
+    <select id="CMCPfmcRsvtnDAO.selectPfmcRsvtn" parameterType="emfMap" resultMap="emfMap">	
+		SELECT /* CMCPfmcRsvtnDAO.selectPfmcRsvtn */
+		   	   A.RSVTN_SEQ
+			   , A.PFMC_SEQ
+			   , A.ID
+			   , A.ACCNT_NO
+			   , A.GUBUN
+			   , CASE GUBUN WHEN '1' THEN (SELECT MEM_NM FROM MEMBER@DMLIFE WHERE MEM_NO = B.MEM_NO)
+			                ELSE (SELECT NAME FROM MB_MEM_MST WHERE ID = A.ID)
+			                 END NAME
+			   , CASE GUBUN WHEN '1' THEN (SELECT CELL FROM MEMBER@DMLIFE WHERE MEM_NO = B.MEM_NO)
+			                ELSE (SELECT HP FROM MB_MEM_MST WHERE ID = A.ID)
+			                 END HP
+			   , (SELECT EMAIL FROM MB_MEM_MST WHERE ID = A.ID) AS EMAIL
+			   , (SELECT PFMC_NM FROM CM_PFMC_MST WHERE PFMC_SEQ = A.PFMC_SEQ) AS PFMC_NM
+			   , A.SEAT_CNT
+			   , A.SEAT_GB
+			   , A.FST_RSVTN_DTM
+			   , A.SECN_RSVTN_DTM
+			   , A.LAST_RSVTN_DTM
+			   , A.REQN
+			   , A.REG_DTM
+			   , A.PRCS_CD
+			   , A.CONF_YN1
+			   , A.CONF_YN2
+			   , (SELECT COUNT(*) FROM CM_PFMC_RSVTN_LOG WHERE RSVTN_SEQ = A.RSVTN_SEQ AND PRCS_CD = '00') AS CNCL_CNT
+		  FROM CM_PFMC_RSVTN_MST A LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON A.ACCNT_NO = B.ACCNT_NO AND B.DEL_FG= 'N'
+		 WHERE A.GBIT = '2'
+		   AND A.RSVTN_SEQ = #{rsvtnSeq}
+    </select>
+    
+    <!--
+         쿼리명 : CMCPfmcRsvtnDAO.excelPfmcRsvtnList
+         설  명 : 공연예약 엑셀 리스트를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   허진영      최초생성
+    -->
+	<select id="CMCPfmcRsvtnDAO.excelPfmcRsvtnList" parameterType="emfMap" resultMap="emfMap">	
+		SELECT COUNT(*) OVER() AS TOT_CNT
+			   , A.REG_DTM
+			   , A.ACCNT_NO
+			   , CASE GUBUN WHEN '1' THEN (SELECT MEM_NM FROM MEMBER@DMLIFE WHERE MEM_NO = B.MEM_NO)
+			                ELSE (SELECT NAME FROM MB_MEM_MST WHERE ID = A.ID)
+			                 END NAME
+			   , A.FST_RSVTN_DTM
+			   , A.SECN_RSVTN_DTM
+			   , A.LAST_RSVTN_DTM
+			   , A.SEAT_CNT
+			   , A.SEAT_GB
+			   , A.REQN
+			   , A.CONF_YN1
+			   , A.CONF_YN2
+			   , A.PRCS_CD
+		  FROM CM_PFMC_RSVTN_MST A LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON A.ACCNT_NO = B.ACCNT_NO AND B.DEL_FG = 'N'
+    	 WHERE GBIT = '2'
+		<if test="prcsCd != null and prcsCd != ''">
+			AND A.PRCS_CD = #{prcsCd}
+	  	</if>
+	  	<if test="strtDt != null and strtDt != ''">
+			AND A.REG_DTM <![CDATA[>=]]> TO_DATE(#{strtDt}, 'yyyy-MM-dd')
+		</if>
+		<if test="endDt != null and endDt != ''">
+			AND A.REG_DTM <![CDATA[<]]> TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1
+		</if>
+	   	<if test="q != null and q != ''">
+	   		<if test="f == 1">
+	   			 AND A.PFMC_SEQ IN (SELECT PFMC_SEQ FROM CM_PFMC_MST WHERE PFMC_NM LIKE '%' || #{q} || '%')
+	   		</if>
+	   		<if test="f == 2">
+	   			 AND A.ID IN (SELECT ID FROM MB_MEM_MST WHERE NAME LIKE '%' || #{q} || '%')
+	   		</if>
+	   		<if test="f == 3">
+	   			 AND A.ACCNT_NO LIKE '%' || #{q} || '%'
+	   		</if>
+	   		<if test="f == 4">
+				AND ( EXISTS(SELECT 'X' FROM MB_MEM_MST WHERE ID = A.ID AND NAME LIKE '%' || #{q} || '%') OR EXISTS(SELECT 'X' FROM MEMBER@DMLIFE WHERE MEM_NO = B.MEM_NO AND MEM_NM LIKE '%' || #{q} || '%') )
+			</if>	
+	   		<if test="f == 5">
+				AND ( EXISTS(SELECT 'X' FROM MB_MEM_MST WHERE ID = A.ID AND HP LIKE '%' || #{q} || '%') OR EXISTS(SELECT 'X' FROM MEMBER@DMLIFE WHERE MEM_NO = B.MEM_NO AND CELL LIKE '%' || #{q} || '%') )
+	   		</if>
+	   	</if>
+		 ORDER BY A.REG_DTM DESC
+    </select>
+    
+    <!--
+         쿼리명 : CMCPfmcRsvtnDAO.updatePfmcRsvtn
+         설  명 : 공연예약을 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   허진영      최초생성
+    -->
+	<update id="CMCPfmcRsvtnDAO.updatePfmcRsvtn" parameterType="emfMap">	
+		UPDATE /* CMCPfmcRsvtnDAO.updatePfmcRsvtn */ CM_PFMC_RSVTN_MST
+ 		   SET LAST_RSVTN_DTM = TO_DATE(#{lastRsvtnDtm}, 'yyyy-MM-dd hh24:mi:ss')
+ 		       , PRCS_CD = #{prcsCd}
+ 		   	   , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = SYSDATE
+	     WHERE RSVTN_SEQ = #{rsvtnSeq}
+    </update>
+    
+    <!--
+         쿼리명 : CMCPfmcRsvtnDAO.deletePfmcRsvtn
+         설  명 : 공연예약을 삭제한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+       2016.02.11  허진영     최초 생성
+    -->
+	<delete id="CMCPfmcRsvtnDAO.deletePfmcRsvtn" parameterType="emfMap">
+		DELETE /* CMCPfmcRsvtnDAO.deletePfmcRsvtn */ 
+		  FROM CM_PFMC_RSVTN_MST
+		 WHERE RSVTN_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+        	#{item}
+        </foreach>
+	</delete>
+	
+    <!--
+		 쿼리명 : CMCPfmcRsvtnDAO.insertPfmcRsvtnPrcsLog
+         설  명 : 공연예약 로그를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   허진영      최초생성
+    -->   
+   	<insert id="CMCPfmcRsvtnDAO.insertPfmcRsvtnPrcsLog" parameterType="emfMap">
+        INSERT /* CMCPfmcRsvtnDAO.insertPfmcRsvtnPrcsLog */ INTO CM_PFMC_RSVTN_LOG
+        	(RSVTN_SEQ
+			, PRCS_CD
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+        	)
+		SELECT #{rsvtnSeq}
+			   , #{prcsCd}
+	       	   , #{modId}
+	       	   , #{modIp}
+	       	   , SYSDATE
+          FROM DUAL
+         WHERE EXISTS (SELECT 'X' FROM CM_PFMC_RSVTN_MST WHERE RSVTN_SEQ = #{rsvtnSeq} AND GBIT = '2' AND PRCS_CD != #{prcsCd})
+   	</insert>
+   	
+   	<!--
+         쿼리명 : CMCPfmcRsvtnDAO.selectPfmcRsvtnCnslList
+         설  명 : 공연예약 상담이력을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2017.05.10   이준혁      최초생성
+    -->
+    <select id="CMCPfmcRsvtnDAO.selectPfmcRsvtnCnslList" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* CMCPfmcRsvtnDAO.selectPfmcRsvtnCnslList */
+    		   REG_NM
+    		   , MEMO
+    		   , REG_DTM
+    	  FROM CM_PFMC_RSVTN_DTL
+    	 WHERE RSVTN_SEQ = #{rsvtnSeq}
+    	 ORDER BY REG_DTM DESC
+    </select>
+
+   	<!--
+         쿼리명 : CMCPfmcRsvtnDAO.insertPfmcRsvtnCnsl
+         설  명 : 공연예약 상담이력을 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2017.05.10   이준혁      최초생성
+    -->
+    <insert id="CMCPfmcRsvtnDAO.insertPfmcRsvtnCnsl" parameterType="emfMap">
+    	INSERT /*CMCPfmcRsvtnDAO.insertPfmcRsvtnCnsl*/ INTO CM_PFMC_RSVTN_DTL
+			(RSVTN_SEQ
+			, MEMO
+			, REG_ID
+			, REG_NM
+   			, REG_IP
+   			, REG_DTM
+   			)
+   		VALUES 
+   			(#{rsvtnSeq}
+   			, #{memo}
+   			, #{regId}
+   			, #{regNm}
+   			, #{regIp}
+   			, SYSDATE
+   			)
+    </insert>
+    
+    <!--
+         쿼리명 : CMCPfmcRsvtnDAO.insertPfmcRsvtnCnsl
+         설  명 : 공연예약 담당자 확인을 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2017.05.10   이준혁      최초생성
+    -->
+    <update id="CMCPfmcRsvtnDAO.updatePfmcRsvtnConf" parameterType="emfMap">
+    	UPDATE /* CMCPfmcRsvtnDAO.updatePfmcRsvtnConf */ CM_PFMC_RSVTN_MST
+    	<choose>
+    		<when test="confYn1 != null and confYn1 != ''">
+    			 SET CONF_YN1 = #{confYn1}
+    		</when>
+    		<when test="confYn2 != null and confYn2 != ''">
+    			 SET CONF_YN2 = #{confYn2}
+    		</when>
+    	</choose>
+	     WHERE RSVTN_SEQ = #{rsvtnSeq}
+    </update>
+    
+</mapper>

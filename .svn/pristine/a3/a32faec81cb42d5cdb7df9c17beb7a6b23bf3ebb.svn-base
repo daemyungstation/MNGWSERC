@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CMFChkReqnDAO">
+
+	<!--
+         쿼리명 : CMFChkReqnDAO.selectChkReqnList
+         설  명 : 확인요청 내역 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   허진영     최초 생성
+    -->
+    <select id="CMFChkReqnDAO.selectChkReqnList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CMFChkReqnDAO.selectChkReqnList */
+			   TBL.* 
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = TBL.ID) AS NAME
+      		   , (SELECT UNQ_NO FROM MB_MEM_MST WHERE ID = TBL.ID) AS UNQ_NO
+      		   , (SELECT CI FROM MB_MEM_MST WHERE ID = TBL.ID) AS CI
+      		   , (SELECT MAX(MOD_DTM) FROM CM_CHK_REQN_LOG WHERE REQN_SEQ = TBL.REQN_SEQ AND PRCS_CD = '02') AS ACPT_DTM
+               , (SELECT MAX(MOD_DTM) FROM CM_CHK_REQN_LOG WHERE REQN_SEQ = TBL.REQN_SEQ AND PRCS_CD = '03') AS COMP_DTM
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , REQN_SEQ
+					   , ID
+					   , REQN_GB
+					   , PRCS_CD
+					   , REG_DTM
+			      FROM CM_CHK_REQN_PTC
+				 WHERE 1=1
+				<if test="reqnGb != null and reqnGb != ''">
+					AND REQN_GB = #{reqnGb}
+			 	</if>
+			 	<if test="prcsCd != null and prcsCd != ''">
+					AND PRCS_CD = #{prcsCd}
+			 	</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND ID IN(SELECT ID FROM MB_MEM_MST WHERE NAME LIKE '%' || #{q} || '%')	]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND ID LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 3">
+						<![CDATA[	AND ID IN (SELECT ID FROM MB_MEM_MST WHERE CI = #{ci})	]]>
+					</if>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+    </select>
+
+ 	<!--
+         쿼리명 : CMFChkReqnDAO.deleteChkReqn
+         설  명 : 확인요청 내역을 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   허진영     최초 생성
+    -->
+ 	<delete id="CMFChkReqnDAO.deleteChkReqn" parameterType="emfMap">
+		DELETE /* CMFChkReqnDAO.deleteChkReqn */ 
+		  FROM CM_CHK_REQN_PTC
+		 WHERE REQN_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+ 	</delete>
+ 	
+ 	<!--
+         쿼리명 : CMFChkReqnDAO.updateChkReqnPrcsCd
+         설  명 : 확인요청 내역 처리현황를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   허진영      최초생성
+    -->
+    <update id="CMFChkReqnDAO.updateChkReqnPrcsCd" parameterType="emfMap">
+    	UPDATE /* CMFChkReqnDAO.updateChkReqnPrcsCd */ CM_CHK_REQN_PTC
+    	   SET PRCS_CD = #{prcsCd}
+    	 WHERE REQN_SEQ = #{reqnSeq}
+    </update>
+ 	
+	<!--
+         쿼리명 : CMFChkReqnDAO.insertChkReqnPrcsLog
+         설  명 : 확인요청 내역 처리현황 로그를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   허진영      최초생성
+    -->   
+   	<insert id="CMFChkReqnDAO.insertChkReqnPrcsLog" parameterType="emfMap">
+        INSERT /* CMFChkReqnDAO.insertChkReqnPrcsLog */ INTO CM_CHK_REQN_LOG
+        	(REQN_SEQ
+			, PRCS_CD
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+        	)
+		SELECT #{reqnSeq}
+			   , #{prcsCd}
+	       	   , #{modId}
+	       	   , #{modIp}
+	       	   , SYSDATE
+          FROM DUAL
+         WHERE EXISTS (SELECT 'X' FROM CM_CHK_REQN_PTC WHERE REQN_SEQ = #{reqnSeq} AND PRCS_CD != #{prcsCd})
+   </insert>
+	
+</mapper>

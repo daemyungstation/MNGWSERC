@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FairProductDetailDAO">
+
+	<!--
+         쿼리명 : FairProductDetailDAO.selectList
+         설  명 : 제품 상세 목록 조회
+    -->	
+	<select id="selectList" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.* 
+			  FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		                ,FP_SEQ
+		                ,FP_MAIN_IMAGE_BG_PATH
+						,FP_MAIN_IMAGE_BG_SAVE_NM
+						,FP_MAIN_IMAGE_BG_REAL_NM
+						,FP_MAIN_IMAGE_W_PATH
+						,FP_MAIN_IMAGE_W_SAVE_NM
+						,FP_MAIN_IMAGE_W_REAL_NM
+						,FP_MAIN_IMAGE_M_PATH
+						,FP_MAIN_IMAGE_M_SAVE_NM
+						,FP_MAIN_IMAGE_M_REAL_NM
+						,FP_MAIN_TITLE
+						,FP_MAIN_SUBTITLE
+						,cast(FP_MAIN_DESC as varchar2(4000)) FP_MAIN_DESC
+						,cast(FP_INPUT as varchar2(4000)) FP_INPUT
+						,cast(FP_LABEL as varchar2(4000)) FP_LABEL
+						,cast(FP_THUMNAIL as varchar2(4000)) FP_THUMNAIL
+						,cast(FP_DETAIL as varchar2(4000)) FP_DETAIL
+						,FP_ORDER
+						,FP_STIME
+						,FP_ETIME
+						,TO_CHAR(FP_STIME, 'YYYY-MM-DD') AS FP_STIME_DAY
+						,TO_CHAR(FP_STIME, 'HH24') AS FP_STIME_HH
+						,TO_CHAR(FP_STIME, 'MI') AS FP_STIME_MI
+						,TO_CHAR(FP_STIME, 'SS') AS FP_STIME_SS
+						,TO_CHAR(FP_ETIME, 'YYYY-MM-DD') AS FP_ETIME_DAY
+						,TO_CHAR(FP_ETIME, 'HH24') AS FP_ETIME_HH
+						,TO_CHAR(FP_ETIME, 'MI') AS FP_ETIME_MI
+						,TO_CHAR(FP_ETIME, 'SS') AS FP_ETIME_SS
+						,FP_STATUS
+						,FAIR_CATEGORY_FC_SEQ
+		          FROM FAIR_PRODUCT   
+				 ORDER BY FP_ORDER ASC, REG_DTM DESC   
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}           
+	</select>
+	
+	<!--
+         쿼리명 : FairProductDetailDAO.select
+         설  명 : 제품 상세 상세 조회
+    -->	
+	<select id="select" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+            FP_SEQ
+			,FP_MAIN_IMAGE_BG_PATH
+			,FP_MAIN_IMAGE_BG_SAVE_NM
+			,FP_MAIN_IMAGE_BG_REAL_NM
+			,FP_MAIN_IMAGE_W_PATH
+			,FP_MAIN_IMAGE_W_SAVE_NM
+			,FP_MAIN_IMAGE_W_REAL_NM
+			,FP_MAIN_IMAGE_M_PATH
+			,FP_MAIN_IMAGE_M_SAVE_NM
+			,FP_MAIN_IMAGE_M_REAL_NM
+			,FP_MAIN_TITLE
+			,FP_MAIN_SUBTITLE
+			,cast(FP_MAIN_DESC as varchar2(4000)) FP_MAIN_DESC
+			,cast(FP_INPUT as varchar2(4000)) FP_INPUT
+			,cast(FP_LABEL as varchar2(4000)) FP_LABEL
+			,cast(FP_THUMNAIL as varchar2(4000)) FP_THUMNAIL
+			,cast(FP_DETAIL as varchar2(4000)) FP_DETAIL
+			,FP_ORDER
+			,FP_STIME
+			,FP_ETIME
+			,TO_CHAR(FP_STIME, 'YYYY-MM-DD') AS FP_STIME_DAY
+			,TO_CHAR(FP_STIME, 'HH24') AS FP_STIME_HH
+			,TO_CHAR(FP_STIME, 'MI') AS FP_STIME_MI
+			,TO_CHAR(FP_STIME, 'SS') AS FP_STIME_SS
+			,TO_CHAR(FP_ETIME, 'YYYY-MM-DD') AS FP_ETIME_DAY
+			,TO_CHAR(FP_ETIME, 'HH24') AS FP_ETIME_HH
+			,TO_CHAR(FP_ETIME, 'MI') AS FP_ETIME_MI
+			,TO_CHAR(FP_ETIME, 'SS') AS FP_ETIME_SS
+			,FP_STATUS
+			,FAIR_CATEGORY_FC_SEQ
+         FROM FAIR_PRODUCT   
+		 WHERE FP_SEQ = #{seq}   
+	</select>
+	
+	
+	<!--
+         쿼리명 : FairProductDetailDAO.selectMaxOrder
+         설  명 : 제품 상세 MAX ORDER 조회
+    -->	
+	<select id="selectMaxOrder" resultType="emfMap">
+		SELECT 
+        	NVL(max(FP_ORDER), 0) + 1 as FP_ORDER
+        FROM FAIR_PRODUCT   
+	</select>
+	
+	<!--
+         쿼리명 : FairProductDetailDAO.insert
+         설  명 : 제품 상세 등록
+    -->	
+	<insert id="insert" parameterType="emfMap">
+		INSERT INTO FAIR_PRODUCT
+			(
+			FP_SEQ
+			<if test="fpMainImageBgPath != null">
+			,FP_MAIN_IMAGE_BG_PATH
+			,FP_MAIN_IMAGE_BG_SAVE_NM
+			,FP_MAIN_IMAGE_BG_REAL_NM
+			</if>
+			<if test="fpMainImageWPath != null">
+			,FP_MAIN_IMAGE_W_PATH
+			,FP_MAIN_IMAGE_W_SAVE_NM
+			,FP_MAIN_IMAGE_W_REAL_NM
+			</if>
+			<if test="fpMainImageMPath != null">
+			,FP_MAIN_IMAGE_M_PATH
+			,FP_MAIN_IMAGE_M_SAVE_NM
+			,FP_MAIN_IMAGE_M_REAL_NM
+			</if>
+			,FP_MAIN_TITLE
+			,FP_MAIN_SUBTITLE
+			,FP_MAIN_DESC
+			,FP_INPUT
+			,FP_LABEL
+			,FP_THUMNAIL
+			,FP_DETAIL
+			,FP_ORDER
+			<if test="fpStime != null">
+			,FP_STIME
+			</if>
+			<if test="fpEtime != null">
+			,FP_ETIME
+			</if>
+			,FP_STATUS
+			,FAIR_CATEGORY_FC_SEQ
+			<if test="regId != null">
+			,REG_ID
+			</if>
+			<if test="regIp != null">
+			,REG_IP
+			</if>
+			,REG_DTM
+			)
+		VALUES
+			(
+			#{fpSeq}
+			<if test="fpMainImageBgPath != null">
+			,#{fpMainImageBgPath, jdbcType=VARCHAR}
+			,#{fpMainImageBgSaveNm, jdbcType=VARCHAR}
+			,#{fpMainImageBgRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fpMainImageWPath != null">
+			,#{fpMainImageWPath, jdbcType=VARCHAR}
+			,#{fpMainImageWSaveNm, jdbcType=VARCHAR}
+			,#{fpMainImageWRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fpMainImageMPath != null">
+			,#{fpMainImageMPath, jdbcType=VARCHAR}
+			,#{fpMainImageMSaveNm, jdbcType=VARCHAR}
+			,#{fpMainImageMRealNm, jdbcType=VARCHAR}
+			</if>
+			,#{fpMainTitle, jdbcType=VARCHAR}
+			,#{fpMainSubtitle, jdbcType=VARCHAR}
+			,#{fpMainDesc, jdbcType=VARCHAR}
+			,#{fpInput, jdbcType=VARCHAR}
+			,#{fpLabel, jdbcType=VARCHAR}
+			,#{fpThumnail, jdbcType=VARCHAR}
+			,#{fpDetail, jdbcType=VARCHAR}
+			,#{fpOrder}
+			<if test="fpStime != null">
+			,TO_DATE(#{fpStime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="fpEtime != null">
+			,TO_DATE(#{fpEtime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			,#{fpStatus}
+			,#{fairCategoryFcSeq}
+			<if test="regId != null">
+			,#{regId, jdbcType=VARCHAR}
+			</if>
+			<if test="regIp != null">
+			,#{regIp, jdbcType=VARCHAR}
+			</if>
+			,SYSDATE
+			)					
+	</insert>
+	
+	<!--
+         쿼리명 : FairProductDetailDAO.update
+         설  명 : 제품 상세 수정
+    -->	
+	<update id="update" parameterType="emfMap">
+		UPDATE FAIR_PRODUCT SET
+			 FP_MAIN_TITLE = #{fpMainTitle, jdbcType=VARCHAR}
+			,FP_MAIN_SUBTITLE = #{fpMainSubtitle, jdbcType=VARCHAR}
+			,FP_MAIN_DESC = #{fpMainDesc, jdbcType=VARCHAR}
+			,FP_INPUT = #{fpInput, jdbcType=VARCHAR}
+			,FP_LABEL = #{fpLabel, jdbcType=VARCHAR}
+			,FP_THUMNAIL = #{fpThumnail, jdbcType=VARCHAR}
+			,FP_DETAIL = #{fpDetail, jdbcType=VARCHAR}
+			,FP_STATUS = #{fpStatus}
+			,FAIR_CATEGORY_FC_SEQ = #{fairCategoryFcSeq}
+			<if test="fpMainImageBgPath != null">
+			,FP_MAIN_IMAGE_BG_PATH = #{fpMainImageBgPath, jdbcType=VARCHAR}
+			,FP_MAIN_IMAGE_BG_SAVE_NM = #{fpMainImageBgSaveNm, jdbcType=VARCHAR}
+			,FP_MAIN_IMAGE_BG_REAL_NM = #{fpMainImageBgRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fpMainImageWPath != null">
+			,FP_MAIN_IMAGE_W_PATH = #{fpMainImageWPath, jdbcType=VARCHAR}
+			,FP_MAIN_IMAGE_W_SAVE_NM = #{fpMainImageWSaveNm, jdbcType=VARCHAR}
+			,FP_MAIN_IMAGE_W_REAL_NM = #{fpMainImageWRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fpMainImageMPath != null">
+			,FP_MAIN_IMAGE_M_PATH = #{fpMainImageMPath, jdbcType=VARCHAR}
+			,FP_MAIN_IMAGE_M_SAVE_NM = #{fpMainImageMSaveNm, jdbcType=VARCHAR}
+			,FP_MAIN_IMAGE_M_REAL_NM = #{fpMainImageMRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fpStime != null">
+			,FP_STIME = TO_DATE(#{fpStime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="fpEtime != null">
+			,FP_ETIME = TO_DATE(#{fpEtime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="modId != null">
+			,MOD_ID = #{modId}
+			</if>
+			<if test="modIp != null">
+			,MOD_IP = #{modIp}
+			</if>
+			,MOD_DTM = SYSDATE
+         WHERE FP_SEQ = #{fpSeq}
+	</update>
+	
+	<!--
+         쿼리명 : FairProductDetailDAO.order
+         설  명 : 제품 상세 순서변경
+    -->		
+	<update id="order" parameterType="emfMap">
+		UPDATE FAIR_PRODUCT SET
+			FP_ORDER = #{fpOrder}
+        WHERE FP_SEQ = #{fpSeq}
+	</update>
+
+	<!--
+         쿼리명 : FairProductDetailDAO.delete
+         설  명 : 제품 상세 삭제
+    -->		
+	<delete id="delete" parameterType="emfMap">
+		 DELETE FAIR_PRODUCT
+	     WHERE FP_SEQ = #{fpSeq}
+	</delete>
+	
+	<!--
+         쿼리명 : FairProductCategoryDAO.selectCate
+         설  명 : 제품 카테고리 목록 조회
+    -->	
+	<select id="selectCate" resultType="emfMap">
+		SELECT 
+            FC_SEQ
+			,FC_IMAGE_W_PATH
+			,FC_IMAGE_W_SAVE_NM
+			,FC_IMAGE_W_REAL_NM
+			,FC_IMAGE_M_PATH
+			,FC_IMAGE_M_SAVE_NM
+			,FC_IMAGE_M_REAL_NM
+			,FC_BGCOLOR
+			,FC_TITLE
+			,FC_SUBTITLE
+			,FC_CATEGORY_TITLE
+			,FC_ORDER
+			,FC_STIME
+			,FC_ETIME
+			,TO_CHAR(FC_STIME, 'YYYY-MM-DD') AS FC_STIME_DAY
+			,TO_CHAR(FC_STIME, 'HH24') AS FC_STIME_HH
+			,TO_CHAR(FC_STIME, 'MI') AS FC_STIME_MI
+			,TO_CHAR(FC_STIME, 'SS') AS FC_STIME_SS
+			,TO_CHAR(FC_ETIME, 'YYYY-MM-DD') AS FC_ETIME_DAY
+			,TO_CHAR(FC_ETIME, 'HH24') AS FC_ETIME_HH
+			,TO_CHAR(FC_ETIME, 'MI') AS FC_ETIME_MI
+			,TO_CHAR(FC_ETIME, 'SS') AS FC_ETIME_SS
+			,FC_STATUS
+			,FC_MAIN_MAX_COUNT
+        FROM FAIR_CATEGORY
+        WHERE FC_STATUS = 'A'
+		OR
+			(
+			FC_STATUS = 'Y' 
+			AND TO_NUMBER(TO_CHAR(FC_STIME, 'yyyymmddhh24miss')) <![CDATA[<=]]> TO_NUMBER(TO_CHAR(SYSDATE, 'yyyymmddhh24miss'))
+			AND TO_NUMBER(TO_CHAR(SYSDATE, 'yyyymmddhh24miss')) <![CDATA[<]]> TO_NUMBER(TO_CHAR(FC_ETIME, 'yyyymmddhh24miss'))
+			)
+		ORDER BY FC_ORDER ASC, REG_DTM DESC   
+	</select>	
+
+	<!--
+         쿼리명 : FairProductCategoryDAO.selectInput
+         설  명 : 제품 입력폼 목록 조회
+    -->	
+	<select id="selectInput" resultType="emfMap">
+		SELECT 
+            FPI_SEQ
+			,FPI_TITLE
+			,cast(FPI_INPUT as varchar2(4000)) FPI_INPUT
+        FROM FAIR_PRODUCT_INPUT
+		ORDER BY REG_DTM DESC   
+	</select>	
+	
+	<!--
+         쿼리명 : FairProductCategoryDAO.selectBenefit
+         설  명 : 제품 결합혜택 목록 조회
+    -->	
+	<select id="selectBenefit" resultType="emfMap">
+		SELECT 
+            FB_SEQ
+			,FB_IMAGE_W_PATH
+			,FB_IMAGE_W_SAVE_NM
+			,FB_IMAGE_W_REAL_NM
+			,FB_IMAGE_M_PATH
+			,FB_IMAGE_M_SAVE_NM
+			,FB_IMAGE_M_REAL_NM
+			,FB_TITLE
+			,FB_SUBTITLE
+			,FB_MODEL
+			,FB_PRICE
+			,FB_USER_TARGET
+			,FB_PRODUCT_TARGET
+			,FB_ORDER
+			,FB_STIME
+			,FB_ETIME
+			,FB_STATUS
+        FROM FAIR_BENEFIT
+        WHERE FB_STATUS = 'A'
+		OR
+			(
+			FB_STATUS = 'Y' 
+			AND TO_NUMBER(TO_CHAR(FB_STIME, 'yyyymmddhh24miss')) <![CDATA[<=]]> TO_NUMBER(TO_CHAR(SYSDATE, 'yyyymmddhh24miss'))
+			AND TO_NUMBER(TO_CHAR(SYSDATE, 'yyyymmddhh24miss')) <![CDATA[<]]> TO_NUMBER(TO_CHAR(FB_ETIME, 'yyyymmddhh24miss'))
+			)
+		ORDER BY FB_ORDER ASC, REG_DTM DESC   
+	</select>	
+</mapper>

@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FairProductBenefitDAO">
+
+	<!--
+         쿼리명 : FairProductBenefitDAO.selectList
+         설  명 : 제품 결합상품 목록 조회
+    -->	
+	<select id="selectList" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.* 
+			  FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		                ,FB_SEQ
+						,FB_IMAGE_W_PATH
+						,FB_IMAGE_W_SAVE_NM
+						,FB_IMAGE_W_REAL_NM
+						,FB_IMAGE_M_PATH
+						,FB_IMAGE_M_SAVE_NM
+						,FB_IMAGE_M_REAL_NM
+						,FB_TITLE
+						,FB_SUBTITLE
+						,FB_MODEL
+						,FB_PRICE
+						,FB_USER_TARGET
+						,FB_PRODUCT_TARGET
+						,FB_ORDER
+						,FB_STIME
+						,FB_ETIME
+						,TO_CHAR(FB_STIME, 'YYYY-MM-DD') AS FB_STIME_DAY
+						,TO_CHAR(FB_STIME, 'HH24') AS FB_STIME_HH
+						,TO_CHAR(FB_STIME, 'MI') AS FB_STIME_MI
+						,TO_CHAR(FB_STIME, 'SS') AS FB_STIME_SS
+						,TO_CHAR(FB_ETIME, 'YYYY-MM-DD') AS FB_ETIME_DAY
+						,TO_CHAR(FB_ETIME, 'HH24') AS FB_ETIME_HH
+						,TO_CHAR(FB_ETIME, 'MI') AS FB_ETIME_MI
+						,TO_CHAR(FB_ETIME, 'SS') AS FB_ETIME_SS
+						,FB_STATUS
+		          FROM FAIR_BENEFIT   
+				 ORDER BY FB_ORDER ASC, REG_DTM DESC   
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}           
+	</select>	
+	
+	<!--
+         쿼리명 : FairProductBenefitDAO.select
+         설  명 : 제품 결합상품 상세 조회
+    -->	
+	<select id="select" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+            FB_SEQ
+			,FB_IMAGE_W_PATH
+			,FB_IMAGE_W_SAVE_NM
+			,FB_IMAGE_W_REAL_NM
+			,FB_IMAGE_M_PATH
+			,FB_IMAGE_M_SAVE_NM
+			,FB_IMAGE_M_REAL_NM
+			,FB_TITLE
+			,FB_SUBTITLE
+			,FB_MODEL
+			,FB_PRICE
+			,FB_USER_TARGET
+			,FB_PRODUCT_TARGET
+			,FB_ORDER
+			,FB_STIME
+			,FB_ETIME
+			,TO_CHAR(FB_STIME, 'YYYY-MM-DD') AS FB_STIME_DAY
+			,TO_CHAR(FB_STIME, 'HH24') AS FB_STIME_HH
+			,TO_CHAR(FB_STIME, 'MI') AS FB_STIME_MI
+			,TO_CHAR(FB_STIME, 'SS') AS FB_STIME_SS
+			,TO_CHAR(FB_ETIME, 'YYYY-MM-DD') AS FB_ETIME_DAY
+			,TO_CHAR(FB_ETIME, 'HH24') AS FB_ETIME_HH
+			,TO_CHAR(FB_ETIME, 'MI') AS FB_ETIME_MI
+			,TO_CHAR(FB_ETIME, 'SS') AS FB_ETIME_SS
+			,FB_STATUS
+         FROM FAIR_BENEFIT   
+		 WHERE FB_SEQ = #{seq}   
+	</select>
+	
+	
+	<!--
+         쿼리명 : FairProductBenefitDAO.selectMaxOrder
+         설  명 : 제품 결합상품 MAX ORDER 조회
+    -->	
+	<select id="selectMaxOrder" resultType="emfMap">
+		SELECT 
+        	NVL(max(FB_ORDER), 0) + 1 as FB_ORDER
+        FROM FAIR_BENEFIT   
+	</select>
+	
+	<!--
+         쿼리명 : FairProductBenefitDAO.insert
+         설  명 : 제품 결합상품 등록
+    -->	
+	<insert id="insert" parameterType="emfMap">
+		INSERT INTO FAIR_BENEFIT
+			(
+			FB_SEQ
+			<if test="fbImageWPath != null">
+			,FB_IMAGE_W_PATH
+			,FB_IMAGE_W_SAVE_NM
+			,FB_IMAGE_W_REAL_NM
+			</if>
+			<if test="fbImageMPath != null">
+			,FB_IMAGE_M_PATH
+			,FB_IMAGE_M_SAVE_NM
+			,FB_IMAGE_M_REAL_NM
+			</if>
+			,FB_TITLE
+			,FB_SUBTITLE
+			,FB_MODEL
+			,FB_PRICE
+			,FB_USER_TARGET
+			,FB_PRODUCT_TARGET
+			,FB_ORDER
+			<if test="fbStime != null">
+			,FB_STIME
+			</if>
+			<if test="fbEtime != null">
+			,FB_ETIME
+			</if>
+			,FB_STATUS
+			<if test="regId != null">
+			,REG_ID
+			</if>
+			<if test="regIp != null">
+			,REG_IP
+			</if>
+			,REG_DTM
+			)
+		VALUES
+			(
+			#{fbSeq}
+			<if test="fbImageWPath != null">
+			,#{fbImageWPath, jdbcType=VARCHAR}
+			,#{fbImageWSaveNm, jdbcType=VARCHAR}
+			,#{fbImageWRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fbImageMPath != null">
+			,#{fbImageMPath, jdbcType=VARCHAR}
+			,#{fbImageMSaveNm, jdbcType=VARCHAR}
+			,#{fbImageMRealNm, jdbcType=VARCHAR}
+			</if>
+			,#{fbTitle, jdbcType=VARCHAR}
+			,#{fbSubtitle, jdbcType=VARCHAR}
+			,#{fbModel, jdbcType=VARCHAR}
+			,#{fbPrice, jdbcType=VARCHAR}
+			,#{fbUserTarget, jdbcType=VARCHAR}
+			,#{fbProductTarget, jdbcType=VARCHAR}
+			,#{fbOrder}
+			<if test="fbStime != null">
+			,TO_DATE(#{fbStime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="fbEtime != null">
+			,TO_DATE(#{fbEtime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			,#{fbStatus}
+			<if test="regId != null">
+			,#{regId, jdbcType=VARCHAR}
+			</if>
+			<if test="regIp != null">
+			,#{regIp, jdbcType=VARCHAR}
+			</if>
+			,SYSDATE
+			)					
+	</insert>
+	
+	<!--
+         쿼리명 : FairProductBenefitDAO.update
+         설  명 : 제품 결합상품 수정
+    -->	
+	<update id="update" parameterType="emfMap">
+		UPDATE FAIR_BENEFIT SET
+			FB_STATUS = #{fbStatus}
+			,FB_TITLE = #{fbTitle, jdbcType=VARCHAR}
+			,FB_SUBTITLE = #{fbSubtitle, jdbcType=VARCHAR}
+			,FB_MODEL = #{fbModel, jdbcType=VARCHAR}
+			,FB_PRICE = #{fbPrice, jdbcType=VARCHAR}
+			,FB_USER_TARGET = #{fbUserTarget, jdbcType=VARCHAR}
+			,FB_PRODUCT_TARGET = #{fbProductTarget, jdbcType=VARCHAR}
+			<if test="fbImageWPath != null">
+			,FB_IMAGE_W_PATH = #{fbImageWPath, jdbcType=VARCHAR}
+			,FB_IMAGE_W_SAVE_NM = #{fbImageWSaveNm, jdbcType=VARCHAR}
+			,FB_IMAGE_W_REAL_NM = #{fbImageWRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fbImageMPath != null">
+			,FB_IMAGE_M_PATH = #{fbImageMPath, jdbcType=VARCHAR}
+			,FB_IMAGE_M_SAVE_NM = #{fbImageMSaveNm, jdbcType=VARCHAR}
+			,FB_IMAGE_M_REAL_NM = #{fbImageMRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fbStime != null">
+			,FB_STIME = TO_DATE(#{fbStime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="fbEtime != null">
+			,FB_ETIME = TO_DATE(#{fbEtime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="modId != null">
+			,MOD_ID = #{modId}
+			</if>
+			<if test="modIp != null">
+			,MOD_IP = #{modIp}
+			</if>
+			,MOD_DTM = SYSDATE
+         WHERE FB_SEQ = #{fbSeq}
+	</update>
+	
+	<!--
+         쿼리명 : FairProductBenefitDAO.updateProduct
+         설  명 : 결합상품 수정 데이터 제품에 적용
+    -->	
+	<update id="updateProduct" parameterType="emfMap">
+		<if test="extBenefit != null and newBenefit != null">
+		UPDATE FAIR_PRODUCT SET FP_INPUT = replace(FP_INPUT, #{extBenefit}, #{newBenefit}) WHERE FP_INPUT LIKE '%' || #{extBenefit} || '%'
+        </if>
+	</update>
+	
+	<!--
+         쿼리명 : FairProductBenefitDAO.order
+         설  명 : 제품 결합상품 순서변경
+    -->		
+	<update id="order" parameterType="emfMap">
+		UPDATE FAIR_BENEFIT SET
+			FB_ORDER = #{fbOrder}
+        WHERE FB_SEQ = #{fbSeq}
+	</update>
+
+	<!--
+         쿼리명 : FairProductBenefitDAO.delete
+         설  명 : 제품 결합상품 삭제
+    -->		
+	<delete id="delete" parameterType="emfMap">
+		 DELETE FAIR_BENEFIT
+	     WHERE FB_SEQ = #{fbSeq}
+	</delete>
+
+</mapper>

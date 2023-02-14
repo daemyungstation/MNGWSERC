@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SMAPopMngDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+		<result property="cntn" column="CNTN" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+	
+	<!--
+         쿼리명 : SMAPopMngDAO.selectPopList
+         설  명 : 팝업 목록을 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.25  허진영     최초생성
+    -->
+	<select id="SMAPopMngDAO.selectPopList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* SMAPopMngDAO.selectPopList */
+			   TBL.*
+		FROM (
+			SELECT ROWNUM AS RNUM, A.*
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+			           , POP_SEQ
+		               , POP_NM
+					   , PTUP_STRT_DTM
+				  	   , PTUP_END_DTM
+				  	   , ODTM_YN
+		               , PTUP_YN
+		               , REG_ID
+					   , REG_DTM
+			      FROM SM_POP_MST
+			     WHERE 1=1
+				<if test="ptupYn != null and ptupYn != ''">
+					AND PTUP_YN = #{ptupYn}
+			 	</if>
+		      	<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND POP_NM LIKE '%' || #{q} || '%'	]]>
+					</if>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) A
+	    ) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+	
+	<!--
+         쿼리명 : SMAPopMngDAO.selectPop
+         설  명 : 팝업 상세를 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.27  허진영     최초생성
+    -->
+	<select id="SMAPopMngDAO.selectPop" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* SMAPopMngDAO.selectPop */ 
+               POP_SEQ
+               , POP_NM
+               , CNTN
+               , PTUP_STRT_DTM
+               , PTUP_END_DTM
+               , ODTM_YN
+               , LINK
+               , WND_YN
+               , PTUP_YN
+		  FROM SM_POP_MST
+		 WHERE POP_SEQ = #{popSeq}
+	</select>
+	
+	<!--
+         쿼리명 : SMAPopMngDAO.insertPop
+         설  명 : 팝업을 등록한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.26  허진영     최초생성
+    -->
+	<insert id="SMAPopMngDAO.insertPop" parameterType="emfMap">
+		<![CDATA[
+		INSERT /* SMAPopMngDAO.insertPop */INTO SM_POP_MST 
+			(POP_SEQ
+ 			, POP_NM
+ 			, CNTN
+ 			, PTUP_STRT_DTM
+ 			, PTUP_END_DTM
+ 			, ODTM_YN
+ 			, LINK
+ 			, WND_YN
+ 			, PTUP_YN
+ 			, REG_ID
+ 			, REG_IP
+ 			, REG_DTM
+ 			, MOD_ID
+ 			, MOD_IP
+ 			, MOD_DTM
+ 			)
+		VALUES        
+			(#{popSeq}
+			, #{popNm}
+			, #{cntn}
+			, TO_DATE(#{ptupStrtDt, jdbcType=VARCHAR}||#{ptupStrtHh, jdbcType=VARCHAR}||#{ptupStrtMi, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+ 			, TO_DATE(#{ptupEndDt, jdbcType=VARCHAR}||#{ptupEndHh, jdbcType=VARCHAR}||#{ptupEndMi, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+ 			, #{odtmYn, jdbcType=VARCHAR}
+ 			, #{link, jdbcType=VARCHAR}
+ 			, #{wndYn}
+ 			, #{ptupYn}
+ 			, #{regId}
+ 			, #{regIp}
+ 			, SYSDATE
+ 			, #{modId}
+ 			, #{modIp}
+ 			, SYSDATE
+		  	)
+		  ]]>
+	</insert>
+	
+	<!--
+         쿼리명 : SMAPopMngDAO.updatePop
+         설  명 : 팝업를 수정한다.
+         수정일   수정자     수정내용 
+      ==========  ======  ============== 
+      2016.02.11  허진영     최초생성
+    -->
+ 	<update id="SMAPopMngDAO.updatePop" parameterType="emfMap">
+ 		<![CDATA[
+		UPDATE /* SMAPopMngDAO.updatePop */ SM_POP_MST
+ 		   SET POP_NM = #{popNm}
+ 		   	   , CNTN = #{cntn}
+ 		       , PTUP_STRT_DTM = TO_DATE(#{ptupStrtDt, jdbcType=VARCHAR}||#{ptupStrtHh, jdbcType=VARCHAR}||#{ptupStrtMi, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+ 			   , PTUP_END_DTM = TO_DATE(#{ptupEndDt, jdbcType=VARCHAR}||#{ptupEndHh, jdbcType=VARCHAR}||#{ptupEndMi, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+	  		   , ODTM_YN = #{odtmYn, jdbcType=VARCHAR}
+	  		   , LINK = #{link, jdbcType=VARCHAR}
+	  		   , WND_YN = #{wndYn}
+	  		   , PTUP_YN = #{ptupYn}
+	  		   , MOD_ID = #{modId}
+	  		   , MOD_IP = #{modIp}
+	  		   , MOD_DTM = SYSDATE
+		 WHERE POP_SEQ = #{popSeq}
+		]]>
+	</update>
+	
+	<!--
+         쿼리명 : SMAPopMngDAO.deletePop
+         설  명 : 팝업를 삭제한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2016.02.11  허진영     최초 생성
+    -->
+	<delete id="SMAPopMngDAO.deletePop" parameterType="emfMap">
+		DELETE /* SMAPopMngDAO.deletePop */ 
+		  FROM SM_POP_MST
+		 WHERE POP_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+
+	<select id="SMAPopMngDAO.selectMainPopList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* SMAPopMngDAO.selectMainPopList */
+			TBL.*
+		FROM (
+			SELECT ROWNUM AS RNUM, A.*
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT,
+					IDX,
+					NAME,
+					START_DTM,
+					END_DTM,
+					ALWAYS_YN,
+					TYPE,
+					POST_YN,
+					REG_IP,
+					REG_ID,
+					REG_DTM,
+					MOD_ID,
+					MOD_IP,
+					MOD_DTM
+				FROM
+					SM_MAIN_POP_MST
+				WHERE 1=1
+				<if test="alwaysYn != null and alwaysYn != ''">
+					AND ALWAYS_YN = #{alwaysYn}
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND NAME LIKE '%' || #{q} || '%'	]]>
+					</if>
+				</if>
+				ORDER BY REG_DTM DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+
+	<insert id="SMAPopMngDAO.insertMainPop" parameterType="emfMap">
+		INSERT INTO /* SMAPopMngDAO.insertPop */
+		SM_MAIN_POP_MST (
+			NAME
+			,CNTN
+			,START_DTM
+			,END_DTM
+			,ALWAYS_YN
+			,TYPE
+			,POST_YN
+			,REG_ID
+			,REG_IP
+			,REG_DTM
+			,MOD_ID
+			,MOD_IP
+			,MOD_DTM
+			,TODAY_YN
+		) VALUES (
+			 #{name}
+			, #{cntn}
+			, TO_DATE(#{startDtm, jdbcType=VARCHAR}||#{ptupStrtHh, jdbcType=VARCHAR}||#{ptupStrtMi, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+ 			, TO_DATE(#{endDtm, jdbcType=VARCHAR}||#{ptupEndHh, jdbcType=VARCHAR}||#{ptupEndMi, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+ 			, #{alwaysYn, jdbcType=VARCHAR}
+ 			, #{type, jdbcType=VARCHAR}
+ 			, #{postYn}
+ 			, #{regId}
+ 			, #{regIp}
+ 			, SYSDATE
+ 			, #{modId}
+ 			, #{modIp}
+ 			, SYSDATE
+ 			, #{todayYn}
+		)
+	</insert>
+
+	<select id="SMAPopMngDAO.getMainPop" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* SMAPopMngDAO.getMainPop */
+			IDX,
+			NAME,
+			CNTN,
+			START_DTM,
+			END_DTM,
+			ALWAYS_YN,
+			TYPE,
+			POST_YN,
+			REG_IP,
+			REG_ID,
+			REG_DTM,
+			MOD_ID,
+			MOD_IP,
+			MOD_DTM,
+			TODAY_YN
+		  FROM SM_MAIN_POP_MST
+		 WHERE IDX = #{idx}
+	</select>
+
+	<update id="SMAPopMngDAO.putMainPopup" parameterType="emfMap">
+		UPDATE /* SMAPopMngDAO.putMainPopup */ SM_MAIN_POP_MST
+		SET
+			NAME = #{name}
+			, CNTN = #{cntn}
+			<choose>
+				<when test='alwaysYn == "Y"'>
+					, START_DTM = TO_DATE('1900-01-01 00:00:00', 'yyyy-MM-dd hh24:mi:ss')
+					, END_DTM = TO_DATE('2999-12-31 00:00:00', 'yyyy-MM-dd hh24:mi:ss')
+				</when>
+				<otherwise>
+					, START_DTM = TO_DATE(#{startDtm, jdbcType=VARCHAR}||#{ptupStrtHh, jdbcType=VARCHAR}||#{ptupStrtMi, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+					, END_DTM = TO_DATE(#{endDtm, jdbcType=VARCHAR}||#{ptupEndHh, jdbcType=VARCHAR}||#{ptupEndMi, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+				</otherwise>
+			</choose>
+			, ALWAYS_YN = #{alwaysYn, jdbcType=VARCHAR}
+			, TYPE = #{type, jdbcType=VARCHAR}
+			, POST_YN = #{postYn}
+			, MOD_ID = #{modId}
+			, MOD_IP = #{modIp}
+			, MOD_DTM = SYSDATE
+			, TODAY_YN = #{todayYn}
+		WHERE IDX = #{idx}
+	</update>
+
+	<delete id="SMAPopMngDAO.delMainPopList" parameterType="emfMap">
+		DELETE /* SMAPopMngDAO.delMainPopList */
+		FROM SM_MAIN_POP_MST
+		WHERE IDX IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+</mapper>

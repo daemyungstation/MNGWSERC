@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="COGCntnsMngDAO">
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.selectContentsManageMap
+         설  명 : 콘텐츠 정보
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+    <resultMap id="emfMap" type="emfMap">
+	    <result property="CNTN" column="CNTN" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.selectCntnsList
+         설  명 : 콘텐츠 리스트를 불러온다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.12  박주석     최초 생성
+    -->
+	<select id="COGCntnsMngDAO.selectCntnsList" parameterType="emfMap" resultMap="emfMap">		
+		SELECT /* COGCntnsMngDAO.selectCntnsList */
+		       TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , CNTS_SEQ
+					   , MENU_SEQ
+                       , CNTN
+                       , VER
+                       , PRCS_STTS
+                       , REG_ID
+                       , REG_IP
+                       , REG_DTM
+                  FROM CO_CNTS_MST  
+                 WHERE DEL_YN ='N'
+                   AND MENU_SEQ = #{menuSeq}
+                 ORDER BY REG_DTM DESC  
+			) A
+		) TBL
+        WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.getRelMenuList
+         설  명 : cms idx가 등록되어있는 메뉴 정보 가져오기
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.12  박주석     최초 생성
+    -->
+	<select id="COGCntnsMngDAO.getRelMenuList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COGCntnsMngDAO.getRelMenuList */
+		        MENU_SEQ
+		       , MENU_NM
+		       , USER_LINK
+		       , REF_SEQ
+		  FROM CO_MENU_MST
+		 WHERE REF_SEQ = #{menuSeq}
+		   AND MENU_GB = 'cms'
+		   AND USER_USE_YN = 'Y'
+	</select>
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.selectCntns
+         설  명 : 콘텐츠 상세내용을 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+	<select id="COGCntnsMngDAO.selectCntns" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* COGCntnsMngDAO.selectCntns */ 
+			   CNTS_SEQ
+			   , MENU_SEQ
+			   , CNTN
+               , VER
+               , PRCS_STTS
+               , REG_ID
+               , REG_IP
+               , REG_DTM
+		  FROM CO_CNTS_MST
+		 WHERE DEL_YN = 'N'
+	   	   AND MENU_SEQ = #{menuSeq}
+	   	   AND CNTS_SEQ = #{cntsSeq}
+	</select>
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.getCntnsVer
+         설  명 : 현재 최신 버전 값 구하기
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+	<select id="COGCntnsMngDAO.getCntnsVer" parameterType="emfMap" resultType="java.lang.String">
+	    SELECT /* COGCntnsMngDAO.getCntnsVer */ 
+	           NVL(MAX(VER), 0) + 1
+	      FROM CO_CNTS_MST
+	     WHERE DEL_YN = 'N'
+	       AND MENU_SEQ = #{menuSeq}
+	</select>
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.selectCntnsLogList
+         설  명 : 콘텐츠 수정로그를 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+	<select id="COGCntnsMngDAO.selectCntnsLogList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COGCntnsMngDAO.selectCntsLogList */ 
+			   CNTS_SEQ
+			   , MOD_ID
+			   , MOD_IP
+			   , MOD_DTM
+		  FROM CO_CNTS_MOD_LOG
+		 WHERE CNTS_SEQ = #{cntsSeq}  
+		 ORDER BY MOD_DTM DESC
+	</select>	
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.insertCntns
+         설  명 : 콘텐츠 등록
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.12  박주석     최초 생성
+    -->
+	<insert id="COGCntnsMngDAO.insertCntns" parameterType="emfMap">
+		INSERT /* COGCntnsMngDAO.insertCntns */ INTO CO_CNTS_MST 
+			(CNTS_SEQ
+			, MENU_SEQ
+			, CNTN
+			, VER
+			, PRCS_STTS
+			, DEL_YN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		VALUES
+			(#{cntsSeq}
+			, #{menuSeq}
+			, #{cntn}
+			, #{ver}
+			, #{prcsStts}
+			, 'N'
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+			)
+	</insert>
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.updateCntns
+         설  명 : 콘텐츠 메뉴를 수정한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+	<update id="COGCntnsMngDAO.updateCntns" parameterType="emfMap">
+		UPDATE /* COGCntnsMngDAO.updateCnts */ CO_CNTS_MST 
+		   SET CNTN = #{cntn}
+		   	   , PRCS_STTS = #{prcsStts}
+		 WHERE MENU_SEQ = #{menuSeq}
+		   AND CNTS_SEQ = #{cntsSeq}	
+	</update>
+
+	<!--
+         쿼리명 : COGCntnsMngDAO.insertCntnsModLog
+         설  명 : 콘텐츠 메뉴를 수정로그를 등록한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+	<insert id="COGCntnsMngDAO.insertCntnsModLog" parameterType="emfMap">
+		INSERT /* COGCntnsMngDAO.insertCntnsModLog */ INTO CO_CNTS_MOD_LOG
+			(CNTS_SEQ
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+			VALUES
+			(#{cntsSeq}
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+			)
+	</insert>
+
+	<!--
+         쿼리명 : COGCntnsMngDAO.deleteCntns
+         설  명 : 콘텐츠 메뉴를 삭제한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+	<update id="COGCntnsMngDAO.deleteCntns" parameterType="emfMap">
+			UPDATE /* COGCntnsMngDAO.deleteCntns */ CO_CNTS_MST
+			   SET DEL_YN = 'Y'
+			 WHERE MENU_SEQ = #{menuSeq}
+		       AND CNTS_SEQ IN
+			<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+	            #{item}
+	        </foreach>
+	</update>
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.insertCopyCntns
+         설  명 : 콘텐츠 메뉴를 복사한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+	<insert id="COGCntnsMngDAO.insertCopyCntns" parameterType="emfMap">
+		INSERT /* COGCntnsMngDAO.insertCopyCntns */ INTO CO_CNTS_MST
+			(CNTS_SEQ
+			, MENU_SEQ
+			, CNTN
+			, VER
+			, PRCS_STTS
+			, DEL_YN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		SELECT #{copyCntsSeq}
+			   , #{copyMenuSeq}
+			   , CNTN
+			   , #{ver}
+			   , 0
+			   , 'N'
+			   , #{regId}
+			   , #{regIp}
+			   , SYSDATE
+			   , #{modId}
+			   , #{modIp}
+			   , SYSDATE
+		  FROM CO_CNTS_MST
+	     WHERE DEL_YN = 'N'
+		   AND MENU_SEQ = #{menuSeq}
+		   AND CNTS_SEQ = #{cntsSeq}
+	</insert>	
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.getCntnsList
+         설  명 : CMS 다중 복사시 CMS 리스트 팝업 내용
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+	<select id="COGCntnsMngDAO.getCntnsList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COGCntnsMngDAO.getCntnsList */
+			   MENU_SEQ
+			   , PARNT_SEQ
+			   , PSTN
+			   , LFT_VAL
+			   , RHT_VAL
+			   , DPTH
+			   , MENU_GB
+			   , LPAD(' > ', (LEVEL - 1)) || MENU_NM AS MENU_GB 
+			   , USER_USE_YN
+			   , USER_WND_YN
+			   , USER_LINK
+			   , ADM_LINK
+			   , SEO
+			   , KWRD
+			   , REF_SEQ
+			   , (SELECT COUNT(*) 
+			        FROM CO_MENU_MST 
+			       WHERE PARNT_SEQ = A.MENU_SEQ 
+				<if test="userUseYn != null and userUseYn != ''">
+			         AND USER_USE_YN = #{userUseYn}
+				</if>) AS CHILDCNT    
+		  FROM CO_MENU_MST A
+	     WHERE DPTH <![CDATA[>]]> 2
+	       AND MENU_GB = #{menuGb}
+		<if test="userUseYn != null and userUseYn != ''">
+			AND USER_USE_YN = #{userUseYn}
+		</if>
+		START WITH MENU_SEQ = #{menuSeq}
+	  CONNECT BY PRIOR MENU_SEQ = PARNT_SEQ 
+	    ORDER SIBLINGS BY LFT_VAL
+	</select>	
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.updatePrevApprovalContents
+         설  명 : 기존 승인 요청시 배포 콘텐츠 만기 변경
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+	<update id="COGCntnsMngDAO.updatePrevApprovalContents" parameterType="emfMap">
+		UPDATE /* COGCntnsMngDAO.updatePrevApprovalContents */ CO_CNTS_MST 
+		   SET PRCS_STTS = 3
+		 WHERE MENU_SEQ	= #{menuSeq}
+		   AND PRCS_STTS = 2
+	</update>
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.updateApprovalContents
+         설  명 : 콘텐츠 승인
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+	<update id="COGCntnsMngDAO.updateApprovalContents" parameterType="emfMap">
+		UPDATE /* COGCntnsMngDAO.updateApprovalContents */ CO_CNTS_MST 
+		   SET PRCS_STTS = 2
+		 WHERE MENU_SEQ	= #{menuSeq}
+		   AND CNTS_SEQ	= #{cntsSeq}
+	</update>	
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.selectApprovalCntns
+         설  명 : 해당 컨텐츠 ID 중에 배포 중인 CMS 가져오기
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+	<select id="COGCntnsMngDAO.selectApprovalCntns" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* COGCntnsMngDAO.selectApprovalCntns */ 
+			   CNTS_SEQ
+			   , MENU_SEQ
+			   , CNTN
+			   , VER
+			   , PRCS_STTS
+			   , DEL_YN
+			   , REG_ID
+			   , REG_IP
+			   , REG_DTM
+       	  FROM CO_CNTS_MST
+         WHERE DEL_YN = 'N'
+           AND MENU_SEQ = #{menuSeq}
+           AND PRCS_STTS = 2
+	</select>
+	
+	<!--
+         쿼리명 : COGCntnsMngDAO.selectApprovalCntnsAll
+         설  명 : 전체 최신 컨텐츠 가져오기
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.17  안진용     최초 생성
+    -->
+	<select id="COGCntnsMngDAO.selectApprovalCntnsAll" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* COGCntnsMngDAO.selectApprovalCntnsAll */
+			   CNTS_SEQ
+			   , MENU_SEQ
+               , CNTN
+               , VER
+			   , PRCS_STTS
+               , REG_ID
+			   , REG_IP
+			   , REG_DTM
+          FROM CO_CNTS_MST
+ 		 WHERE DEL_YN = 'N'
+           AND PRCS_STTS = 2
+	</select>
+	
+</mapper>

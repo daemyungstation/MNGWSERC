@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CMAOnlinePrdctCsMngDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+	    <result property="answ" column="ANSW" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+
+
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCsMngList
+         설  명 : 온라인 상담신청 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   김필기     최초 생성
+    -->
+    <select id="CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCsMngList" parameterType="emfMap" resultType="emfMap">
+		SELECT TBL.* /* CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCsMngList */
+			, (
+				SELECT CD_NM FROM CO_CD_DTL 
+				WHERE CD_ID = 'PROCESS_TYPE' 
+					AND CD = TBL.PRCS_CD				
+			) AS PRCS_NM
+		   , (SELECT PRDCT_NM FROM CM_ONLINE_PRDCT_INF WHERE ONLINE_PRDCT_CS_SEQ = TBL.ONLINE_PRDCT_CS_SEQ AND ROWNUM <![CDATA[ < ]]> 2) AS PRDCT_NM
+		   , (SELECT PAY_MTD FROM CM_ONLINE_PRDCT_INF WHERE ONLINE_PRDCT_CS_SEQ = TBL.ONLINE_PRDCT_CS_SEQ AND ROWNUM <![CDATA[ < ]]> 2) AS PAY_MTD								
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , ONLINE_PRDCT_CS_SEQ
+					   ,	 PRDCT_CS_GB
+					   , NAME
+					   , REG_DTM
+					   , PRCS_CD
+					   , MARKETING_YN
+					   , HP
+			     FROM CM_ONLINE_PRDCT_CS_MST
+				 WHERE 1=1
+				 	AND PRDCT_CS_GB = #{prdctCsGb}
+				 <if test="prcsCd != null and prcsCd != ''">
+				 	AND PRCS_CD = #{prcsCd}
+				 </if>
+				<if test="q != null and q != ''">	
+					<if test="f == 1">	
+				 		<![CDATA[	AND NAME LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	
+						AND ONLINE_PRDCT_CS_SEQ IN (
+							SELECT ONLINE_PRDCT_CS_SEQ FROM CM_ONLINE_PRDCT_INF
+							WHERE PRDCT_NM LIKE '%' ||  #{q} || '%'
+						)
+						]]>
+					</if>
+				</if>
+					 
+				 <if test="strtDt != null and strtDt != ''">
+					<![CDATA[	AND TO_CHAR(REG_DTM,  'yyyy-mm-dd')  >= #{strtDt} ]]>
+				 </if>
+				 <if test="endDt != null and endDt != ''">
+					<![CDATA[	AND TO_CHAR(REG_DTM,  'yyyy-mm-dd') <= #{endDt}]]>
+				 </if>
+				 ORDER BY REG_DTM DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}	         
+	</select>
+
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCsMng
+         설  명 : 온라인 상담신청 고객정보를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   김필기     최초 생성
+    -->	
+	<select id="CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCsMng" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCsMng */
+				ONLINE_PRDCT_CS_SEQ
+			,	PRDCT_CS_GB
+			,	NAME
+			,	BIRTH
+			,	SEX
+			, 	HP
+			, 	TEL
+			, 	EMAIL
+			, 	ZIPCD1
+			, 	ADR
+			, 	ADR_DTL
+			, 	ZIPCD2
+			, 	ADR2
+			, 	ADR_DTL2
+			,	PRCS_CD
+			,	MOD_ID
+			,	MOD_NM
+			,	MOD_DTM
+			,	ANSW
+		  FROM CM_ONLINE_PRDCT_CS_MST A
+		 WHERE ONLINE_PRDCT_CS_SEQ = #{seq} 		
+	</select>
+
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCsMng
+         설  명 : 온라인 상담신청 상품정보를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   김필기     최초 생성
+    -->	
+	<select id="CMAOnlinePrdctCsMngDAO.selectOnlinePrdctInf" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CMAOnlinePrdctCsMngDAO.selectOnlinePrdctInf */
+				PRDCT_NM
+			,	PRDCT_DTL_NM
+			,	PRDCT_ACNT
+			,	PAY_MTD
+			,	ASGN_NM
+			,	CO_CD
+			,	CO_NM
+			,	DEPT
+			,	STF
+			,	ALT
+			,	ASGN_YN  
+			,	PRDCT_DTL_MODEL
+		  FROM CM_ONLINE_PRDCT_INF A
+		 WHERE ONLINE_PRDCT_CS_SEQ = #{seq} 		
+	</select>
+	
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCsMng
+         설  명 : 온라인 상담신청 상품정보를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   김필기     최초 생성
+    -->	
+	<select id="CMAOnlinePrdctCsMngDAO.selectOnlinePrdctAcntInf" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CMAOnlinePrdctCsMngDAO.selectOnlinePrdctAcntInf */				
+				PMT_GB
+			,	ACNTHD
+			,	ACNT_BIRTH
+			,	ACNT_HP
+			,	PMT_CO_GB	
+			,	PMT_CO_GRP_GB
+			,	PMT_NO
+			,	EXP_YR
+			,	EXP_MM
+			,	PMT_DAY_GB
+			,	(SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'HAPPY_CALL' AND CD = A.HAPPY_CALL_GB) AS HAPPY_CALL_GB			
+		  FROM CM_ONLINE_PRDCT_ACNT_INF A
+		 WHERE ONLINE_PRDCT_CS_SEQ = #{seq} 		
+	</select>	
+	
+
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.insertOnlinePrdctCsMng
+         설  명 : 온라인 상담신청 고객정보를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   김필기     최초 생성
+    -->	
+	<insert id="CMAOnlinePrdctCsMngDAO.insertOnlinePrdctCsMng" parameterType="emfMap">
+		INSERT INTO /* CMAOnlinePrdctCsMngDAO.insertOnlinePrdctCsMng */
+			CM_ONLINE_PRDCT_CS_MST(
+				ONLINE_PRDCT_CS_SEQ
+			,	PRDCT_CS_GB
+			,	NAME
+			,	BIRTH
+			,	EMAIL
+			,	HP
+			,	TEL
+			,	SEX
+			,	ZIPCD1
+			,	ADR
+			,	ADR_DTL
+			,	ZIPCD2
+			,	ADR2
+			,	ADR_DTL2
+			,	REG_ID
+			,	REG_IP	
+			,	PRCS_CD
+			)
+		VALUES (
+			#{onlinePrdctCsMstSeq}
+		,	#{prdctCsGb}
+		,	#{name}
+		,	#{birth}
+		,	#{email}
+		,	#{hp}
+		,	#{tel}
+		,	#{sex}
+		,	#{zipcd1}
+		,	#{adr}
+		,	#{adrDtl}
+		,	#{zipcd2, jdbcType=VARCHAR}
+		,	#{adr2, jdbcType=VARCHAR}
+		,	#{adrDtl2, jdbcType=VARCHAR}
+		,	#{regId}
+		,	#{regIp}
+		,	'01'
+		)			
+	</insert>
+
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.insertOnlinePrdctInf
+         설  명 : 온라인 상담신청 상품정보를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   김필기     최초 생성
+    -->	
+	<insert id="CMAOnlinePrdctCsMngDAO.insertOnlinePrdctInf" parameterType="emfMap">
+		INSERT INTO /* CMAOnlinePrdctCsMngDAO.insertOnlinePrdctInf */
+			CM_ONLINE_PRDCT_INF(
+				ONLINE_PRDCT_CS_SEQ
+			,	PRDCT_NM
+			,	PRDCT_CD
+			,	PRDCT_DTL_NM
+			,	PRDCT_DTL_CD
+			,	PRDCT_ACNT
+			,	PAY_MTD
+			,	ASGN_YN			
+			,	ASGN_NM
+			,	ASGN_CD
+			,	CO_NM
+			,	CO_CD
+			,	DEPT
+			,	STF
+			,	ALT
+			,	PRDCT_GRP_CD			
+			)
+		VALUES (
+			#{onlinePrdctCsMstSeq}
+		,	#{prdctNm, jdbcType=VARCHAR}
+		,	#{prdctCd}
+		,	#{prdctDtlNm,  jdbcType=VARCHAR}
+		,	#{prdctDtlCd,  jdbcType=VARCHAR}
+		,	#{prdctAcnt,  jdbcType=VARCHAR}
+		,	#{payMtd}
+		,	#{asgnYn,  jdbcType=VARCHAR}		
+		,	#{asgnNm,  jdbcType=VARCHAR}
+		,	#{asgnCd,  jdbcType=VARCHAR}
+		,	#{coNm, jdbcType=VARCHAR}
+		,	#{coCd, jdbcType=VARCHAR}
+		,	#{dept, jdbcType=VARCHAR}
+		,	#{stf, jdbcType=VARCHAR}
+		,	#{alt, jdbcType=VARCHAR}
+		,	#{prdctGrpCd}				
+		)		
+	</insert>
+	
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.insertOnlinePrdctAcntInf
+         설  명 : 온라인 상담신청 계좌정보를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   김필기     최초 생성
+    -->	
+	<insert id="CMAOnlinePrdctCsMngDAO.insertOnlinePrdctAcntInf" parameterType="emfMap">
+		INSERT INTO /* CMAOnlinePrdctCsMngDAO.insertOnlinePrdctAcntInf */
+			CM_ONLINE_PRDCT_ACNT_INF(
+				ONLINE_PRDCT_CS_SEQ
+			,	PMT_GB
+			,	ACNTHD
+			,	ACNT_BIRTH
+			,	ACNT_HP
+			,	PMT_CO_GB
+			,	PMT_NO
+			,	EXP_YR
+			,	EXP_MM
+			,	PMT_DAY_GB
+			,	HAPPY_CALL_GB			
+			)
+		VALUES (
+			#{onlinePrdctCsMstSeq}
+		,	#{pmtGb}			
+		,	#{acnthd}
+		,	#{acntBirth}
+		,	#{acntHp}
+		,	#{pmtCoGb}
+		,	#{pmtNo}
+		,	#{expYr, jdbcType=VARCHAR}
+		,	#{expMm, jdbcType=VARCHAR}
+		,	#{pmtDayGb}
+		,	#{happyCallGb}		
+		)		
+	</insert>	
+
+
+
+
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.updateOnlinePrdctCsMng
+         설  명 : 온라인 상담신청를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   김필기     최초 생성
+    -->		
+	<update id="CMAOnlinePrdctCsMngDAO.updateOnlinePrdctCsMng" parameterType="emfMap">
+		UPDATE /* CMAOnlinePrdctCsMngDAO.updateOnlinePrdctCsMng */ CM_ONLINE_PRDCT_CS_MST	
+			SET PRCS_CD = #{prcsCd}
+				, ANSW = #{answ}
+				, MOD_ID = #{modId}
+				, MOD_IP = #{modIp}
+				, MOD_NM = #{modNm}
+				, MOD_DTM = SYSDATE
+		WHERE ONLINE_PRDCT_CS_SEQ = #{onlinePrdctCsSeq}
+	</update>
+	
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.insertOnlinePrdctCsLog
+         설  명 : 온라인 상담신청 수정 로그를 입력한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   김필기     최초 생성
+    -->		
+	<insert id="CMAOnlinePrdctCsMngDAO.insertOnlinePrdctCsLog" parameterType="emfMap">
+		INSERT INTO /* CMAOnlinePrdctCsMngDAO.insertOnlinePrdctCsLog */
+			CM_ONLINE_PRDCT_CS_LOG(
+				ONLINE_PRDCT_CS_SEQ
+			,	PRCS_CD
+			,	ANSW
+			,	MOD_ID
+			,	MOD_NM
+			,	MOD_IP
+			,	MOD_DTM			
+			)
+			VALUES (
+				#{onlinePrdctCsSeq}
+			,	#{prcsCd}
+			,	#{answ}
+			,	#{modId}
+			,	#{modNm}
+			,	#{modIp}
+			,	SYSDATE
+			)		
+	</insert>	
+	
+	
+		
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.deleteOnlinePrdctCsMng
+         설  명 : 온라인 상담신청 고객정보를 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   김필기     최초 생성
+    -->		
+	<delete id="CMAOnlinePrdctCsMngDAO.deleteOnlinePrdctCsMng" parameterType="emfMap">
+		DELETE FROM CM_ONLINE_PRDCT_CS_MST
+		WHERE ONLINE_PRDCT_CS_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+        	#{item}
+        </foreach>				
+	</delete>
+	
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.deleteOnlinePrdctInf
+         설  명 : 온라인 상담신청 상품정보를 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   김필기     최초 생성
+    -->		
+	<delete id="CMAOnlinePrdctCsMngDAO.deleteOnlinePrdctInf" parameterType="emfMap">
+		DELETE FROM CM_ONLINE_PRDCT_INF
+		WHERE ONLINE_PRDCT_CS_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+        	#{item}
+        </foreach>		
+	</delete>	
+	
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.deleteOnlinePrdctAcntInf
+         설  명 : 온라인 상담신청를 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   김필기     최초 생성
+    -->		
+	<delete id="CMAOnlinePrdctCsMngDAO.deleteOnlinePrdctAcntInf" parameterType="emfMap">
+		DELETE FROM CM_ONLINE_PRDCT_ACNT_INF
+		WHERE ONLINE_PRDCT_CS_SEQ IN		
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+        	#{item}
+        </foreach>
+	</delete>
+	
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.selectOnlinePrdctList
+         설  명 : 온라인 상품 그룹 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.25   김필기     최초 생성
+    -->
+    <select id="CMAOnlinePrdctCsMngDAO.selectOnlinePrdctList" parameterType="emfMap" resultType="emfMap">
+    	SELECT PRDCT_GB
+    		,	PRDCT_GRP_CD
+    		,	PRDCT_PRT_NM
+    		,	SORT
+    		,	PRDCT_CD
+    	FROM
+    		CM_ONLINE_PRDCT_LIST
+    	WHERE 
+    		PRDCT_GB = #{prdctCsGb}
+	</select>	
+		
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCoList
+         설  명 : 온라인 상담 회사 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.10   김필기     최초 생성
+    -->
+    <select id="CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCoList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCoList */
+			TBL.*											
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					,	CO_CD
+					,	CO_NM
+			     FROM CM_ONLINE_PRDCT_CO_MST
+				 WHERE 1=1
+				<if test="q != null and q != ''">	
+					<if test="f == 1">	
+				 		<![CDATA[	AND CO_NM LIKE '%' || #{q} || '%'	]]>
+					</if>
+				</if>
+				 ORDER BY CO_CD DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}	         
+	</select>		
+		
+<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.insertOnlinePrdctCo
+         설  명 : 온라인 상담 회사 목록을 입력한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.10   김필기     최초 생성
+    -->		
+	<insert id="CMAOnlinePrdctCsMngDAO.insertOnlinePrdctCo" parameterType="emfMap">
+		INSERT INTO /* CMAOnlinePrdctCsMngDAO.insertOnlinePrdctCo */
+			CM_ONLINE_PRDCT_CO_MST (
+				CO_CD
+			,	CO_NM
+			,	REG_ID
+			,	REG_IP
+			,	REG_NM
+			)
+			VALUES (
+				#{coCd}
+			,	#{coNm}
+			,	#{regId}
+			,	#{regIp}
+			,	#{regNm}
+			)		
+	</insert>	
+	
+	
+			
+	<!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCo
+         설  명 : 등록한 회사를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.10   김필기     최초 생성
+    -->	
+	<select id="CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCo" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* CMAOnlinePrdctCsMngDAO.selectOnlinePrdctCo */
+				CO_CD
+			,	CO_NM
+		  FROM CM_ONLINE_PRDCT_CO_MST A
+		 WHERE CO_CD = #{coCd} 		
+	</select>		
+		
+  <!--
+         쿼리명 : CMAOnlinePrdctCsMngDAO.deleteOnlinePrdctCoList
+         설  명 : 등록한 회사를 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.10   김필기      최초생성
+    -->
+	<delete id="CMAOnlinePrdctCsMngDAO.deleteOnlinePrdctCoList" parameterType="emfMap">
+		DELETE /* CMAOnlinePrdctCsMngDAO.deleteOnlinePrdctCoList */ 
+		  FROM CM_ONLINE_PRDCT_CO_MST
+		 WHERE CO_CD IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+        	#{item}
+        </foreach>
+	</delete>		
+		
+</mapper>

@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="COBLgnDAO">
+
+	<!--
+         쿼리명 : COBLgnDAO.actionLogin
+         설  명 : 로그인정보를 조회한다.
+          수정일     수정자       수정내용 
+        ==========   ======    ============== 
+        2015.11.02   박주석       최초생성
+    -->
+	<select id="COBLgnDAO.actionLogin" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COBLgnDAO.actionLogin */
+			   ADM_SEQ   	
+		       , ID
+			   , NAME
+			   , TEL
+			   , EMAIL
+			   , LAST_LGN_DTM
+			   , LAST_PWD_MOD_DTM
+			   , ALLW_IP
+			   , AUTH_CD
+			   , ROLE_CD
+			   , REG_DTM
+		  FROM CO_ADM_MST
+		 WHERE ID = #{id}
+		   AND PWD = #{password}
+		   AND USE_YN = 'Y'
+	</select>
+	
+	<select id="COBLgnDAO.selectMemLgnCnt" parameterType="String" resultType="emfMap">
+		SELECT
+			ID,
+			LGN_TRY_CNT
+			,LAST_LGN_TRY_DTM
+		FROM CO_ADM_LGN_TRY_INFO
+		WHERE ID = #{id}
+	</select>
+	
+	<insert id="COBLgnDAO.insertMemLgnCnt" parameterType="emfMap">
+		INSERT /* LGBMemJoinDAO.insertMemLgnCnt */
+		INTO CO_ADM_LGN_TRY_INFO
+		(
+			ID
+		,	LGN_TRY_CNT
+		,	LAST_LGN_TRY_DTM
+		)
+		VALUES
+		(
+			#{id}
+		,	1
+		,	SYSDATE
+		)
+	</insert>
+	
+	<update id="COBLgnDAO.updateMemLgnCnt" parameterType="emfMap">
+		UPDATE /* LGBMemJoinDAO.updateMemLgnCnt */
+			CO_ADM_LGN_TRY_INFO
+		SET
+			LGN_TRY_CNT = #{lgnTryCnt}
+			,LAST_LGN_TRY_DTM = SYSDATE
+		WHERE ID = #{id}
+	</update>
+	
+	<!--
+         쿼리명 : COBLgnDAO.setLgnLstDtm
+         설  명 : 로그인 일시를 업데이트한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.02   박주석      최초생성
+    -->
+	<update id="COBLgnDAO.setLgnLstDtm" parameterType="emfMap">
+		UPDATE /* COBLgnDAO.setLgnLstDtm */ CO_ADM_MST 
+		   SET LAST_LGN_DTM = SYSDATE
+		 WHERE ID = #{id}
+	</update>
+	
+	<!--
+         쿼리명 : COBLgnDAO.setPwdChng
+         설  명 : 비밀번호를 변경한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.02   박주석      최초생성
+    -->
+	<update id="COBLgnDAO.setPwdChng" parameterType="EmfMap">
+		UPDATE /* COBLgnDAO.setChgPass */ CO_ADM_MST 
+		   SET PWD = #{pwd}
+			   , LAST_PWD_MOD_DTM = SYSDATE
+		 WHERE ID = #{id}
+	</update>
+	
+	<!--
+         쿼리명 : COBLgnDAO.getMenuList
+         설  명 : 로그인에 따른 메뉴 리스트를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.02   박주석      최초생성
+    -->
+	<select id="COBLgnDAO.getMenuList" parameterType="emfMap" resultType="emfMap">
+		<choose>
+			<when test="authCd eq '99'">
+				SELECT /* COBLgnDAO.getMenuList */
+				       MENU_SEQ
+					   , PARNT_SEQ
+					   , PSTN
+					   , LFT_VAL
+					   , RHT_VAL
+					   , DPTH
+					   , MENU_GB
+					   , MENU_NM
+					   , USER_USE_YN
+					   , USER_WND_YN
+					   , ADM_LINK
+				  FROM CO_MENU_MST 
+				 WHERE USER_USE_YN = 'Y'
+				   AND (LFT_VAL <![CDATA[>]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 2) AND RHT_VAL <![CDATA[<]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 2))
+			  
+				UNION
+				
+				SELECT MENU_SEQ
+					   , PARNT_SEQ
+				   	   , PSTN
+				   	   , LFT_VAL
+				   	   , RHT_VAL
+				   	   , DPTH
+				   	   , MENU_GB
+					   , MENU_NM
+					   , USER_USE_YN
+					   , USER_WND_YN
+					   , ADM_LINK
+				  FROM CO_MENU_MST A
+			     WHERE USER_USE_YN = 'Y'
+			       AND MENU_GB IN ('board', 'etc')
+				   AND (LFT_VAL <![CDATA[>]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 3) AND RHT_VAL <![CDATA[<]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 3))
+				   AND NOT EXISTS(SELECT 'X' FROM CO_MENU_MST WHERE PARNT_SEQ = A.MENU_SEQ) 
+     				OR (SELECT COUNT(*) FROM CO_MENU_MST WHERE PARNT_SEQ = A.MENU_SEQ) <![CDATA[>]]> (SELECT COUNT(*) FROM CO_MENU_MST WHERE MENU_GB IN('folder', 'cms') START WITH MENU_SEQ = A.MENU_SEQ CONNECT BY PRIOR MENU_SEQ = PARNT_SEQ)
+				 ORDER BY LFT_VAL
+			</when>
+			<otherwise>
+				SELECT /* COBLgnDAO.getMenuList */
+					   T1.MENU_SEQ
+					   , T1.PARNT_SEQ
+					   , T1.PSTN
+					   , T1.LFT_VAL
+					   , T1.RHT_VAL 
+					   , T1.DPTH
+					   , T1.MENU_GB
+					   , T1.MENU_NM
+					   , T1.USER_USE_YN
+					   , T1.ADM_LINK
+				  FROM CO_MENU_MST T1, 
+				(
+					SELECT A.MENU_SEQ AS CHKTREEID
+						   , A.PARNT_SEQ AS CHKPARENTTREEID
+						   , A.ADM_LINK AS CHKADMINLINKURL
+						   , A.LFT_VAL
+						   , A.RHT_VAL
+	   				  FROM CO_MENU_MST A JOIN CO_ADM_MENU_INF B ON A.MENU_SEQ = B.MENU_SEQ
+       				 WHERE (B.ADM_SEQ = #{admSeq, jdbcType=VARCHAR} OR B.ROLE_CD = #{roleCd, jdbcType=VARCHAR})
+	  			) T2
+	 			 WHERE T2.LFT_VAL BETWEEN T1.LFT_VAL AND T1.RHT_VAL
+	 			   AND T1.DPTH <![CDATA[>]]> 1
+	  			 GROUP BY T1.MENU_SEQ, T1.PARNT_SEQ, T1.PSTN, T1.LFT_VAL, T1.RHT_VAL, T1.DPTH, T1.MENU_GB, T1.MENU_NM, T1.USER_USE_YN, T1.ADM_LINK
+	  			 ORDER BY T1.LFT_VAL
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!--
+         쿼리명 : COBLgnDAO.getMenuList
+         설  명 : 로그인에 따른 메뉴 리스트를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.02   박주석      최초생성
+    -->
+	<select id="COBLgnDAO.getParentMenuList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COBLgnDAO.getParentMenuList */
+	 		   MENU_SEQ
+	 		   , PARNT_SEQ
+	 		   , PSTN
+	 		   , LFT_VAL
+		       , RHT_VAL
+		       , DPTH
+		       , MENU_GB
+		       , MENU_NM
+		       , USER_LINK
+	 	  FROM CO_MENU_MST  
+	 	 WHERE MENU_SEQ != 1
+	 	 START WITH MENU_SEQ = #{menuSeq}
+	   CONNECT BY PRIOR PARNT_SEQ = MENU_SEQ 
+	     ORDER BY LFT_VAL
+	</select>
+
+	<insert id="setAdmAuth" parameterType="emfMap">
+	INSERT INTO CO_ADM_AUTH
+		 (
+			 AUTH_SEQ
+			 , ID
+			 , HP
+			 , NAME
+			 , CI
+			 , REG_IP
+			 , REG_DATE
+		 ) VALUES (
+			 AUTH_SEQ.nextval
+			 , #{id}
+			 , #{hp}
+			 , #{name}
+			 , #{ci}
+			 , #{ip}
+			 , SYSDATE
+		 )
+	</insert>
+
+	<!-- 
+         쿼리명 : COBLgnDAO.setAdmAuthLog
+         설  명 : 화면별 로그를 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2017.12.15   강재석      최초생성
+	 -->
+	<insert id="setAdmAuthLog" parameterType="emfMap">
+	INSERT INTO CO_ADM_LOG
+		(
+			LOG_SEQ
+			, ID
+			, HP
+			, NAME
+			, IP
+			, LOGIN
+			, LOGOUT
+			, ISSUE_DATE
+			, GUBUN
+			, FLAG
+		) VALUES (
+			LOG_SEQ.nextval
+			, #{id}
+			, #{hp}
+			, #{name}
+			, #{ip}
+			, SYSDATE
+			, ''
+			, SYSDATE
+			, #{gubun}
+			, #{flag}
+		)
+	</insert>
+
+	<select id="getMaxLogId" parameterType="emfMap" resultType="emfMap">
+		SELECT TMP.LOG_SEQ, TMP.LOGOUT
+		FROM(
+		    SELECT ROW_NUMBER() OVER(ORDER BY LOG_SEQ DESC) AS RNUM, LOG_SEQ, LOGOUT
+		    FROM CO_ADM_LOG
+		    WHERE ID = #{id}
+		    AND FLAG = 'L'
+		) TMP WHERE TMP.RNUM = 1
+<!--  	
+		SELECT A.LOG_SEQ
+		     , B.LOGOUT 
+		  FROM (
+		        SELECT MAX(LOG_SEQ) AS LOG_SEQ 
+		          FROM CO_ADM_LOG 
+		         WHERE ID = #{id}
+		           AND FLAG = 'L'
+		     ) A 
+		     , CO_ADM_LOG B
+		 WHERE A.LOG_SEQ = B.LOG_SEQ
+-->		 
+	</select>
+
+	<update id="setAdmAuthLogOut" parameterType="emfMap">
+		UPDATE CO_ADM_LOG
+		   SET LOGOUT = SYSDATE
+		 WHERE LOG_SEQ = #{logSeq}
+		   AND FLAG = 'L'
+	</update>
+</mapper>

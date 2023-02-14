@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CSAVocDAO">
+	<!--
+         쿼리명 : CSAVocDAO.selectVocList
+         설  명 : VOC 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2021.02.23   장준일     최초 생성
+    -->
+    <select id="CSAVocDAO.selectVocList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CSAVocDAO.selectVocList */
+			   TBL.*
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+				        , VOC_NO
+					    , GUEST_NM
+						, TITLE
+						, STORE_CD
+						, IND
+						, TYPE_CD
+						, IND_TYPE_CD
+						, GRAD_CD
+						, RCEPT_EMPL_NO
+						, RCEPT_DT
+						, CEPT_OPINION
+						, MEM
+						, DTL_DESC
+						, AGE
+						, GEN
+						, MOBL_NO
+						, EMAIL_ADDR
+						, ZIPNO
+						, INIT_ADDR
+						, DTL_ADDR
+						, ORG_SNTNC_NO
+						, REG_EMPL_NO
+						, REG_DT
+						, RESIND
+						, SEND_YN
+						, SEND_DATE
+						, ID
+						, REG_ID
+						, REG_IP
+						, MOD_ID
+						, MOD_IP
+						, MOD_DTM
+						, LOCATE
+						, STORE_DATE
+						, DEL_FG
+						, CATEGORY1
+						, CATEGORY2
+				  FROM KM_VOC_INIT
+				 WHERE 1=1
+				<if test="delFg != null and delFg != ''">
+					AND DEL_FG = #{delFg}
+			 	</if>
+				<if test="ind != null and ind != ''">
+					AND IND = #{ind}
+			 	</if>
+			 	<if test="strtDt != null and strtDt != '' and dateType != null and dateType == 'regDt'">
+					<![CDATA[	AND REG_DT >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+				</if>
+				<if test="endDt != null and endDt != '' and dateType != null and dateType == 'regDt'">
+					<![CDATA[	AND REG_DT < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+				</if>
+				<if test="strtDt != null and strtDt != '' and dateType != null and dateType == 'rceptDt'">
+					<![CDATA[	AND RCEPT_DT >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+				</if>
+				<if test="endDt != null and endDt != '' and dateType != null and dateType == 'rceptDt'">
+					<![CDATA[	AND RCEPT_DT < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 'title'">
+						<![CDATA[	AND TITLE LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 'dtlDesc'">
+						<![CDATA[	AND DTL_DESC LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 'guestNm'">
+						<![CDATA[	AND GUEST_NM LIKE '%' || #{q} || '%'	]]>
+					</if>
+				</if>
+				 ORDER BY REG_DT DESC
+			) A
+		) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}             
+    </select>
+    
+    <!--
+         쿼리명 : CSAVocDAO.selectVoc
+         설  명 : VOC 상세를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2021.02.23   장준일     최초 생성
+    -->
+    <select id="CSAVocDAO.selectVoc" parameterType="emfMap" resultType="emfMap">
+     	SELECT /* CSAVocDAO.selectVoc */      
+			    VOC_NO
+			    , GUEST_NM
+				, TITLE
+				, STORE_CD
+				, IND
+				, TYPE_CD
+				, IND_TYPE_CD
+				, GRAD_CD
+				, RCEPT_EMPL_NO
+				, RCEPT_DT
+				, CEPT_OPINION
+				, MEM
+				, DTL_DESC
+				, AGE
+				, GEN
+				, MOBL_NO
+				, EMAIL_ADDR
+				, ZIPNO
+				, INIT_ADDR
+				, DTL_ADDR
+				, ORG_SNTNC_NO
+				, REG_EMPL_NO
+				, REG_DT
+				, RESIND
+				, SEND_YN
+				, SEND_DATE
+				, ID
+				, REG_ID
+				, REG_IP
+				, MOD_ID
+				, MOD_IP
+				, MOD_DTM
+				, LOCATE
+				, STORE_DATE
+				, CATEGORY1
+				, CATEGORY2
+		  FROM KM_VOC_INIT A
+         WHERE VOC_NO = #{vocNo}
+   	</select>
+    
+ 	<!--
+         쿼리명 : CSAVocDAO.deleteVoc
+         설  명 : VOC을 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2021.02.23   장준일     최초 생성
+    -->
+ 	<delete id="CSAVocDAO.deleteVoc" parameterType="emfMap">
+		UPDATE /* CSAVocDAO.deleteVoc */ 
+		 KM_VOC_INIT
+		SET DEL_FG = 'Y'
+		 WHERE VOC_NO IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+ 	</delete>
+</mapper>

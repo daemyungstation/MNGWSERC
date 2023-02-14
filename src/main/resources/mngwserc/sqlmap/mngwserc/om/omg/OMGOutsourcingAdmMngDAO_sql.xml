@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OMGOutsourcingAdmMngDAO">
+
+	<!--
+         쿼리명 : OMGOutsourcingAdmMngDAO.selectOutsourcingAdmMngList
+         설  명 : 조건 설정된 외주업체 관리자 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.20   김필기     최초 생성
+    -->
+    <select id="OMGOutsourcingAdmMngDAO.selectOutsourcingAdmMngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMGOutsourcingAdmMngDAO.selectOutsourcingAdmMngList */
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+				       , OSC_ADM_MST_SEQ
+				       , ADM_ID
+				       , OSC_CD
+				       , B2B_STTS
+			      FROM OM_OSC_ADM_MST
+				 ORDER BY OSC_ADM_MST_SEQ DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+    </select>
+    
+	<!--
+         쿼리명 : OMGOutsourcingAdmMngDAO.selectOutsourcingAdmMngInfo
+         설  명 : 외주업체 관리자 조건 정보를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.20   김필기     최초 생성
+    -->
+    <select id="OMGOutsourcingAdmMngDAO.selectOutsourcingAdmMngInfo" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMGOutsourcingAdmMngDAO.selectOutsourcingAdmMngInfo */
+	    	   *
+		  FROM OM_OSC_ADM_MST
+		 WHERE 
+		<choose>
+			<when test="overrapChk == 'Y'.toString()">
+				ADM_ID = #{admId}
+			</when>
+			<otherwise>
+				OSC_ADM_MST_SEQ = #{seq}
+			</otherwise>
+		</choose>
+    </select>
+    
+    
+	<!--
+         쿼리명 : OMGOutsourcingAdmMngDAO.insertOutsourcingAdmMngInf 
+         설  명 : 외주업체 관리자 조건을 저장한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.20   김필기     최초 생성
+    -->
+    <insert id="OMGOutsourcingAdmMngDAO.insertOutsourcingAdmMngInf" parameterType="emfMap">
+		INSERT /* OMGOutsourcingAdmMngDAO.insertOutsourcingAdmMngInf */ INTO OM_OSC_ADM_MST
+			(OSC_ADM_MST_SEQ
+			, ADM_ID
+			, OSC_CD
+			, B2B_STTS
+			, CODE_1
+			)
+		VALUES
+			(#{seq}
+			, #{admId}
+			, #{oscCd}
+			, #{b2bStts}
+			, #{code1, jdbcType=VARCHAR}
+			)
+    </insert>
+    
+	<!--
+         쿼리명 : OMGOutsourcingAdmMngDAO.updateOutsourcingAdmMngInf
+         설  명 : 외주업체 관리자 조건을 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.20   김필기     최초 생성
+    -->
+    <update id="OMGOutsourcingAdmMngDAO.updateOutsourcingAdmMngInf" parameterType="emfMap">
+		UPDATE /* OMGOutsourcingAdmMngDAO.updateOutsourcingAdmMngInf */ OM_OSC_ADM_MST
+		   SET ADM_ID = #{admId}
+			   , OSC_CD = #{oscCd}
+			   , B2B_STTS = #{b2bStts}
+			   , CODE_1 = #{code1, jdbcType=VARCHAR}
+		 WHERE OSC_ADM_MST_SEQ  = #{seq}
+    </update>
+    
+	<!--
+         쿼리명 : OMGOutsourcingAdmMngDAO.selectAdmList
+         설  명 : 외주업체 관리자 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.20   김필기     최초 생성
+    -->
+    <select id="OMGOutsourcingAdmMngDAO.selectAdmList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMGOutsourcingAdmMngDAO.selectAdmList */
+	    	   *
+		  FROM CO_ADM_MST
+		 WHERE ROLE_CD IN('ROLE_00007', 'ROLE_00024')			
+    </select>
+    
+</mapper>

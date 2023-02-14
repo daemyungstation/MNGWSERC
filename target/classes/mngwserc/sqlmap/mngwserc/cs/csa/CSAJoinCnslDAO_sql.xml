@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CSAJoinCnslDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+		<result property="cntn" column="CNTN" javaType="java.lang.String" jdbcType="CLOB" />
+		<result property="answ" column="ANSW" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+	
+	<!--
+         쿼리명 : CSAJoinCnslDAO.selectJoinCnslList
+         설  명 : 가입 상담 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+    <select id="CSAJoinCnslDAO.selectJoinCnslList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CSAJoinCnslDAO.selectJoinCnslList */
+			   TBL.* 
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'JOIN_INQRY_GB' AND CD = TBL.INQRY_CD) AS INQRY_NM
+			   , (SELECT MAX(MOD_DTM) FROM CS_JOIN_CNSL_LOG WHERE JOIN_CNSL_SEQ = TBL.JOIN_CNSL_SEQ AND TASK_GB = 'A') AS PRCS_DTM
+      		   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PROCESS_TYPE' AND CD = TBL.PRCS_CD) AS PRCS_NM
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , JOIN_CNSL_SEQ
+					   , INQRY_CD
+					   , TITL
+					   , NAME
+					   , TEL_ABLE_DT
+					   , TEL_ABLE_STRT_TIME
+					   , TEL_ABLE_END_TIME
+					   , PRCS_CD
+					   , REG_DTM
+					   , CTEL
+			      FROM CS_JOIN_CNSL_MST
+				 WHERE 1=1
+				<if test="inqryCd != null and inqryCd != ''">
+					AND INQRY_CD = #{inqryCd}
+			 	</if>
+			 	<if test="prcsCd != null and prcsCd != ''">
+					AND PRCS_CD = #{prcsCd}
+			 	</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND TITL LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND CNTN LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 3">
+						<![CDATA[	AND NAME LIKE '%' || #{q} || '%'	]]>
+					</if>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}        
+    </select>
+    
+    <!--
+         쿼리명 : CSAJoinCnslDAO.selectJoinCnsl
+         설  명 : 가입 상담 상세를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+    <select id="CSAJoinCnslDAO.selectJoinCnsl" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* CSAJoinCnslDAO.selectJoinCnsl */      
+			   JOIN_CNSL_SEQ
+			   , INQRY_CD
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'JOIN_INQRY_GB' AND CD = A.INQRY_CD) AS INQRY_NM
+			   , NAME
+			   , CTEL
+			   , EMAIL
+			   , TEL_ABLE_DT
+			   , TEL_ABLE_STRT_TIME
+			   , TEL_ABLE_END_TIME
+			   , TITL
+			   , CNTN
+			   , ANSW
+			   , PRCS_CD
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PROCESS_TYPE' AND CD = A.PRCS_CD) AS PRCS_NM
+			   , REG_DTM
+		  FROM CS_JOIN_CNSL_MST A
+         WHERE JOIN_CNSL_SEQ = #{joinCnslSeq}
+   	</select>
+   
+	<!--
+         쿼리명 : CSAJoinCnslDAO.updateJoinCnslAnsw
+         설  명 : 가입 상담 답변을 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+    <update id="CSAJoinCnslDAO.updateJoinCnslAnsw" parameterType="emfMap">
+    	UPDATE /* CSAJoinCnslDAO.updateJoinCnslAnsw */ CS_JOIN_CNSL_MST
+    	   SET ANSW = #{answ}
+    	   	   , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = SYSDATE
+    	 WHERE JOIN_CNSL_SEQ = #{joinCnslSeq}
+    </update>
+    
+ 	<!--
+         쿼리명 : CSAJoinCnslDAO.deleteJoinCnsl
+         설  명 : 가입 상담을 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+ 	<delete id="CSAJoinCnslDAO.deleteJoinCnsl" parameterType="emfMap">
+		DELETE /* CSAJoinCnslDAO.deleteJoinCnsl */ 
+		  FROM CS_JOIN_CNSL_MST
+		 WHERE JOIN_CNSL_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+ 	</delete>
+ 	
+ 	<!--
+         쿼리명 : CSAJoinCnslDAO.updateJoinCnslPrcsCd
+         설  명 : 가입 상담 처리상태를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+    <update id="CSAJoinCnslDAO.updateJoinCnslPrcsCd" parameterType="emfMap">
+    	UPDATE /* CSAJoinCnslDAO.updateJoinCnslPrcsCd */ CS_JOIN_CNSL_MST
+    	   SET PRCS_CD = #{prcsCd}
+    	 WHERE JOIN_CNSL_SEQ = #{joinCnslSeq}
+    	   AND NOT EXISTS (SELECT 'X' FROM CS_JOIN_CNSL_LOG WHERE JOIN_CNSL_SEQ = #{joinCnslSeq} AND TASK_GB = #{taskGb})
+    </update>
+ 	
+ 	<!--
+         쿼리명 : CSAJoinCnslDAO.selectJoinCnslLog
+         설  명 : 가입 상담 로그를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+    <select id="CSAJoinCnslDAO.selectJoinCnslLog" parameterType="emfMap" resultType="emfMap">
+    	SELECT /* CSAJoinCnslDAO.selectJoinCnslLog */
+    		   TBL.*
+    		   , (SELECT NAME FROM CO_ADM_MST WHERE ID = TBL.MOD_ID) AS MOD_NM 
+    	FROM (
+    		SELECT ROW_NUMBER() OVER(PARTITION BY TASK_GB ORDER BY MOD_DTM DESC) RNK
+			   	   , MOD_ID
+			   	   , MOD_DTM
+		  	  FROM CS_JOIN_CNSL_LOG
+             WHERE JOIN_CNSL_SEQ = #{joinCnslSeq}
+    	) TBL
+    	WHERE RNK = 1
+    	ORDER BY MOD_DTM
+   	</select>
+   	
+ 	<!--
+         쿼리명 : CSAJoinCnslDAO.insertJoinCnslLog
+         설  명 : 가입 상담 로그를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+    <insert id="CSAJoinCnslDAO.insertJoinCnslLog" parameterType="emfMap">
+		INSERT /* CSAJoinCnslDAO.insertJoinCnslLog */ INTO CS_JOIN_CNSL_LOG
+			(JOIN_CNSL_SEQ
+			, TASK_GB
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		SELECT #{joinCnslSeq}
+			   , #{taskGb}
+			   , #{modId}
+			   , #{modIp}
+			   , SYSDATE
+		  FROM DUAL
+		<if test="taskGb == 'R'.toString()">
+			WHERE NOT EXISTS (SELECT 'X' FROM CS_JOIN_CNSL_LOG WHERE JOIN_CNSL_SEQ = #{joinCnslSeq} AND TASK_GB = #{taskGb})
+		</if>
+    </insert>
+    
+    <!--
+         쿼리명 : CSAJoinCnslDAO.excelJoinCnslList
+         설  명 : 가입 상담 목록을 조회한다. (엑셀 다운로드)
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.29   허진영     최초 생성
+    -->
+    <select id="CSAJoinCnslDAO.excelJoinCnslList" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* CSAJoinCnslDAO.excelJoinCnslList */
+			   TBL.* 
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'JOIN_INQRY_GB' AND CD = TBL.INQRY_CD) AS INQRY_NM
+			   , (SELECT MAX(MOD_DTM) FROM CS_JOIN_CNSL_LOG WHERE JOIN_CNSL_SEQ = TBL.JOIN_CNSL_SEQ AND TASK_GB = 'A') AS PRCS_DTM
+      		   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PROCESS_TYPE' AND CD = TBL.PRCS_CD) AS PRCS_NM
+		FROM (
+			SELECT COUNT(*) OVER() AS TOT_CNT
+				   , A.JOIN_CNSL_SEQ
+				   , A.INQRY_CD
+				   , A.TITL
+				   , A.NAME
+				   , A.TEL_ABLE_DT
+				   , A.TEL_ABLE_STRT_TIME
+				   , A.TEL_ABLE_END_TIME
+				   , A.PRCS_CD
+				   , A.REG_DTM
+				   , A.ANSW
+				   , REPLACE(A.CTEL, '-', '') AS CTEL
+                   , B.MEM_NO
+                   , B.ACCNT_NO
+                   , B.PROD_NM
+                   , B.JOIN_DT
+		      FROM CS_JOIN_CNSL_MST A
+                 , (SELECT A.MEM_NO
+                           , A.MEM_NM
+                           , REPLACE(A.CELL, '-', '') AS CELL
+                           , A.REG_DM
+                           , B.ACCNT_NO
+                           , NVL(C.PROD_PRT_NM, C.PROD_NM) AS PROD_NM
+                           , B.JOIN_DT
+                      FROM MEMBER@DMLIFE A, MEM_PROD_ACCNT@DMLIFE B, PRODUCT@DMLIFE C
+                     WHERE A.MEM_NO = B.MEM_NO
+                       AND B.PROD_CD = C.PROD_CD
+                       AND A.DEL_FG = 'N'
+                       AND B.DEL_FG = 'N'
+                       ) B
+			 WHERE 1=1
+               AND REPLACE(A.CTEL, '-', '') = B.CELL(+)
+               AND A.NAME = B.MEM_NM(+)
+			<if test="inqryCd != null and inqryCd != ''">
+				AND INQRY_CD = #{inqryCd}
+		 	</if>
+		 	<if test="prcsCd != null and prcsCd != ''">
+				AND PRCS_CD = #{prcsCd}
+		 	</if>
+			<if test="q != null and q != ''">
+				<if test="f == 1">
+					<![CDATA[	AND TITL LIKE '%' || #{q} || '%'	]]>
+				</if>
+				<if test="f == 2">
+					<![CDATA[	AND CNTN LIKE '%' || #{q} || '%'	]]>
+				</if>
+				<if test="f == 3">
+					<![CDATA[	AND NAME LIKE '%' || #{q} || '%'	]]>
+				</if>
+			</if>
+			 ORDER BY REG_DTM DESC
+		) TBL
+    </select>
+	
+</mapper>

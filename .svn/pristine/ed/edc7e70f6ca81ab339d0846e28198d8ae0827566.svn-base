@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CNCProdCnclDAO">
+
+	<select id="CNCProdCnclDAO.selectProdCnclList" parameterType="emfMap" resultType="emfMap">
+		SELECT TBL.*
+		  FROM 
+		    (
+		    SELECT ROWNUM AS RNUM, A.*
+		      FROM
+		        (
+		        SELECT COUNT(*) OVER() AS TOT_CNT
+		             , PROD_CNCL_SEQ
+		             , CUST_NAME
+		             , CUST_HPHONE
+					, INFLOW_CHANNEL
+					, INTEREST_GOODS
+		             , (SELECT CD_NM FROM CO_CD_DTL A WHERE A.CD_ID = 'MICRO_PROD_GB' AND A.CD = PROD_CD) AS PROD_NM
+		             , CALLTIME
+		             , CNSLR
+		             , (SELECT CD_NM FROM CO_CD_DTL A WHERE A.CD_ID = 'CALL_STTS' AND A.CD = COUNSEL_CD) AS COUNSEL_NM
+		             , CNTN
+		             , TO_CHAR(REG_DTM, 'yyyy-MM-dd hh24:mi:ss') AS REG_DTM
+		          FROM MC_PROD_CNCL_MST
+		         WHERE 1=1
+				<if test="strtDt != null and strtDt != ''">
+					AND REG_DTM <![CDATA[>=]]> TO_DATE(#{strtDt}, 'yyyy-MM-dd')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND REG_DTM <![CDATA[<]]> TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">	
+				 		AND CUST_NAME LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 2">	
+				 		AND CUST_HPHONE LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 3">	
+				 		AND (SELECT CD_NM FROM CO_CD_DTL A WHERE A.CD_ID = 'MICRO_PROD_GB' AND A.CD = PROD_CD) LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 4">
+						AND CNSLR LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 5">
+						AND INFLOW_CHANNEL LIKE '%' || #{q} || '%'
+					</if>
+				</if>
+		        <if test="callStts != null and callStts != ''">
+					AND COUNSEL_CD = #{callStts}
+				</if>
+				<if test="id != null and id.toString() == 'asset'">
+					AND INFLOW_CHANNEL IN ('위메프','유튜브','참여형가전랜딩(facebook)','페이스북')
+				</if>
+		         ORDER BY PROD_CNCL_SEQ DESC
+		        ) A
+		    ) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+
+	<select id="CNCProdCnclDAO.selectProdCncl" parameterType="emfMap" resultType="emfMap">
+        SELECT PROD_CNCL_SEQ
+             , CUST_NAME
+             , CUST_HPHONE
+             , PROD_CD
+             , (SELECT CD_NM FROM CO_CD_DTL A WHERE A.CD_ID = 'MICRO_PROD_GB' AND A.CD = PROD_CD) AS PROD_NM
+             , CALLTIME
+             , CNSLR
+             , COUNSEL_CD
+             , (SELECT CD_NM FROM CO_CD_DTL A WHERE A.CD_ID = 'CALL_STTS' AND A.CD = COUNSEL_CD) AS COUNSEL_NM
+             , CNTN
+             , TO_CHAR(REG_DTM, 'yyyy-MM-dd hh24:mi:ss') AS REG_DTM
+          FROM MC_PROD_CNCL_MST
+         WHERE PROD_CNCL_SEQ = #{idx}
+	</select>
+
+	<select id="CNCProdCnclDAO.selectProdCnclDtlList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CNCProdCnclDAO.selectProdCnclDtlList */
+		 	   NAME
+		 	   , CNTN
+		 	   , IP
+		 	   , REG_DTM
+		  FROM MC_PROD_CNCL_DTL
+		 WHERE PROD_CNSL_SEQ = #{prodCnclSeq}
+		 ORDER BY REG_DTM DESC
+	</select>
+
+	<update id="CNCProdCnclDAO.updateProdCnclMng" parameterType="emfMap">
+		UPDATE /* CNCProdCnclDAO.updateProdCnclMng */ MC_PROD_CNCL_MST 
+		   SET CNSLR = #{answer}
+			   , COUNSEL_CD = #{callStts}
+			   , CNTN = #{cntn}
+		 WHERE PROD_CNCL_SEQ = #{idx}
+	</update>
+	
+	<insert id="CNCProdCnclDAO.insertProdCnclDtl" parameterType="emfMap">
+		INSERT INTO MC_PROD_CNCL_DTL
+			(PROD_CNSL_SEQ
+			, NAME
+			, CNTN
+			, IP	
+			, PROD_CNSL_DTL_SEQ
+			)
+		VALUES 
+			(#{idx}
+			, #{answer}
+			, #{cntn}
+			, #{ip}
+			, PROD_CNCL_DTL_SEQ.NEXTVAL
+			)		
+	</insert>
+	
+	<select id="CNCProdCnclDAO.selectProdCnclExcelList" parameterType="emfMap" resultType="emfMap">
+	    SELECT ROWNUM AS RNUM, A.*
+	      FROM
+	        (
+	        SELECT COUNT(*) OVER() AS TOT_CNT
+	             , PROD_CNCL_SEQ
+	             , CUST_NAME
+	             , CUST_HPHONE
+				, INFLOW_CHANNEL
+				, INTEREST_GOODS
+	             , (SELECT CD_NM FROM CO_CD_DTL A WHERE A.CD_ID = 'MICRO_PROD_GB' AND A.CD = PROD_CD) AS PROD_NM
+	             , CALLTIME
+	             , CNSLR
+	             , (SELECT CD_NM FROM CO_CD_DTL A WHERE A.CD_ID = 'CALL_STTS' AND A.CD = COUNSEL_CD) AS COUNSEL_NM
+	             , CNTN
+	             , TO_CHAR(REG_DTM, 'yyyy-MM-dd hh24:mi:ss') AS REG_DTM
+	          FROM MC_PROD_CNCL_MST
+		         WHERE 1=1
+				<if test="strtDt != null and strtDt != ''">
+					AND REG_DTM <![CDATA[>=]]> TO_DATE(#{strtDt}, 'yyyy-MM-dd')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND REG_DTM <![CDATA[<]]> TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">	
+				 		AND CUST_NAME LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 2">	
+				 		AND CUST_HPHONE LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 3">	
+				 		AND (SELECT CD_NM FROM CO_CD_DTL A WHERE A.CD_ID = 'MICRO_PROD_GB' AND A.CD = PROD_CD) LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 4">
+						AND CNSLR LIKE '%' || #{q} || '%'
+					</if>
+				</if>
+				<if test="call_stts != null and call_stts != ''">
+					AND COUNSEL_CD = #{call_stts}
+				</if>
+				<if test="id != null and id.toString() == 'asset'">
+					AND INFLOW_CHANNEL IN ('위메프','유튜브','참여형가전랜딩(facebook)','페이스북')
+				</if>
+	         ORDER BY PROD_CNCL_SEQ DESC
+	        ) A
+	</select>
+
+	<insert id="CNCProdCnclDAO.insertExcelData" parameterType="emfMap">
+		<selectKey keyProperty="no" resultType="int" order="BEFORE">
+			select PROD_CNCL_SEQ.nextval FROM DUAL
+		</selectKey>
+		INSERT INTO MC_PROD_CNCL_MST /* CNCProdCnclDAO.insertExcelData */
+			(
+				PROD_CNCL_SEQ,
+				CUST_NAME,
+				CUST_HPHONE,
+				PROD_CD,
+				INFLOW_CHANNEL,
+				INTEREST_GOODS,
+				CALLTIME,
+				REG_DTM,
+				CNSLR,
+				COUNSEL_CD,
+				CNTN,
+				REG_ID,
+				REG_IP
+			) VALUES (
+				#{no},
+				#{name},
+				#{phone},
+				#{productName},
+				#{inflowChannel},
+				#{interestGoods},
+				#{counselTime},
+				TO_DATE(CONCAT(#{regDtm}, TO_CHAR(SYSDATE, ' hh24:mi:ss')),'yy-MM-dd hh24:mi:ss'),
+				#{cnslr},
+				#{counselCd},
+				#{cntn},
+				#{regId},
+				#{regIp}
+			)
+	</insert>
+
+</mapper>

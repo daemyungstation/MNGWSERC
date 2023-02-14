@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CMBChngSysDAO">
+
+	<!--
+         쿼리명 : CMBChngSysDAO.selectChngSysGrpList
+         설  명 : 전환서비스 쳬계 그룹 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.17   허진영     최초 생성
+        2016.08.08   김필기     수정
+    -->
+    <select id="CMBChngSysDAO.selectChngSysGrpList" parameterType="emfMap" resultType="emfMap">
+    	SELECT /* CMBChngSysDAO.selectChngSysGrpList */
+    		   T1.GRP_SEQ
+    		   , T1.GRP_NM
+    		   , T1.CHNG_COND_CD
+    		   , T1.CD AS PRDCT_CD
+    		   , T2.PRDCT_SEQ
+    		   , (SELECT COUNT(*) FROM CM_CHNG_PRDCT_INF WHERE GRP_SEQ = T1.GRP_SEQ) AS PRDCT_CNT
+    	FROM (
+    		SELECT A.GRP_SEQ
+			   	   , A.GRP_NM
+			   	   , A.CHNG_COND_CD
+             	   , A.REG_DTM
+			   	   , C.CD
+             	   , C.CD_ORD
+		  	  FROM CM_CHNG_SYS_MST A ,CO_CD_MST B, CO_CD_DTL C
+		 	 WHERE B.CD_ID = C.CD_ID(+)
+		   	   AND B.CD_ID = 'PRDCT_GB'
+		   	   AND C.USE_YN = 'Y'
+    	) T1, CM_CHNG_SYS_DTL T2
+    	WHERE T1.GRP_SEQ = T2.GRP_SEQ(+)
+    	  AND T1.CD = T2.PRDCT_CD(+)
+        ORDER BY T1.GRP_NM, T1.CD_ORD
+    </select>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.getPrdctAllList
+         설  명 : 전환서비스 모든 상품을 가져온다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.17   허진영     최초 생성
+    -->
+    <select id="CMBChngSysDAO.getPrdctAllList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CMBChngSysDAO.getPrdctAllList */
+		       PRDCT_SEQ
+			   , PRDCT_CD
+			   , PRDCT_NM
+	      FROM CM_PRDCT_MST
+		 ORDER BY PRDCT_NM
+    </select>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.getChngSysGrpNmExstCnt
+         설  명 : 전환서비스 쳬계 그룹을 등록을 위해 중복 검사를 한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.17   허진영     최초 생성
+    -->
+    <select id="CMBChngSysDAO.getChngSysGrpNmExstCnt" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /* CMBChngSysDAO.getChngSysGrpNmExstCnt */
+		       COUNT(*)
+	      FROM CM_CHNG_SYS_MST
+		 WHERE GRP_NM = #{grpNm}
+    </select>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.insertChngSysGrp
+         설  명 : 전환서비스 쳬계 그룹을 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   허진영     최초 생성
+    -->
+    <insert id="CMBChngSysDAO.insertChngSysGrp" parameterType="emfMap">
+    	INSERT /* CMBChngSysDAO.insertChngSysGrp */ INTO CM_CHNG_SYS_MST 
+    		(GRP_SEQ
+			, GRP_NM
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+    		)
+    	VALUES
+    		(#{grpSeq}
+			, #{grpNm}
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+    		)
+    </insert>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.insertChngSysGrpDtl
+         설  명 : 전환서비스 쳬계 그룹 상세를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   허진영     최초 생성
+    -->
+   	<insert id="CMBChngSysDAO.insertChngSysGrpDtl" parameterType="emfMap">
+   		INSERT /* CMBChngSysDAO.insertChngSysGrpDtl */ INTO CM_CHNG_SYS_DTL 
+    		(GRP_SEQ
+			, PRDCT_CD
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+    		)
+    	SELECT #{grpSeq}
+    		   , B.CD
+    		   , #{regId}
+    		   , #{regIp}
+    		   , SYSDATE
+    		   , #{modId}
+    		   , #{modIp}
+    		   , SYSDATE
+    	  FROM CO_CD_MST A, CO_CD_DTL B
+    	 WHERE A.CD_ID = B.CD_ID(+)
+    	   AND A.CD_ID = 'PRDCT_GB'
+    	   AND B.USE_YN = 'Y'
+    	 ORDER BY B.CD_ORD
+    </insert>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.updateChngSysGrp
+         설  명 : 전환서비스 쳬계 그룹을 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   허진영     최초 생성
+    -->
+    <update id="CMBChngSysDAO.updateChngSysGrp" parameterType="emfMap">
+    	UPDATE /* CMBChngSysDAO.updateChngSysGrp */ CM_CHNG_SYS_MST
+    	   SET CHNG_COND_CD = #{chngCondCd}
+    	   	   , MOD_ID = #{modId}
+    	       , MOD_IP = #{modIp}
+    	       , MOD_DTM = SYSDATE
+    	 WHERE GRP_SEQ = #{grpSeq}
+    </update>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.updateChngSysGrpDtl
+         설  명 : 전환서비스 쳬계 그룹 상세를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   허진영     최초 생성
+    -->
+    <update id="CMBChngSysDAO.updateChngSysGrpDtl" parameterType="emfMap">
+		MERGE /* CMBChngSysDAO.updateChngSysGrpDtl */ INTO CM_CHNG_SYS_DTL
+		USING DUAL ON (
+			GRP_SEQ = #{grpSeq}
+			AND PRDCT_CD = #{prdctCd}
+		)
+		WHEN MATCHED THEN
+			UPDATE 
+			   SET PRDCT_SEQ = #{prdctSeq}
+				   , MOD_ID = #{modId}
+				   , MOD_IP = #{modIp}
+    	   	   	   , MOD_DTM = SYSDATE
+		WHEN NOT MATCHED THEN
+			INSERT
+	    		(GRP_SEQ
+				, PRDCT_CD
+				, PRDCT_SEQ
+				, REG_ID
+				, REG_IP
+				, REG_DTM
+				, MOD_ID
+				, MOD_IP
+				, MOD_DTM
+	    		)
+	    	VALUES
+	    		(#{grpSeq}
+	    		, #{prdctCd}
+	    		, #{prdctSeq, jdbcType=VARCHAR}
+	    		, #{regId}
+	    		, #{regIp}
+	    		, SYSDATE
+	    		, #{modId}
+	    		, #{modIp}
+	    		, SYSDATE
+    		)
+    </update>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.deleteChngSysGrp
+         설  명 : 전환서비스 쳬계 그룹을 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   허진영     최초 생성
+    -->
+    <delete id="CMBChngSysDAO.deleteChngSysGrp" parameterType="emfMap">
+    	DELETE /* CMBChngSysDAO.deleteChngSysGrp */
+    	  FROM CM_CHNG_SYS_MST
+    	 WHERE GRP_SEQ = #{grpSeq}
+    </delete>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.deleteChngSysGrpDtl
+         설  명 : 전환서비스 쳬계 그룹 상세를 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   허진영     최초 생성
+    -->
+    <delete id="CMBChngSysDAO.deleteChngSysGrpDtl" parameterType="emfMap">
+    	DELETE /* CMBChngSysDAO.deleteChngSysGrpDtl */
+    	  FROM CM_CHNG_SYS_DTL
+    	 WHERE GRP_SEQ = #{grpSeq}
+    </delete>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.selectChngSysGrpPrdctList
+         설  명 : 전환서비스 쳬계 그룹 상품 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   허진영     최초 생성
+    -->
+	<select id="CMBChngSysDAO.selectChngSysGrpPrdctList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CMBChngSysDAO.selectChngSysGrpPrdctList */
+			   TBL.*
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.*
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , A.GRP_SEQ
+					   , A.GRP_NM
+             		   , B.GRP_PRDCT_SEQ
+					   , B.OUT_PRDCT_CD
+					   , B.OUT_PRDCT_NM
+					   , B.REG_DTM
+			      FROM CM_CHNG_SYS_MST A, CM_CHNG_PRDCT_INF B
+			     WHERE A.GRP_SEQ = B.GRP_SEQ
+             	   AND A.GRP_SEQ = #{grpSeq}
+		      	<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND B.OUT_PRDCT_NM LIKE '%' || #{q} || '%'	]]>
+					</if>
+				</if>
+				 ORDER BY B.REG_DTM DESC
+			) T1
+	    ) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+	
+	<!--
+         쿼리명 : CMBChngSysDAO.getChngSysGrpPrdctAllList
+         설  명 : 전환서비스 쳬계 그룹 모든 상품을 가져온다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   허진영     최초 생성
+    -->
+	<select id="CMBChngSysDAO.getChngSysGrpPrdctAllList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CMBChngSysDAO.getChngSysGrpPrdctAllList */
+			   OUT_PRDCT_CD
+	      FROM CM_CHNG_PRDCT_INF
+	</select>
+	
+	 <!--
+         쿼리명 : CMBChngSysDAO.getChngSysGrpDtl
+         설  명 : 전환서비스 체계 그룹 상세를 가져온다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.17   허진영     최초 생성
+    -->
+    <select id="CMBChngSysDAO.getChngSysGrpDtl" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CMBChngSysDAO.getChngSysGrpDtl */
+			   (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'CHNG_COND_GB' AND CD = A.CHNG_COND_CD) AS CHNG_COND_NM
+			   , (SELECT PRDCT_NM FROM CM_PRDCT_MST WHERE PRDCT_SEQ = B.PRDCT_SEQ) AS PRDCT_NM
+         	   , (SELECT CD_ORD FROM CO_CD_DTL WHERE CD_ID = 'PRDCT_GB' AND CD = B.PRDCT_CD) AS CD_ORD
+	      FROM CM_CHNG_SYS_MST A, CM_CHNG_SYS_DTL B
+	 	 WHERE A.GRP_SEQ = B.GRP_SEQ(+)
+	 	   AND A.GRP_SEQ = #{grpSeq}
+         ORDER BY CD_ORD
+    </select>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.insertChngSysGrpPrdct
+         설  명 : 전환서비스 쳬계 그룹 상품을 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영     최초 생성
+    -->
+    <insert id="CMBChngSysDAO.insertChngSysGrpPrdct" parameterType="emfMap">
+    	INSERT /* CMBChngSysDAO.insertChngSysGrpPrdct */ INTO CM_CHNG_PRDCT_INF 
+    		(GRP_PRDCT_SEQ
+			, GRP_SEQ
+			, OUT_PRDCT_CD
+			, OUT_PRDCT_NM
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+    		)
+    	VALUES
+    		(#{grpPrdctSeq}
+    		, #{grpSeq}
+			, #{outPrdctCd}
+			, #{outPrdctNm}
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+    		)
+    </insert>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.updateChngSysGrpNm
+         설  명 : 전환서비스 쳬계 그룹명을 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   허진영     최초 생성
+    -->
+    <update id="CMBChngSysDAO.updateChngSysGrpNm" parameterType="emfMap">
+    	UPDATE /* CMBChngSysDAO.updateChngSysGrpNm */ CM_CHNG_SYS_MST
+    	   SET GRP_NM = #{grpNm}
+    	       , MOD_ID = #{modId}
+    	       , MOD_IP = #{modIp}
+    	       , MOD_DTM = SYSDATE
+    	 WHERE GRP_SEQ = #{grpSeq}
+    </update>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.deleteChngSysGrpPrdct
+         설  명 : 전환서비스 쳬계 그룹 상품을 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   허진영     최초 생성
+    -->
+    <delete id="CMBChngSysDAO.deleteChngSysGrpPrdct" parameterType="emfMap">
+    	DELETE /* CMBChngSysDAO.deleteChngSysGrpPrdct */
+    	  FROM CM_CHNG_PRDCT_INF
+		<choose>	
+			<when test="delSeq != null and delSeq != ''">
+				WHERE GRP_PRDCT_SEQ IN
+				<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+		            #{item}
+		        </foreach>
+			</when>
+			<otherwise>
+				WHERE GRP_SEQ = #{grpSeq}
+			</otherwise>
+		</choose>
+    </delete>
+    
+    <!--
+         쿼리명 : CMBChngSysDAO.excelChngSysGrpPrdctList
+         설  명 : 전환서비스 쳬계 그룹 상품 목록을 조회한다. (엑셀 다운로드)
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.20   허진영     최초 생성
+    -->
+	<select id="CMBChngSysDAO.excelChngSysGrpPrdctList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CMBChngSysDAO.excelChngSysGrpPrdctList */
+			   COUNT(*) OVER() AS TOT_CNT
+			   , A.GRP_SEQ
+			   , A.GRP_NM
+           	   , B.GRP_PRDCT_SEQ
+			   , B.OUT_PRDCT_CD
+			   , B.OUT_PRDCT_NM
+			   , B.REG_DTM
+	      FROM CM_CHNG_SYS_MST A, CM_CHNG_PRDCT_INF B
+	     WHERE A.GRP_SEQ = B.GRP_SEQ
+           	   AND A.GRP_SEQ = #{grpSeq}
+      	<if test="q != null and q != ''">
+			<if test="f == 1">
+				<![CDATA[	AND B.OUT_PRDCT_NM LIKE '%' || #{q} || '%'	]]>
+			</if>
+		</if>
+		 ORDER BY B.REG_DTM DESC
+	</select>
+
+</mapper>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SMCDnldFormDAO">
+
+	<!--
+         쿼리명 : SMCDnldFormDAO.selectDnldFormList
+         설  명 : 다운로드 양식 목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.30   허진영      최초생성
+    -->
+	<select id="SMCDnldFormDAO.selectDnldFormList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* SMCDnldFormDAO.selectDnldFormList */
+			   TBL.*
+		FROM (
+			SELECT ROWNUM AS RNUM, A.*
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+			           , DNLD_FORM_SEQ
+		               , DNLD_FORM_NM
+		               , REG_ID
+					   , REG_DTM
+					   , (SELECT CNT FROM CO_FILE_DTL WHERE A.ATCH_FILE_ID = ATCH_FILE_ID) AS CNT
+			      FROM SM_DNLD_FORM_MST A
+			     WHERE 1=1
+		      	<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND DNLD_FORM_NM LIKE '%' || #{q} || '%'	]]>
+					</if>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) A
+	    ) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+	
+	<!--
+         쿼리명 : SMCDnldFormDAO.selectDnldForm
+         설  명 : 다운로드 양식 상세를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.30   허진영      최초생성
+    -->
+	<select id="SMCDnldFormDAO.selectDnldForm" parameterType="emfMap" resultType="emfMap">
+		SELECT /* SMCDnldFormDAO.selectDnldForm */ 
+               DNLD_FORM_SEQ
+		       , DNLD_FORM_NM
+               , ATCH_FILE_ID
+		  FROM SM_DNLD_FORM_MST
+		 WHERE DNLD_FORM_SEQ = #{dnldFormSeq}
+	</select>
+	
+	<!--
+         쿼리명 : SMCDnldFormDAO.insertDnldForm
+         설  명 : 팝업을 등록한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.26  허진영     최초생성
+    -->
+	<insert id="SMCDnldFormDAO.insertDnldForm" parameterType="emfMap">
+		INSERT /* SMCDnldFormDAO.insertDnldForm */INTO SM_DNLD_FORM_MST 
+			(DNLD_FORM_SEQ
+ 			, DNLD_FORM_NM
+ 			, ATCH_FILE_ID
+ 			, REG_ID
+ 			, REG_IP
+ 			, REG_DTM
+ 			, MOD_ID
+ 			, MOD_IP
+ 			, MOD_DTM
+ 			)
+		VALUES        
+			(#{dnldFormSeq}
+			, #{dnldFormNm}
+			, #{atchFileId}
+ 			, #{regId}
+ 			, #{regIp}
+ 			, SYSDATE
+ 			, #{modId}
+ 			, #{modIp}
+ 			, SYSDATE
+		  )
+	</insert>
+	
+	<!--
+         쿼리명 : SMCDnldFormDAO.updateDnldForm
+         설  명 : 팝업를 수정한다.
+         수정일   수정자     수정내용 
+      ==========  ======  ============== 
+      2016.02.11  허진영     최초생성
+    -->
+ 	<update id="SMCDnldFormDAO.updateDnldForm" parameterType="emfMap">
+		UPDATE /* SMCDnldFormDAO.updateDnldForm */ SM_DNLD_FORM_MST
+ 		   SET DNLD_FORM_NM = #{dnldFormNm}
+ 		   	   , ATCH_FILE_ID = #{atchFileId}
+	  		   , MOD_ID = #{modId}
+	  		   , MOD_IP = #{modIp}
+	  		   , MOD_DTM = SYSDATE
+		 WHERE DNLD_FORM_SEQ = #{dnldFormSeq}
+	</update>
+	
+	<!--
+         쿼리명 : SMCDnldFormDAO.deleteDnldForm
+         설  명 : 팝업를 삭제한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2016.02.11  허진영     최초 생성
+    -->
+	<delete id="SMCDnldFormDAO.deleteDnldForm" parameterType="emfMap">
+		DELETE /* SMCDnldFormDAO.deleteDnldForm */ 
+		  FROM SM_DNLD_FORM_MST
+		 WHERE DNLD_FORM_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+</mapper>

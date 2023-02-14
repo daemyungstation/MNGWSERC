@@ -1,0 +1,764 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OMACounselMng2DAO">
+
+	<!--
+         쿼리명 : OMACounselMngDAO.selectCounselMngList
+         설  명 : 외주업체 상담관리 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.26   김필기     최초 생성
+    -->
+    <select id="OMACounselMng2DAO.selectCounselMngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMACounselMng2DAO.selectCounselMngList */
+			   TBL.*
+			<if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR' or b2bStts.toString() == 'WEDDING'">
+			   , (SELECT COUNT(*) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = TBL.ACCNT_NO) AS TRUE_COUNT
+               , DECODE(FN_ACCNT_STAT(TBL.ACCNT_NO), 'Y', '정상', 'R', '해약', 'E', '행사', '청약철회') AS ACC_STAT
+			</if>
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , A.OSC_CNSL_SEQ
+					   , A.B2B_STTS
+					   , A.ID_NO
+					   , A.COMPANY_NM
+					   , A.AGENT_CD	
+					   , A.AGENT_NM
+					   , NVL2(D.AGENT_NM, D.AGENT_NM || '(' || D.AGENT_CD || ')', NULL) AS AGENT_CD2					   
+					   , A.AGENT_EMP_NM
+					   , A.AGENT_EMP_TEL
+					   , A.AGENT_NUM
+					   , A.B2B_CD
+					   , A.B2B_NM
+					   , A.B2B_EMP_CD
+					   , A.NAME
+					   , A.HP
+					   , A.PRDCT_CD
+					   , A.PRDCT_NM
+					   , A.PRDCT_CD2
+					   , A.PRDCT_NM2
+					   , A.PRDCT_CD3
+					   , A.PRDCT_NM3
+					   , A.FUSION_PRDCT_NM
+					   , A.FUSION_PRDCT_NM2
+					   , NVL(A.CALL_STTS, '미상담') AS CALL_STTS
+					   , A.AGENT_CALL_STTS
+					   , A.CODE_1
+					   , A.CODE_2
+					   , A.CODE_3
+					   , A.CNSLR
+					   , A.CALLTIME
+					   , A.MEMO
+					   , A.LGU_HOME_NO
+					   , A.LGU_MOBILE_NO
+					   , A.PREPAID_CARD_NUM
+					   , A.SKB_JOIN
+					   , A.STORE_NM
+					   , A.AGENT_CODE1
+					   , A.AGENT_CODE2
+					   , A.AGENT_ETC
+					   , A.AGENT_UNQ_NUM
+					   , A.SLLR_NUM
+					   , A.SLLR_PART
+					   , A.SLLR_CTEL
+					   , A.CSTMR_CODE1
+					   , A.CSTMR_UNQ_NUM
+					   , A.CARD_NUM
+					   , A.CSTMR_NUM
+					   , A.CSTMR_CODE2
+					   , A.CSTMR_ETC
+					   , A.HANSS_MBSP_NUM
+					   , A.MBSP_NUM
+					   , A.ORDER_NUM
+					   , A.AGENT_EMP_NUM
+					   , A.REG_DTM
+					   , A.FUNNEL
+					   , A.TRAVEL
+					   , A.JAU_NUM
+					   , A.DM_TOUR_NUM
+					   , A.LOTTE_CARD
+					   , A.SLLR_AGENT_NM
+					   , A.LOTTE_CARD_PAY
+					   , A.TOUR_BOOK_NO
+					   , A.JOIN_PROD
+					   , A.HOME_PRD_NUM
+					   , A.U_DLR_CD
+					   , A.U_INDC_EMPNO
+					   , A.U_INTG_USER_ID
+					   , A.CARD_PAY
+						<if test="b2bStts.toString() == 'LGU'">
+							, DECODE(A.AGENT_GUBUN, 'Y', 'FM사원(점장)', '-') AS AGENT_GUBUN
+						</if>
+						<if test="b2bStts.toString() == 'SONE'">
+		                    , (
+		                        SELECT DISTINCT JOIN_DT
+		                        FROM MEM_PROD_ACCNT T1 LEFT JOIN MEMBER T2 ON (T1.MEM_NO=T2.MEM_NO)
+		                        WHERE T1.ORDER_NUM=a.AGENT_EMP_NUM
+		                        AND T2.MEM_NM=a.NAME
+		                        AND T2.CELL=a.HP
+		                    ) as JOIN_DT
+						</if>
+						<if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR' or b2bStts.toString() == 'CHUNGHO' or b2bStts.toString() == 'WEDDING'">
+						   , B.ACCNT_NO
+						   , B.KB_NO
+						   , B.PROD_CD
+						   , B.JOIN_DT
+						</if>
+             	       , C.CNTN AS CNSL_DTL_CNTN
+             	       , C.REG_DTM AS CNSL_DTL_DTM
+             	       <if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR'">
+	             	       <if test="(uplussaveYn == 'N'.toString()) and (uplussave3Yn == 'N'.toString()) and b2bStts.toString() != 'HANSSEM' and b2bStts.toString() != 'JAUTOUR' and b2bStts.toString() != 'DMTOUR'and b2bStts.toString() != 'MODETOUR'">
+	             	       , D.RESN_PROC_DAY
+	             	       </if>
+             	       </if>
+			           , A.EXPIRE_RENEW_ACCNT_NO
+			           , A.EXPIRE_RENEW_GIFT_NO
+			           , NVL(A.EXPIRE_RENEW_ACCNT_NAME, '-') AS EXPIRE_RENEW_ACCNT_NAME
+				       , A.EXPIRE_RENEW_ACCNT_CNT
+				       , A.UNQ_NO
+				       , A.CONTRACT_NO
+				       , A.SERIAL_NO
+				       , A.PRODUCT_NM
+			           , A.ZIPCD
+			           , A.ADR
+			           , A.ADR_DTL
+			           , CASE A.SEX WHEN '0001' THEN '남' WHEN '0002' THEN '여' ELSE '' END AS GENDER
+			           , TO_CHAR(TO_DATE(A.BIRTH, 'YYYYMMDD'), 'YYYY-MM-DD') AS BIRTH
+			           , A.DISCOUNT_CTN
+			           , A.DISCOUNT_PIN
+			           , A.ESTIMATE_PRICE
+			           , A.WEDDING_DATE
+					   , A.MAIN_CONT_TYPE
+					   , A.SALES_TYPE
+					   , A.INVITE_CODE
+					   , A.U_PROD_NM
+					   , A.U_CMMN_CD
+					   , A.U_CMMN_CD_NM
+					   , A.U_DLR_NM
+					   , A.U_PROD_NO
+					   , A.WH_POS_CD
+					   , A.WH_STORE_NM
+						, A.CONTRACTOR_NAME
+						, A.CONTRACTOR_BIRTH
+						, A.CONTRACTOR_PHONE
+						, A.CARD_COMPANY
+						, A.CREDIT_CARD_NUM
+						, A.VALID_THRU
+						, A.PLATE_NUM
+						, A.ORDER_QTY
+						, A.MAIN_CONT_SERVICE_1
+						, A.MAIN_CONT_SERVICE_2
+						, A.TERM_AGREE
+						, A.EMAIL
+			      FROM OM_OSC_CNSL_MST@DMWEB_KT A 
+						<if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR' or b2bStts.toString() == 'CHUNGHO' or b2bStts.toString() == 'WEDDING'">
+							<if test="(uplussaveYn == 'Y'.toString()) or (uplussave3Yn == 'Y'.toString()) ">
+							 LEFT JOIN MEM_PROD_ACCNT B ON (A.CSTMR_UNQ_NUM = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'HANSSEM'">
+							 LEFT JOIN MEM_PROD_ACCNT B ON (A.HANSS_MBSP_NUM || '_' || A.OSC_CNSL_SEQ = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'JAUTOUR'">
+							 LEFT JOIN MEM_PROD_ACCNT B ON (A.JAU_NUM = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'DMTOUR'">
+							 LEFT JOIN MEM_PROD_ACCNT B ON (A.DM_TOUR_NUM = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'MODETOUR'">
+							 LEFT JOIN MEM_PROD_ACCNT B ON (TO_CHAR(A.OSC_CNSL_SEQ) = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'CHUNGHO'">
+								LEFT JOIN MEM_PROD_ACCNT B ON (TO_CHAR(A.CONTRACT_NO) = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'WEDDING'">
+								LEFT JOIN MEM_PROD_ACCNT B ON (A.ID_NO = TRIM(B.ID_NO) )
+							</if>
+							<if test="(uplussaveYn == 'N'.toString()) and (uplussave3Yn == 'N'.toString()) and b2bStts.toString() != 'HANSSEM' and b2bStts.toString() != 'JAUTOUR' and b2bStts.toString() != 'DMTOUR'and b2bStts.toString() != 'MODETOUR' and b2bStts.toString() != 'CHUNGHO' and b2bStts.toString() != 'WEDDING'">
+							 LEFT JOIN MEM_PROD_ACCNT B ON (A.ID_NO = TRIM(B.ID_NO) )
+							 LEFT JOIN RESCISSION D ON (B.ACCNT_NO = D.ACCNT_NO)
+							</if>
+						</if>
+							 LEFT JOIN (
+								SELECT TMP.*
+								FROM (
+									SELECT ROW_NUMBER() OVER (PARTITION BY OSC_CNSL_SEQ ORDER BY REG_DTM DESC) AS RNUM
+										   , OSC_CNSL_SEQ
+										   , CNTN
+										   , REG_DTM
+									  FROM OM_OSC_CNSL_DTL@DMWEB_KT
+								) TMP
+								WHERE TMP.RNUM = 1
+							 ) C ON A.OSC_CNSL_SEQ = C.OSC_CNSL_SEQ
+							 LEFT JOIN OM_SDP_AGENT@DMWEB_KT D ON A.AGENT_CD = D.AGENT_CD
+				<if test="(uplussaveYn == 'N'.toString()) and (uplussave3Yn == 'N'.toString()) and (smartYn == 'N'.toString())">
+				 WHERE A.B2B_STTS = #{b2bStts,jdbcType=VARCHAR}
+				</if>
+				<if test="(uplussaveYn == 'Y'.toString()) or (uplussave3Yn == 'Y'.toString())">
+				 WHERE (A.B2B_STTS = 'UPLUSSAVE1' OR A.B2B_STTS = 'UPLUSSAVE2')
+				</if>
+				<if test="(smartYn == 'Y'.toString())">
+				 WHERE (A.B2B_STTS = 'SMART' OR A.B2B_STTS = 'SMARTMOBILE' OR A.B2B_STTS = 'SMARTHOMEPLUS')
+				</if>
+				<if test="code1 != null and code1 != ''">
+		      		AND A.CODE_1 = #{code1,jdbcType=VARCHAR}
+		      	</if>
+				<if test="strtDt != null and strtDt != ''">
+					AND A.REG_DTM <![CDATA[>=]]> TO_DATE(#{strtDt,jdbcType=VARCHAR}, 'yyyy-MM-dd')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND A.REG_DTM <![CDATA[<]]> TO_DATE(#{endDt,jdbcType=VARCHAR}, 'yyyy-MM-dd') + 1
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">	
+				 		AND A.ID_NO LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 2">	
+				 		AND A.AGENT_EMP_NM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 3">
+						<if test="q == '온라인'.toString()">	
+				 			AND A.AGENT_NM IS NULL
+				 		</if>
+						<if test="q != '온라인'.toString()">	
+				 			AND A.AGENT_NM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+				 		</if>
+					</if>
+					<if test="f == 4">	
+				 		AND A.NAME LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 5">
+						AND REPLACE(A.HP, '-', '') LIKE '%' || REPLACE(#{q,jdbcType=VARCHAR}, '-', '') || '%'
+					</if>
+					<if test="f == 6">	
+				 		AND A.CNSLR LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 7">	
+				 		AND A.AGENT_CODE1 LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 8">	
+				 		AND A.AGENT_CODE2 LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 9">	
+				 		AND A.AGENT_EMP_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 10">	
+				 		AND A.AGENT_EMP_TEL LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 11">	
+				 		AND A.CSTMR_UNQ_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 12">	
+				 		AND A.HANSS_MBSP_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 13">	
+				 		AND A.MBSP_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 14">	
+				 		AND A.SLLR_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 15">	
+				 		AND A.SLLR_PART LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 16">
+						<if test="q == '온라인'.toString()">	
+				 			AND A.FUNNEL = '1'
+				 		</if>
+						<if test="q == '홈쇼핑'.toString()">	
+				 			AND A.FUNNEL = '2'
+				 		</if>
+						<if test="q == '가전'.toString()">	
+				 			AND A.FUNNEL = '3'
+				 		</if>
+						<if test="q == '모바일'.toString()">	
+				 			AND A.FUNNEL = '4'
+				 		</if>
+				 		<if test="q == '투어캐빈'.toString()">	
+				 			AND A.FUNNEL = '5'
+				 		</if>
+				 		<if test="q == '홈플러스'.toString()">	
+				 			AND A.FUNNEL = '6'
+				 		</if>
+					</if>
+					<if test="f == 17">	
+				 		AND A.JAU_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 18">	
+				 		AND A.SLLR_AGENT_NM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 19">	
+				 		AND A.DM_TOUR_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 20">	
+				 		AND A.TOUR_BOOK_NO LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 21">	
+						<if test="b2bStts.toString() == 'HANSSEM'">
+					 		AND  A.HANSS_MBSP_NUM || A.OSC_CNSL_SEQ like '%' || #{q,jdbcType=VARCHAR} || '%'
+					 	</if>
+						<if test="b2bStts.toString() == 'MODETOUR'">	
+					 		AND A.OSC_CNSL_SEQ = #{q,jdbcType=VARCHAR}
+						</if>
+					</if>
+					<if test="f == 22">
+							AND 1 = 1
+						<if test="q == '결제'.toString()">	
+				 			AND A.LOTTE_CARD_PAY = '1'
+				 		</if>
+						<if test="q == '미결제'.toString()">	
+				 			AND A.LOTTE_CARD_PAY = '2'
+				 		</if>
+					</if>
+					<if test="f == 23">
+							AND B.JOIN_DT LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 24">
+			 			AND A.AGENT_GUBUN = UPPER(#{q,jdbcType=VARCHAR}) 
+					</if>
+					<if test="f == 25">
+			 			AND A.HOME_PRD_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 26">
+						AND A.U_DLR_CD LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+
+					<if test="f == 27">
+						AND A.PRDCT_NM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 28">
+						AND A.PRDCT_NM2 LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 29">
+						AND A.FUSION_PRDCT_NM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 30">
+						AND A.SERIAL_NO LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 31">
+						AND A.CONTRACT_NO LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 32">
+						AND A.INVITE_CODE LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 33">
+						AND A.CONTRACTOR_NAME LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+					</if>
+					<if test="f == 34">
+						AND A.SLLR_CTEL = #{q,jdbcType=VARCHAR}
+					</if>					
+					<if test="f == 35">
+						AND A.AGENT_CD = #{q,jdbcType=VARCHAR}
+					</if>					
+				</if>
+				<choose>
+					<when test="callStts != null and callStts != ''">
+						<choose>
+							<when test="callStts == 'no'.toString()">
+								AND A.CALL_STTS IS NULL
+							</when>
+							<otherwise>
+								AND A.CALL_STTS = #{callStts,jdbcType=VARCHAR}	
+							</otherwise>
+						</choose>					
+					</when>
+					<otherwise></otherwise>
+				</choose>
+				<choose>
+					<when test="(b2bStts == 'ONLIFECC'.toString()) or (b2bStts == 'EZWEL'.toString())">
+				 		ORDER BY A.OSC_CNSL_SEQ DESC
+				 	</when>
+				 	<otherwise>
+				 		ORDER BY A.REG_DTM DESC, A.OSC_CNSL_SEQ
+				 	</otherwise>
+				</choose>
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}	   	     
+	</select>
+
+	<select id="OMACounselMng2DAO.selectCounselMngExcelList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMACounselMng2DAO.selectCounselMngExcelList */
+			    A.OSC_CNSL_SEQ,
+				A.B2B_STTS,
+				A.B2B_CD,
+				A.B2B_NM,
+				A.PREPAID_CARD_NUM,
+				A.AGENT_EMP_ID,
+				A.AGENT_EMP_NM,
+				A.AGENT_CD,
+				A.ID_NO,
+				A.AGENT_NM,
+				A.AGENT_EMP_TEL,
+				A.COMPANY_NM,
+				A.B2B_EMP_CD,
+				A.CODE_1,
+				A.CODE_2,
+				A.CODE_3,
+				A.CODE_4,
+				A.PRDCT_CD,
+				A.PRDCT_NM,
+				A.PRDCT_CD2,
+				A.PRDCT_NM2,
+				A.PRDCT_CD3,
+				A.PRDCT_NM3,
+				A.FUSION_PRDCT_CD,
+				A.FUSION_PRDCT_NM,
+				A.FUSION_PRDCT_NM2,
+				A.NAME,
+				A.STORE_NM,
+				A.TELECOM,
+				A.HP,
+				A.TEL,
+				A.EMAIL,
+				A.ZIPCD,
+				A.ADR,
+				A.ADR_DTL,
+				A.CALLTIME,
+				A.EMART_A,
+				A.LOT_CARD_NUM,
+				A.SKB_JOIN,
+				A.SKB_JOIN_MEMO,
+				A.MEMO,
+				A.CI,
+				TO_CHAR(TO_DATE(A.BIRTH, 'YYYYMMDD'), 'YYYY-MM-DD') AS BIRTH,
+				A.SEX,
+				A.SUB_HP,
+				A.LGU_HOME_NO,
+				A.LGU_MOBILE_NO,
+				NVL(A.CALL_STTS, '미상담') AS CALL_STTS,
+				A.AGENT_CALL_STTS,
+				A.CNSLR,
+				A.SID,
+				A.REG_IP,
+				A.REG_DTM,
+				A.AGENT_CODE1,
+				A.ORDER_NUM,
+				A.AGENT_EMP_NUM,
+				A.AGENT_NUM,
+				A.AGENT_CODE2,
+				A.AGENT_ETC,
+				A.AGENT_UNQ_NUM,
+				A.SLLR_NUM,
+				A.SLLR_PART,
+				A.SLLR_CTEL,
+				A.CSTMR_CODE1,
+				A.CSTMR_UNQ_NUM,
+				A.CARD_NUM,
+				A.CSTMR_NUM,
+				A.CSTMR_CODE2,
+				A.CSTMR_ETC,
+				A.HANSS_MBSP_NUM,
+				A.MBSP_NUM,
+			    A.REG_DTM,
+			    A.FUNNEL,
+			    A.TRAVEL,
+			    A.JAU_NUM,
+			    A.DM_TOUR_NUM,
+			    A.LOTTE_CARD,
+			    A.SLLR_AGENT_NM,
+			    A.LOTTE_CARD_PAY,
+			    A.TOUR_BOOK_NO,
+			    A.JOIN_PROD,
+			    A.HOME_PRD_NUM
+		    	, A.U_DLR_CD
+			   , A.U_INDC_EMPNO
+			   , A.U_INTG_USER_ID
+			   , A.CARD_PAY
+			<if test="b2bStts.toString() == 'LGU'">
+			   , DECODE(A.AGENT_GUBUN, 'Y', 'FM사원(점장)', '-') AS AGENT_GUBUN
+			</if>
+			<if test="b2bStts.toString() == 'SONE'">
+               , (
+                   SELECT DISTINCT JOIN_DT
+                   FROM MEM_PROD_ACCNT T1 LEFT JOIN MEMBER T2 ON (T1.MEM_NO=T2.MEM_NO)
+                   WHERE T1.ORDER_NUM=a.AGENT_EMP_NUM
+                   AND T2.MEM_NM=a.NAME
+                   AND T2.CELL=a.HP
+               ) as JOIN_DT
+			</if>			
+			<if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR' or b2bStts.toString() == 'CHUNGHO' or b2bStts.toString() == 'WEDDING'">
+			   , B.ACCNT_NO
+			   , B.KB_NO
+			   , B.PROD_CD
+         	   , B.JOIN_DT
+         	   , (SELECT COUNT(*) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = B.ACCNT_NO) AS TRUE_COUNT
+			   , DECODE(FN_ACCNT_STAT(B.ACCNT_NO), 'Y', '정상', 'R', '해약', 'E', '행사', '청약철회') AS ACC_STAT
+			</if>
+			<if test="id.toString() == 'lgusawon' or id.toString() == 'lgumanager'">
+				, EV.EVENT_COMP_DAY
+			</if>
+         	   , C.CNTN AS CNSL_DTL_CNTN
+               , C.REG_DTM AS CNSL_DTL_DTM
+               <if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR'">
+               <if test="id == 'lgusawon' or id == 'lgumanager'">
+               , D.RESN_PROC_DAY
+               </if>
+            </if>
+            <if test="b2bStts.toString() =='EXPIRATION'"> 
+				, A.EXPIRE_RENEW_ACCNT_NO
+				, A.EXPIRE_RENEW_GIFT_NO
+				, NVL(A.EXPIRE_RENEW_ACCNT_NAME, '-') AS EXPIRE_RENEW_ACCNT_NAME
+				, A.EXPIRE_RENEW_ACCNT_CNT
+				, A.UNQ_NO
+				, A.ZIPCD
+				, A.ADR
+				, A.ADR_DTL
+				, CASE A.SEX WHEN '0001' THEN '남' WHEN '0002' THEN '여' ELSE '' END AS GENDER
+			</if>
+				, A.CONTRACT_NO
+				, A.SERIAL_NO
+				, A.PRODUCT_NM
+				, A.DISCOUNT_CTN
+				, A.DISCOUNT_PIN
+				, A.ESTIMATE_PRICE
+				, A.WEDDING_DATE
+				, A.MAIN_CONT_TYPE
+				, A.SALES_TYPE
+				, A.INVITE_CODE
+				, A.U_PROD_NM
+				, A.U_CMMN_CD
+				, A.U_CMMN_CD_NM
+				, A.U_DLR_NM
+				, A.U_PROD_NO
+				, A.WH_POS_CD
+				, A.WH_STORE_NM
+				, A.CONTRACTOR_NAME
+				, A.CONTRACTOR_BIRTH
+				, A.CONTRACTOR_PHONE
+				, A.CARD_COMPANY
+				, A.CREDIT_CARD_NUM
+				, A.VALID_THRU
+				, A.PLATE_NUM
+				, A.ORDER_QTY
+				, A.MAIN_CONT_SERVICE_1
+				, A.MAIN_CONT_SERVICE_2
+				, A.TERM_AGREE
+		  FROM OM_OSC_CNSL_MST@DMWEB_KT A		   
+						<if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR' or b2bStts.toString() == 'CHUNGHO' or b2bStts.toString() == 'WEDDING'">
+		  					<choose>
+		  						<when test="(uplussaveYn == 'Y'.toString()) or (uplussave3Yn == 'Y'.toString())">
+		  							LEFT JOIN MEM_PROD_ACCNT B ON (A.CSTMR_UNQ_NUM = TRIM(B.ID_NO) )
+		  						</when>
+								<when test="b2bStts.toString() == 'HANSSEM'">
+									LEFT JOIN MEM_PROD_ACCNT B ON (A.HANSS_MBSP_NUM || '_' || A.OSC_CNSL_SEQ = TRIM(B.ID_NO) )
+								</when>
+								<when test="b2bStts.toString() == 'JAUTOUR'">
+								 	LEFT JOIN MEM_PROD_ACCNT B ON (A.JAU_NUM = TRIM(B.ID_NO) )
+								</when>
+								<when test="b2bStts.toString() == 'DMTOUR'">
+								 	LEFT JOIN MEM_PROD_ACCNT B ON (A.DM_TOUR_NUM = TRIM(B.ID_NO) )
+								</when>
+								<when test="b2bStts.toString() == 'MODETOUR'">
+								 	LEFT JOIN MEM_PROD_ACCNT B ON (TO_CHAR(A.OSC_CNSL_SEQ) = TRIM(B.ID_NO) )
+								</when>
+								<when test="b2bStts.toString() == 'CHUNGHO'">
+									LEFT JOIN MEM_PROD_ACCNT B ON (TO_CHAR(A.CONTRACT_NO) = TRIM(B.ID_NO) )
+								</when>
+								<when test="b2bStts.toString() == 'WEDDING'">
+									LEFT JOIN MEM_PROD_ACCNT B ON (A.ID_NO = TRIM(B.ID_NO) )
+								</when>
+								<when test="id == 'lgusawon' or id == 'lgumanager'">
+									LEFT JOIN MEM_PROD_ACCNT B ON (A.ID_NO = TRIM(B.ID_NO) )
+									LEFT JOIN EVENT EV ON (B .ACCNT_NO = TRIM(EV.ACCNT_NO))
+									LEFT JOIN RESCISSION D ON (B.ACCNT_NO = D.ACCNT_NO)
+								</when>
+		  						<otherwise>
+		  						 	LEFT JOIN MEM_PROD_ACCNT B ON (A.ID_NO = TRIM(B.ID_NO) )
+		  						</otherwise>
+		  					</choose>
+		  				</if>
+		  						 LEFT JOIN (
+		  						 	SELECT TMP.*
+		  						 	FROM (
+		  						 		SELECT ROW_NUMBER() OVER (PARTITION BY OSC_CNSL_SEQ ORDER BY REG_DTM DESC) AS RNUM
+		  						 			   , OSC_CNSL_SEQ
+		  						 			   , CNTN
+		  						 			   , REG_DTM
+		  						 	      FROM OM_OSC_CNSL_DTL@DMWEB_KT
+		  						 	) TMP
+		  						 	WHERE TMP.RNUM = 1
+		  						 ) C ON A.OSC_CNSL_SEQ = C.OSC_CNSL_SEQ 
+		<if test="(uplussaveYn == 'N'.toString()) and (uplussave3Yn == 'N'.toString()) and (smartYn == 'N'.toString())">
+		 WHERE A.B2B_STTS = #{b2bStts,jdbcType=VARCHAR}
+		</if>
+		<if test="uplussaveYn == 'Y'.toString()">
+		 WHERE (A.B2B_STTS = 'UPLUSSAVE1' OR A.B2B_STTS = 'UPLUSSAVE2') 
+		</if>
+		<if test="(smartYn == 'Y'.toString())">
+		 WHERE (A.B2B_STTS = 'SMART' OR A.B2B_STTS = 'SMARTMOBILE')
+		</if>
+		<if test="code1 != null and code1 != ''">
+      		AND A.CODE_1 = #{code1,jdbcType=VARCHAR}
+      	</if>
+		<if test="strtDt != null and strtDt != ''">
+			AND A.REG_DTM <![CDATA[>=]]> TO_DATE(#{strtDt,jdbcType=VARCHAR}, 'yyyy-MM-dd')
+		</if>
+		<if test="endDt != null and endDt != ''">
+			AND A.REG_DTM <![CDATA[<]]> TO_DATE(#{endDt,jdbcType=VARCHAR}, 'yyyy-MM-dd') + 1
+		</if>
+		<if test="q != null and q != ''">
+			<if test="f == 1">	
+		 		AND A.ID_NO LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 2">	
+		 		AND A.AGENT_EMP_NM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 3">
+				<if test="q == '온라인'.toString()">	
+		 			AND A.AGENT_NM IS NULL
+		 		</if>
+				<if test="q != '온라인'.toString()">	
+		 			AND A.AGENT_NM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+		 		</if>
+			</if>
+			<if test="f == 4">	
+		 		AND A.NAME LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 5">
+				AND REPLACE(A.HP, '-', '') LIKE '%' || REPLACE(#{q,jdbcType=VARCHAR}, '-', '') || '%'
+			</if>
+			<if test="f == 6">	
+		 		AND A.CNSLR LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 7">	
+		 		AND A.AGENT_CODE1 LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 8">	
+		 		AND A.AGENT_CODE2 LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 9">	
+		 		AND A.AGENT_EMP_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 10">	
+		 		AND A.AGENT_EMP_TEL LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 11">	
+		 		AND A.CSTMR_UNQ_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 12">	
+		 		AND A.HANSS_MBSP_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 13">	
+		 		AND A.MBSP_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 14">	
+		 		AND A.SLLR_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 15">	
+		 		AND A.SLLR_PART LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 16">
+				<if test="q == '온라인'.toString()">	
+		 			AND A.FUNNEL = '1'
+		 		</if>
+				<if test="q == '홈쇼핑'.toString()">	
+		 			AND A.FUNNEL = '2'
+		 		</if>
+				<if test="q == '가전'.toString()">	
+		 			AND A.FUNNEL = '3'
+		 		</if>
+				<if test="q == '모바일'.toString()">	
+		 			AND A.FUNNEL = '4'
+		 		</if>
+		 		<if test="q == '투어캐빈'.toString()">	
+		 			AND A.FUNNEL = '5'
+		 		</if>
+		 		<if test="q == '홈플러스'.toString()">	
+		 			AND A.FUNNEL = '6'
+		 		</if>
+			</if>
+			<if test="f == 17">	
+		 		AND A.JAU_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 18">	
+		 		AND A.SLLR_AGENT_NM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 19">	
+		 		AND A.DM_TOUR_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 20">	
+		 		AND A.TOUR_BOOK_NO LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 21">	
+				<if test="b2bStts.toString() == 'HANSSEM'">
+			 		AND  A.HANSS_MBSP_NUM || A.OSC_CNSL_SEQ like '%' || #{q,jdbcType=VARCHAR} || '%'
+			 	</if>
+				<if test="b2bStts.toString() == 'MODETOUR'">	
+			 		AND A.OSC_CNSL_SEQ = #{q,jdbcType=VARCHAR}
+				</if>
+			</if>
+			<if test="f == 22">
+					AND 1 = 1
+				<if test="q == '결제'.toString()">	
+		 			AND A.LOTTE_CARD_PAY = '1'
+		 		</if>
+				<if test="q == '미결제'.toString()">	
+		 			AND A.LOTTE_CARD_PAY = '2'
+		 		</if>
+			</if>
+			<if test="f == 23">
+					AND B.JOIN_DT LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 24">
+	 			AND A.AGENT_GUBUN = UPPER(#{q,jdbcType=VARCHAR}) 
+			</if>
+			<if test="f == 25">
+	 			AND A.HOME_PRD_NUM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 26">
+				AND A.U_DLR_CD LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+
+			<if test="f == 27">
+				AND A.PRDCT_NM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 28">
+				AND A.PRDCT_NM2 LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 29">
+				AND A.FUSION_PRDCT_NM LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 30">
+				AND A.SERIAL_NO LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 31">
+				AND A.CONTRACT_NO LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 32">
+				AND A.INVITE_CODE LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>
+			<if test="f == 33">
+				AND A.CONTRACTOR_NAME LIKE '%' || #{q,jdbcType=VARCHAR} || '%'
+			</if>			
+			<if test="f == 34">
+				AND A.SLLR_CTEL = #{q,jdbcType=VARCHAR}
+			</if>					
+			<if test="f == 35">
+				AND A.AGENT_CD = #{q,jdbcType=VARCHAR}
+			</if>			
+		</if>
+		<choose>
+			<when test="callStts != null and callStts != ''">
+				<choose>
+					<when test="callStts == 'no'.toString()">
+						AND A.CALL_STTS IS NULL
+					</when>
+					<otherwise>
+						AND A.CALL_STTS = #{callStts,jdbcType=VARCHAR}	
+					</otherwise>
+				</choose>					
+			</when>
+			<otherwise></otherwise>
+		</choose>
+		<choose>
+			<when test="(b2bStts == 'ONLIFECC'.toString()) or (b2bStts == 'EZWEL'.toString())">
+		 		ORDER BY A.OSC_CNSL_SEQ DESC
+		 	</when>
+		 	<otherwise>
+		 		ORDER BY A.REG_DTM DESC, A.OSC_CNSL_SEQ
+		 	</otherwise>
+		 </choose>
+	</select> 
+    
+</mapper>

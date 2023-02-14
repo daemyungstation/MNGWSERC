@@ -1,0 +1,1899 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OMACounselMngDAO">
+
+	<!--
+         쿼리명 : OMACounselMngDAO.selectCounselMngList
+         설  명 : 외주업체 상담관리 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.26   김필기     최초 생성
+    -->
+    <select id="OMACounselMngDAO.selectCounselMngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMACounselMngDAO.selectCounselMngList */
+			   TBL.*
+			<if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR' or b2bStts.toString() == 'WEDDING' or b2bStts.toString() == 'KBCAR' ">
+			   , (SELECT COUNT(*) FROM PAY_MNG@DMLIFE WHERE DEL_FG = 'N' AND ACCNT_NO = TBL.ACCNT_NO) AS TRUE_COUNT
+               , DECODE(FN_ACCNT_STAT@DMLIFE(TBL.ACCNT_NO), 'Y', '정상', 'R', '해약', 'E', '행사', '청약철회') AS ACC_STAT
+			</if>
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , A.OSC_CNSL_SEQ
+					   , A.B2B_STTS
+					   , A.ID_NO
+					   , A.COMPANY_NM
+					   , A.AGENT_CD	
+					   , A.AGENT_NM
+					   , NVL2(D.AGENT_NM, D.AGENT_NM || '(' || D.AGENT_CD || ')', NULL) AS AGENT_CD2					   
+					   , A.AGENT_EMP_NM
+					   , A.AGENT_EMP_TEL
+					   , A.AGENT_NUM
+					   , A.B2B_CD
+					   , A.B2B_NM
+					   , A.B2B_EMP_CD
+					   , A.NAME
+					   , SUBSTR(A.HP,-4) AS HP_SHORT
+					   , A.HP
+		<if test="(smartYn == 'Y'.toString())">
+						,CASE SUBSTR(A.HP, -1, 1)
+						WHEN '0' THEN '윌앤비전'
+						WHEN '1' THEN '윌앤비전'
+						WHEN '2' THEN '윌앤비전'
+						WHEN '3' THEN '윌앤비전'
+						WHEN '4' THEN '윌앤비전'
+						WHEN '5' THEN '리딩아이'
+						WHEN '6' THEN '효성ITX'
+						WHEN '7' THEN '효성ITX'
+						WHEN '8' THEN '효성ITX'
+						WHEN '9' THEN '효성ITX'
+						ELSE '' END AS REG_CENTER
+		</if>
+					   , A.PRDCT_CD
+					   , A.PRDCT_NM
+					   , A.PRDCT_CD2
+					   , A.PRDCT_NM2
+					   , A.PRDCT_CD3
+					   , A.PRDCT_NM3
+					   , A.FUSION_PRDCT_NM
+					   , A.FUSION_PRDCT_NM2
+					   , NVL(A.CALL_STTS, '미상담') AS CALL_STTS
+					   , A.AGENT_CALL_STTS
+					   , A.CODE_1
+					   , A.CODE_2
+					   , A.CODE_3
+					   , A.CNSLR
+					   , A.CALLTIME
+					   , A.MEMO
+					   , A.LGU_HOME_NO
+					   , A.LGU_MOBILE_NO
+					   , A.PREPAID_CARD_NUM
+					   , A.SKB_JOIN
+					   , A.STORE_NM
+					   , A.AGENT_CODE1
+					   , A.AGENT_CODE2
+					   , A.AGENT_ETC
+					   , A.AGENT_UNQ_NUM
+					   , A.SLLR_NUM
+					   , A.SLLR_PART
+					   , A.SLLR_CTEL
+					   , A.CSTMR_CODE1
+					   , A.CSTMR_UNQ_NUM
+					   , A.CARD_NUM
+					   , A.CSTMR_NUM
+					   , A.CSTMR_CODE2
+					   , A.CSTMR_ETC
+					   , A.HANSS_MBSP_NUM
+					   , A.MBSP_NUM
+					   , A.ORDER_NUM
+					   , A.AGENT_EMP_NUM
+					   , A.REG_DTM
+					   , A.FUNNEL
+					   , A.TRAVEL
+					   , A.JAU_NUM
+					   , A.DM_TOUR_NUM
+					   , A.LOTTE_CARD
+					   , A.SLLR_AGENT_NM
+					   , A.LOTTE_CARD_PAY
+					   , A.TOUR_BOOK_NO
+					   , A.JOIN_PROD
+					   , A.HOME_PRD_NUM
+					   , A.U_DLR_CD
+					   , A.U_INDC_EMPNO
+					   , A.U_INTG_USER_ID
+					   , A.CARD_PAY
+						<if test="b2bStts.toString() == 'LGU'">
+							, DECODE(A.AGENT_GUBUN, 'Y', 'FM사원(점장)', '-') AS AGENT_GUBUN
+						</if>
+						<if test="b2bStts.toString() == 'SONE'">
+						   , B.JOIN_DT							
+						</if>
+						<if test="b2bStts.toString() == 'KBCAR'">
+						   , B.JOIN_DT
+						   , B.ACCNT_NO
+						   , B.PROD_CD
+						</if>
+<!--  												
+						<if test="b2bStts.toString() == 'SONE'">
+			               , (
+			                   SELECT DISTINCT JOIN_DT
+			                   FROM MEM_PROD_ACCNT@DMLIFE T1 LEFT JOIN MEMBER@DMLIFE T2 ON (T1.MEM_NO=T2.MEM_NO)
+			                   WHERE T1.ORDER_NUM=a.AGENT_EMP_NUM
+			                   AND T2.MEM_NM=a.NAME
+			                   AND T2.CELL=a.HP
+			               ) as JOIN_DT
+						</if>
+-->												
+						<if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR' or b2bStts.toString() == 'CHUNGHO' or b2bStts.toString() == 'WEDDING'">
+						   , B.ACCNT_NO
+                           , CASE WHEN B.PAY_MTHD = '01' THEN '손수' 
+		                          WHEN B.PAY_MTHD = '03' THEN '자동이체' 
+		                          WHEN B.PAY_MTHD = '04' THEN 'CMS' 
+		                          WHEN B.PAY_MTHD = '05' THEN '채권해지(무통장)' 
+		                          WHEN B.PAY_MTHD = '06' THEN '카드' 
+		                          WHEN B.PAY_MTHD = '07' THEN '가상계좌'
+		                          ELSE ''
+		                     END AS PAY_MTHD
+                           , TO_CHAR(B.REG_DM, 'yyyymmdd') AS REG_DM
+						   , B.KB_NO
+						   , B.PROD_CD
+         	               , B.JOIN_DT
+						</if>
+             	       , C.CNTN AS CNSL_DTL_CNTN
+             	       , C.REG_DTM AS CNSL_DTL_DTM
+             	       <if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR'">
+	             	       <if test="(uplussaveYn == 'N'.toString()) and (uplussave3Yn == 'N'.toString()) and b2bStts.toString() != 'HANSSEM' and b2bStts.toString() != 'JAUTOUR' and b2bStts.toString() != 'DMTOUR'and b2bStts.toString() != 'MODETOUR' and b2bStts.toString() != 'DLIVE'">
+	             	       , D.RESN_PROC_DAY
+	             	       </if>
+             	       </if>
+			           , A.EXPIRE_RENEW_ACCNT_NO
+			           , A.EXPIRE_RENEW_GIFT_NO
+			           , NVL(A.EXPIRE_RENEW_ACCNT_NAME, '-') AS EXPIRE_RENEW_ACCNT_NAME
+				       , A.EXPIRE_RENEW_ACCNT_CNT
+				       , A.UNQ_NO
+				       , A.CONTRACT_NO
+				       , A.SERIAL_NO
+				       , A.PRODUCT_NM
+			           , A.ZIPCD
+			           , A.ADR
+			           , A.ADR_DTL
+			           , CASE A.SEX WHEN '0001' THEN '남' WHEN '0002' THEN '여' ELSE '' END AS GENDER
+			           , TO_CHAR(TO_DATE(A.BIRTH, 'YYYYMMDD'), 'YYYY-MM-DD') AS BIRTH
+			           , A.DISCOUNT_CTN
+			           , A.DISCOUNT_PIN
+			           , A.ESTIMATE_PRICE
+			           , A.WEDDING_DATE
+					   , A.MAIN_CONT_TYPE
+					   , A.SALES_TYPE
+					   , A.INVITE_CODE
+					   , A.U_PROD_NM
+					   , A.U_CMMN_CD
+					   , A.U_CMMN_CD_NM
+					   , A.U_DLR_NM
+					   , A.U_PROD_NO
+					   , A.WH_POS_CD
+					   , A.WH_STORE_NM
+						, A.CONTRACTOR_NAME
+						, A.CONTRACTOR_BIRTH
+						, A.CONTRACTOR_PHONE
+						, A.CARD_COMPANY
+						, A.CREDIT_CARD_NUM
+						, A.VALID_THRU
+						, A.PLATE_NUM
+						, A.ORDER_QTY
+						, A.MAIN_CONT_SERVICE_1
+						, A.MAIN_CONT_SERVICE_2
+						, A.TERM_AGREE
+						, A.EMAIL
+			      FROM OM_OSC_CNSL_MST A 
+		  				<if test="b2bStts.toString() == 'SONE'">
+	                    LEFT JOIN (
+	                        SELECT
+	                            TMP.*
+	                        FROM
+	                            (
+	                                SELECT ROW_NUMBER() OVER(PARTITION BY A.ORDER_NUM, B.MEM_NM, B.CELL ORDER BY ACCNT_NO DESC) AS RNUM, A.ORDER_NUM, A.JOIN_DT, B.MEM_NM, B.CELL
+	                                FROM MEM_PROD_ACCNT@DMLIFE A LEFT JOIN MEMBER@DMLIFE B ON (A.MEM_NO = B.MEM_NO)
+	                            ) TMP
+	                        WHERE TMP.RNUM = 1
+	                    ) B ON (A.AGENT_EMP_NUM = B.ORDER_NUM AND A.NAME=B.MEM_NM AND A.HP=B.CELL)		  				
+		  				</if>			      
+		  				<if test="b2bStts.toString() == 'KBCAR'">
+	                    LEFT JOIN (
+	                        SELECT
+	                            TMP.*
+	                        FROM
+	                            (
+	                                SELECT ROW_NUMBER() OVER(PARTITION BY ID_NO ORDER BY ACCNT_NO DESC) AS RNUM,
+	                                    ID_NO,
+	                                    JOIN_DT,
+	                                    ACCNT_NO,
+	                                    PROD_CD
+	                                FROM MEM_PROD_ACCNT@DMLIFE
+	                            ) TMP
+	                        WHERE TMP.RNUM = 1                        
+	                    ) B ON A.ORDER_NUM = B.ID_NO		  				
+		  				</if>			      
+						<if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR' or b2bStts.toString() == 'CHUNGHO' or b2bStts.toString() == 'WEDDING'">
+							<if test="(uplussaveYn == 'Y'.toString()) or (uplussave3Yn == 'Y'.toString()) ">
+							 LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.CSTMR_UNQ_NUM = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'HANSSEM'">
+							 LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.HANSS_MBSP_NUM || '_' || A.OSC_CNSL_SEQ = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'JAUTOUR'">
+							 LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.JAU_NUM = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'DMTOUR'">
+							 LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.DM_TOUR_NUM = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'MODETOUR'">
+							 LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (TO_CHAR(A.OSC_CNSL_SEQ) = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'CHUNGHO'">
+								LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (TO_CHAR(A.CONTRACT_NO) = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'WEDDING'">
+								LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.ID_NO = TRIM(B.ID_NO) )
+							</if>
+							<if test="b2bStts.toString() == 'DLIVE'">
+								LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.CSTMR_UNQ_NUM  = TRIM(B.ID_NO)  AND TO_CHAR(A.OSC_CNSL_SEQ) = B.KB_NO)
+								-- LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.CSTMR_UNQ_NUM  = TRIM(B.ID_NO))
+							</if>
+							<if test="(uplussaveYn == 'N'.toString()) and (uplussave3Yn == 'N'.toString()) and b2bStts.toString() != 'HANSSEM' and b2bStts.toString() != 'JAUTOUR' and b2bStts.toString() != 'DMTOUR'and b2bStts.toString() != 'MODETOUR' and b2bStts.toString() != 'CHUNGHO' and b2bStts.toString() != 'WEDDING' and b2bStts.toString() != 'DLIVE'">
+							 LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.ID_NO = TRIM(B.ID_NO) )
+							 LEFT JOIN RESCISSION@DMLIFE D ON (B.ACCNT_NO = D.ACCNT_NO)
+							</if>
+						</if>
+							 LEFT JOIN (
+								SELECT TMP.*
+								FROM (
+									SELECT ROW_NUMBER() OVER (PARTITION BY OSC_CNSL_SEQ ORDER BY REG_DTM DESC) AS RNUM
+										   , OSC_CNSL_SEQ
+										   , CNTN
+										   , REG_DTM
+									  FROM OM_OSC_CNSL_DTL
+								) TMP
+								WHERE TMP.RNUM = 1
+							 ) C ON A.OSC_CNSL_SEQ = C.OSC_CNSL_SEQ
+							 LEFT JOIN OM_SDP_AGENT D ON A.AGENT_CD = D.AGENT_CD
+				<if test="(uplussaveYn == 'N'.toString()) and (uplussave3Yn == 'N'.toString()) and (smartYn == 'N'.toString())">
+				 WHERE A.B2B_STTS = #{b2bStts}
+				</if>
+				<if test="(uplussaveYn == 'Y'.toString()) or (uplussave3Yn == 'Y'.toString())">
+				 WHERE (A.B2B_STTS = 'UPLUSSAVE1' OR A.B2B_STTS = 'UPLUSSAVE2')
+				</if>
+				<if test="(smartYn == 'Y'.toString())">
+					<if test="b2bStts.toString() == 'ROHASB2B'">
+					 WHERE A.B2B_STTS = #{b2bStts}
+					</if>
+					<if test="b2bStts.toString() != 'ROHASB2B'">
+					 WHERE (A.B2B_STTS = 'SMART' OR A.B2B_STTS = 'SMARTMOBILE' OR A.B2B_STTS = 'SMARTHOMEPLUS')
+					</if>
+
+
+				</if>
+								
+				<if test="code1 != null and code1 != ''">
+		      		AND A.CODE_1 = #{code1}
+		      	</if>
+				<if test="strtDt != null and strtDt != ''">
+					AND A.REG_DTM <![CDATA[>=]]> TO_DATE(#{strtDt}, 'yyyy-MM-dd')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND A.REG_DTM <![CDATA[<]]> TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">	
+				 		AND A.ID_NO LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 2">	
+				 		AND A.AGENT_EMP_NM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 3">
+						<if test="q == '온라인'.toString()">	
+				 			AND A.AGENT_NM IS NULL
+				 		</if>
+						<if test="q != '온라인'.toString()">	
+				 			AND A.AGENT_NM LIKE '%' || #{q} || '%'
+				 		</if>
+					</if>
+					<if test="f == 4">	
+				 		AND A.NAME LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 5">
+						AND REPLACE(A.HP, '-', '') LIKE '%' || REPLACE(#{q}, '-', '') || '%'
+					</if>
+					<if test="f == 6">	
+				 		AND A.CNSLR LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 7">	
+				 		AND A.AGENT_CODE1 LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 8">	
+				 		AND A.AGENT_CODE2 LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 9">	
+				 		AND A.AGENT_EMP_NUM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 10">	
+				 		AND A.AGENT_EMP_TEL LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 11">	
+				 		AND A.CSTMR_UNQ_NUM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 12">	
+				 		AND A.HANSS_MBSP_NUM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 13">	
+				 		AND A.MBSP_NUM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 14">	
+				 		AND A.SLLR_NUM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 15">	
+				 		AND A.SLLR_PART LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 16">
+						<if test="q == '온라인'.toString()">	
+				 			AND A.FUNNEL = '1'
+				 		</if>
+						<if test="q == '홈쇼핑'.toString()">	
+				 			AND A.FUNNEL = '2'
+				 		</if>
+						<if test="q == '가전'.toString()">	
+				 			AND A.FUNNEL = '3'
+				 		</if>
+						<if test="q == '모바일'.toString()">	
+				 			AND A.FUNNEL = '4'
+				 		</if>
+				 		<if test="q == '투어캐빈'.toString()">	
+				 			AND A.FUNNEL = '5'
+				 		</if>
+				 		<if test="q == '홈플러스'.toString()">	
+				 			AND A.FUNNEL = '6'
+				 		</if>
+					</if>
+					<if test="f == 17">	
+				 		AND A.JAU_NUM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 18">	
+				 		AND A.SLLR_AGENT_NM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 19">	
+				 		AND A.DM_TOUR_NUM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 20">	
+				 		AND A.TOUR_BOOK_NO LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 21">	
+						<if test="b2bStts.toString() == 'HANSSEM'">
+					 		AND  A.HANSS_MBSP_NUM || A.OSC_CNSL_SEQ like '%' || #{q} || '%'
+					 	</if>
+						<if test="b2bStts.toString() == 'MODETOUR'">	
+					 		AND A.OSC_CNSL_SEQ = #{q}
+						</if>
+					</if>
+					<if test="f == 22">
+							AND 1 = 1
+						<if test="q == '결제'.toString()">	
+				 			AND A.LOTTE_CARD_PAY = '1'
+				 		</if>
+						<if test="q == '미결제'.toString()">	
+				 			AND A.LOTTE_CARD_PAY = '2'
+				 		</if>
+					</if>
+					<if test="f == 23">
+							AND B.JOIN_DT LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 24">
+			 			AND A.AGENT_GUBUN = UPPER(#{q}) 
+					</if>
+					<if test="f == 25">
+			 			AND A.HOME_PRD_NUM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 26">
+						AND A.U_DLR_CD LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 27">
+						AND A.PRDCT_NM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 28">
+						AND A.PRDCT_NM2 LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 29">
+						AND A.FUSION_PRDCT_NM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 30">
+						AND A.SERIAL_NO LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 31">
+						AND A.CONTRACT_NO LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 32">
+						AND A.INVITE_CODE LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 33">
+						AND A.CONTRACTOR_NAME LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 34">
+						AND A.SLLR_CTEL = #{q}
+					</if>					
+					<if test="f == 35">
+						AND A.AGENT_CD = #{q}
+					</if>					
+					<if test="f == 36">
+						AND A.MAIN_CONT_TYPE LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 38">
+						AND 1  = CASE WHEN '윌앤비전' = #{q} AND SUBSTR(A.HP, -1, 1) IN ( '0', '1', '2', '3' ) THEN 1
+						WHEN '리딩아이' = #{q} AND SUBSTR(A.HP, -1, 1) IN ( '4', '5', '6' ) THEN 1
+						WHEN '효성ITX' = #{q} AND SUBSTR(A.HP, -1, 1) IN ( '7', '8', '9' ) THEN 1
+						ELSE 0 END
+					</if>
+					<if test="f == 39">
+						AND A.SLLR_NUM = #{q}
+					</if>
+				</if>
+				<choose>
+					<when test="callStts != null and callStts != ''">
+						<choose>
+							<when test="callStts == 'no'.toString()">
+								AND A.CALL_STTS IS NULL
+							</when>
+							<otherwise>
+								AND A.CALL_STTS = #{callStts}	
+							</otherwise>
+						</choose>					
+					</when>
+					<otherwise></otherwise>
+				</choose>
+				<choose>
+					<when test="(b2bStts == 'ONLIFECC'.toString()) or (b2bStts == 'EZWEL'.toString())">
+				 		ORDER BY A.OSC_CNSL_SEQ DESC
+				 	</when>
+				 	<otherwise>
+				 		ORDER BY A.REG_DTM DESC, A.OSC_CNSL_SEQ
+				 	</otherwise>
+				</choose>
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}	   	     
+	</select>
+
+	<!--
+         쿼리명 : OMACounselMngDAO.selectCounselMngLGUList
+         설  명 : 외주업체 상담관리 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.26   김필기     최초 생성
+    -->
+    <select id="OMACounselMngDAO.selectCounselMngLGUList" parameterType="emfMap" resultType="emfMap">
+    
+	
+	SELECT
+	    *
+	FROM
+	(
+	SELECT
+	    ROW_NUMBER() OVER(ORDER BY LCM.reg_dtm DESC) AS RNUM,
+	    COUNT(*) OVER() AS TOT_CNT,
+	    LCM.DISCOUNT_CTN,
+	    LCM.MAIN_CONT_TYPE,
+	    LCM.ID_NO,
+	    LCM.HOME_PRD_NUM,
+	    LCM.U_CMMN_CD_NM,
+	    LCM.U_DLR_NM,
+	    LCM.U_DLR_CD,
+	    LCM.U_INDC_EMPNO,
+	    LCM.U_INTG_USER_ID,
+	    LCM.SALES_TYPE,
+	    LCM.WH_POS_CD,
+	    LCM.WH_STORE_NM,
+		LCM.U_PROD_NM,
+		LCM.U_PROD_NO,
+		LCM.HP,
+		SUBSTR(LCM.HP,-4) AS HP_SHORT,
+		CASE SUBSTR(LCM.HP, -1, 1) 
+			 WHEN '0' THEN '윌앤비전'
+			 WHEN '1' THEN '윌앤비전'
+			 WHEN '2' THEN '윌앤비전'
+			 WHEN '3' THEN '윌앤비전'
+			 WHEN '4' THEN '윌앤비전'
+			 WHEN '5' THEN '리딩아이'
+			 WHEN '6' THEN '효성ITX'
+			 WHEN '7' THEN '효성ITX'
+			 WHEN '8' THEN '효성ITX'
+			 WHEN '9' THEN '효성ITX'
+	    ELSE '' END AS REG_CENTER,
+		LCM.AGENT_EMP_TEL,
+        LCM.NAME,
+        LCM.JOIN_METHOD,
+	    LCM.AGENT_EMP_NM,
+	    LCM.PRDCT_CD,
+	    LCM.PRDCT_NM,
+	    LCM.PRDCT_CD2,
+	    LCM.PRDCT_NM2,
+	    LCM.REG_DTM,
+ 		LCM.MEMO,
+		LCM.CNSLR
+		<if test="id == 'lguplus'">
+	    ,NVL(TARGET.DPMS_RESL_NM, '미상담') AS CALL_STTS,
+		TARGET.DPMS_STAT_NM AS TARGET_STTS,         
+	    TARGET.CNSR_NM AS CNSL_DTL_CNTN
+	    </if>
+	    <if test="id == 'lgusawon'">
+	    ,MPA.ACCNT_NO,
+	    MPA.REG_DM,                             
+	    MPA.JOIN_DT,                            
+	    RS.RESN_PROC_DAY,
+		( SELECT EVENT_PROC_DAY FROM  EVENT@DMLIFE ED WHERE MPA.ACCNT_NO = ED.ACCNT_NO AND ED.DEL_FG = 'N' ) AS EVENT_PROC_DAY,
+	    NVL(LCM.CALL_STTS, '미상담') AS CALL_STTS,
+	    CASE WHEN MPA.KSTBIT IN ('01') THEN '대기'
+             WHEN MPA.KSTBIT IN ('02') THEN '가입'
+             WHEN MPA.KSTBIT IN ('03') THEN '해약'
+	         WHEN MPA.KSTBIT IN ('04') THEN '행사'
+             WHEN MPA.KSTBIT IN ('09') THEN '만기'
+	    ELSE '' 
+	    END AS ACC_STAT,
+	
+	    (SELECT COUNT(*) FROM PAY_MNG_DTL@DMLIFE WHERE ACCNT_NO = MPA.ACCNT_NO AND DEL_FG = 'N') AS TRUE_COUNT,
+	    
+	    CASE WHEN MPA.PAY_MTHD = '01' THEN '손수' 
+	        WHEN MPA.PAY_MTHD = '03' THEN '자동이체' 
+	        WHEN MPA.PAY_MTHD = '04' THEN 'CMS' 
+	        WHEN MPA.PAY_MTHD = '05' THEN '채권해지(무통장)' 
+	        WHEN MPA.PAY_MTHD = '06' THEN '카드' 
+	        WHEN MPA.PAY_MTHD = '07' THEN '가상계좌'
+	    ELSE ''
+	    END AS PAY_MTHD,
+	    LCM.CALL_TYPE,
+		LCM.CALL_DATE,
+		LCM.CALL_TIME,
+		TCA.DPMS_RESL_CD,
+		(SELECT TC.CD_NM FROM PS_WILLVI.TB_CD@DMLIFE TC WHERE 1=1 AND TC.CD = TCA.DPMS_RESL_CD AND TC.CD_SET_CD = 'CAM090' AND TC.CNTR_CD = 'CCA') AS DPMS_RESL_NM,
+        CASE WHEN HP.STAT = '01' THEN '승인'
+            WHEN HP.STAT = '011' THEN '재승인'
+            WHEN HP.STAT = '03' THEN '철회'
+            WHEN HP.STAT = '10' THEN '보류'
+            WHEN HP.STAT = '14' THEN '신용등급제한'
+            WHEN HP.STAT = '17' THEN '대리납대기'
+            WHEN HP.STAT = '18' THEN '삼성상담'
+            WHEN HP.STAT = '20' THEN '직권해지'
+            WHEN HP.STAT = '21' THEN '전자서명대기'
+            WHEN HP.STAT = '22' THEN '더블구좌보류'
+            WHEN HP.STAT = '23' THEN '장례이행보증'
+            WHEN HP.STAT = '24' THEN '전환'
+        ELSE ''
+        END AS STAT
+	    </if>          
+	FROM TB_LGUPLUS_CNSL_MAIN LCM 
+		<if test="id == 'lguplus'">
+        LEFT OUTER JOIN PS_WILLVI.LGU_TARGET_STAT_VIEW@DMLIFE TARGET ON  LCM.ID_NO = TARGET.ID_NO 
+        </if>
+        <if test="id == 'lgusawon'">
+        LEFT OUTER JOIN
+	    MEM_PROD_ACCNT@DMLIFE MPA ON LCM.ID_NO = TRIM(MPA.ID_NO) AND MPA.DEL_FG = 'N' LEFT OUTER JOIN
+	     PRODUCT@DMLIFE PD ON MPA.PROD_CD = PD.PROD_CD AND SECTION_THR = '0008' LEFT OUTER JOIN
+	     RESCISSION@DMLIFE RS ON MPA.ACCNT_NO = RS.ACCNT_NO AND RS.DEL_FG = 'N' LEFT OUTER JOIN
+         PS_WILLVI.TB_LGUPLUS_TARGET@DMLIFE TA ON TA.ID_NO = LCM.ID_NO LEFT OUTER JOIN 
+         PS_WILLVI.TB_TRGT_CUST_ALCT@DMLIFE TCA ON TCA.TRGT_CUST_DTPT_ID = TA.TRGT_CUST_DTPT_ID LEFT OUTER JOIN 
+         LF_DMUSER.HP_CALL@DMLIFE HP ON MPA.ACCNT_NO = HP.ACCNT_NO and HP.ACCNT_NO IS NOT NULL
+	     </if>
+	WHERE 1=1
+		    <if test="id == 'lgusawon'">
+		    	<choose>
+		    		<when test="rtnMapf == 'GN'">
+		    			AND LCM.U_DLR_CD IN ('301767','306787','308080','308499','309759','310266','312279','312664','314433','314622','315155','315326','315333','316067','316231','316239','316248','316347','314217','314574','316181','316183','316185','316188','316189','316193','307473','307978','309464','309765','309793','310257','310276','310639','310986','311049','311289','311309','311609','312354','312406','312622','312787','313567','313702','314661','316026','316027','316115','316348','313344','314798','316044','316190','316209','316213','316292','306889','308498','310968','311836','311861','312014','312275','312473','312736','312776','314423','316043','372768','301054','301799','306804','306899','307965','310996','311114','311224','311418','311687','311727','312394','312465','313220','313327','313353','313618','314828','315455','315793','315925','316232','316240','316339','301545','306896','307442','311202','311726','312273','312464','312536','312663','312913','313228','313863','314089','314820','315229','315973','316062','316241','316329','316408','316409','307544','307848','307861','308053','308063','308065','309775','310083','310833','311034','311394','311601','312211','312404','312410','312534','312981','312986','313364','313574','313820','314186','314287','315340','315927','315929','316024','316070','316113','316411','316412','372769','300497','301367','306803','306810','306865','306884','307986','310633','311789','312180','313622','313701','313703','313705','314429','314638','315233','315381','315425','315436','315606')
+		    		</when>
+		    		<when test="rtnMapf == 'GB'">
+		    			AND LCM.U_DLR_CD IN ('316197','316198','316199','316420','316421','307044','308281','309606','309624','309633','310664','310864','312396','312470','312959','313807','314609','315962','316397','316404','315171','316211','316214','316316','316413','372634','307854','308099','309598','309602','309615','309631','310045','310398','310559','310926','311722','311856','312038','312804','313096','313315','314150','314855','307054','309603','309853','309861','310121','310335','310736','311233','312017','312350','312814','313305','313323','314849','315373','316279','300288','300729','308485','309955','310104','310967','311135','312636','313023','313030','313949','314042','314790','315327','316116','316342','316432','307549','310471','311751','311908','312215','312286','312413','312742','313331','313510','314051','315963','316327','300273','308433','308480','308496','310047','312471','312546','312734','312973','313942','315928','316346','300175','307498','307558','307695','307830','309616','312753','313578','313918','313999','315236','315325','316038','316114','316143','316236','316405','306903','307813','309294','309860','310555','311612','312992','313173','314148','315174','308394','310326','310973','311051','311845','312352','313326','314097','314829','314830','315006','315565','315575','316406','307674','307958','309979','312042','312749','313352','314094','314179','314311','314959','315211','315267','315367','315374','316445')
+		    		</when>
+		    		<when test="rtnMapf == 'BB'">
+		    			AND LCM.U_DLR_CD IN ('307676','310124','310327','310462','310505','310597','310690','310691','311041','311528','311540','311551','311570','311730','311895','312012','312308','312417','312542','312550','312813','312948','313105','313730','313745','313747','313882','313910','314031','314180','314223','314555','314890','314897','315245','315360','315390','315519','315617','315703','315839','316263','316273','316290','316291','316293','316433','900551','900568','900645','900646','900664','310427','311399','312035','312475','312852','313676','313879','314220','314457','314472','314684','315237','315937','316111','316242','316278','316330','316361','316363','316387','310179','310291','310771','311319','311898','312323','312564','312941','314434','314524','314533','315582','315628','315836','315948','316050','316100','316171','316265','316402','900462','900599','900670','310600','310888','311298','311894','312741','312976','313140','313147','313992','314133','314458','314499','314734','315278','315366','315445','315502','315597','315702','315829','316227','316229','316234','316247','316266','316269','316271','316324','316382','900502','900634','900673','301700','301889','301981','307839','310170','310623','310761','311056','311614','312036','312131','312562','312634','312711','313867','314092','314138','314237','314343','314641','314648','314704','315295','315697','316130','316161','316422','900642','900650','310173','310585','310599','310856','311139','311576','311843','314130','314140','314171','314507','314713','314938','315203','315240','315584','315608','315858','316054','316277','316295','316378','316407','900647','309803','310800','310806','310812','310816','310858','310898','311248','311506','311522','311677','313206','313219','313342','313835','313888','314224','314365','314367','315047','315080','315249','315406','315500','315517','315542','315710','315727','315801','315832','315902','315912','316041','316374','316383','316401','316403','316434','316443','313492','315596','315975','315979','315981','315982','316389')
+		    		</when>
+		    		<when test="rtnMapf == 'DM1'">
+		    			AND LCM.U_DLR_CD IN ('309862','310473','314358','314612','316075','370432','370454','370455','370640','370680','371563','371564','300481','306858','306891','311536','311759','313760','313916','314021','314296','314492','315251','315441','370423','370628','370860','370976','371742','372290','307509','310077','310337','310627','310938','311573','313307','313621','313995','314039','314705','314940','316319','370194','370252','370306','370370','370380','370436','370439','370537','370672','370691','370692','301652','301891','305107','307821','307951','308051','309447','311425','311840','313819','314565','315352','316336','370028','370193','370229','370236','370334','370412','370461','370594','370676','370897','370903','371313','371573','371743','372268','309856','311398','312940','313697','314226','314323','314351','314453','315132','315482','316426','370394','370437','370534','370626','370794','370817','310453','312420','314960','315321','315518','315795','370197','370239','370404','370585','370793','371261','371351','371608','308497','310917','311417','311442','312346','313872','313923','314115','314215','314699','315055','315056','315388','315835','316282','316352','370184','370336','370373','370385','370653','370745','370956','371260','371324','371331','371373','372447','306758','307992','309035','309455','310224','312824','312830','313002','314308','314510','315137','315416','315936','316442','370203','370250','370269','370393','370442','370483','370493','370565','370566','370569','370644','370646','370673','370780','370882','370889','371227','371308','371370')
+		    		</when>
+		    		<when test="rtnMapf == 'DM2'">
+		    			AND LCM.U_DLR_CD IN ('304891','310237','310859','312009','312359','312972','313495','313502','313792','313845','314298','314597','314689','314726','314942','315451','315498','316058','316084','316254','370268','370390','370409','370452','370524','370620','370662','370671','370685','370918','370919','370926','370955','370960','372004','372050','372189','304692','304727','305892','305961','308306','308340','309283','310940','311185','311972','312893','313795','314459','314680','314884','315154','316425','370308','370356','370512','370583','370586','370636','370642','370649','370661','370664','370683','370784','370949','372180','309056','309096','309280','309431','309432','309434','310475','311239','311592','312838','313304','314428','315028','315988','370195','370410','370514','370517','370608','370630','370658','370688','372013','372082','372246','310063','310239','310434','310960','311615','311830','311880','312678','312793','313738','313786','313901','314748','370224','370320','370444','370557','370650','370651','370789','370941','370999','372010','372042','312048','312788','312936','313834','314617','314962','316053','370222','370341','370610','370617','370665','370928','370954','309414','309480','310532','311015','311173','314355','315243','370213','370285','370462','370558','370666','370785','370967','372040','372107','372173','308831','310950','312217','312834','313673','314435','315636','315901','370301','370528','370614','370684','370728','370853','370920','370947','372317','309175','309644','309826','310871','311326','313060','313079','313905','313915','314420','315234','315696','316025','370221','370253','370515','370605','370606','370667','370682','372012','372111','372177','372181','372719')
+		    		</when>
+		    		<when test="rtnMapf == 'DB'">
+		    			AND LCM.U_DLR_CD IN ('302710','304698','304711','308389','308453','308458','311263','311264','311274','311554','311676','312573','312778','312860','313940','313994','314626','314955','316322','316343','316344','304529','304585','304668','304767','304935','312015','312041','312707','313873','314080','315019','315257','315563','316436','315737','315898','316201','316203','316216','316294','372629','308369','308390','310682','311025','311111','311284','312091','312745','313133','314432','314827','314911','315010','315215','315881','315883','316068','316340','316438','316441','304781','309671','309675','310890','310891','312103','312466','312524','312618','312738','312739','312790','313225','313617','313709','313866','313947','314345','314534','315377','316112','316388','304714','304900','304932','304973','308379','308467','309669','310141','310488','313358','313805','314087','314912','315328','316071','309664','315946','316182','316184','316206','316208','316210','316298','316465','372617','302015','304651','304949','304951','308457','309404','311178','312528','312766','312974','313365','314430','314535','314752','315264','315266','315574','315768','316117','316414','316440','304622','304791','305156','308468','308469','309674','309679','309985','309992','310160','310863','312979','313142','313712','314120','314909','315930','315971','316284')
+		    		</when>
+		    		<when test="rtnMapf == 'SB'">
+		    			AND LCM.U_DLR_CD IN ('302103','302659','308916','308981','309062','309223','309695','309931','309965','311184','311825','311841','312325','312980','313093','313688','313869','314081','314333','314709','314749','314788','315271','315272','315335','315830','316166','302559','302908','302963','309149','309206','309216','309243','309496','309837','309887','310139','310246','311827','312314','312744','312820','313108','313644','313919','314000','314183','314251','314484','314654','314660','315170','315427','315826','316328','316345','308987','309078','309099','310067','311958','312786','313033','313716','315230','315280','316437','302186','309097','309930','310252','311378','313176','313177','313351','313362','313696','313858','314398','314480','314483','314848','315232','315259','315882','316069','316109','316121','316334','304550','304917','304976','310933','311127','311467','312322','312817','312951','314044','314239','314825','315228','315368','316018','309538','309840','310575','310830','310832','311558','311857','311976','312983','312987','312993','314048','314658','315224','315265','315923','316233','316380','316381','308970','309168','309531','310408','310731','311821','311915','311982','312263','312462','312665','312815','313134','313188','313699','313937','314608','314610','316142','316341','314771','316021','316176','316177','316178','316353','372733','314281','315009','315042','316186','316187','316196','316419')
+		    		</when>
+		    		<when test="rtnMapf == 'CX'">
+		    			AND LCM.U_DLR_CD IN ('370073','370103','370125','370132','370172','370228','370230','370256','370347','370645','370655','370896','371270','371325','371329','371715','371720','371741','372314','372318','372387','372479','372482','372616','372707','370005','370025','370029','370037','370044','370062','370143','370157','370231','370284','370468','370621','370772','370778','370866','370899','370974','371258','371454','372269','372270','372272','372277','372289','372331','372358','372359','372362','372366','372384','372464','372468','372480','372537','372559','372615','642268','370116','370212','370293','370491','370639','370800','370822','370986','370988','371237','371303','371305','371306','371343','371344','371364','371585','372483','372488','372588','372620','372718','370048','370053','370069','370075','370083','370105','370120','370135','370166','370277','370365','370753','370865','370944','370950','370951','370953','372071','372075','372131','372148','372258','372263','372597','372622','372758','372766','370043','370546','370572','370663','370867','372390','372397','372451','372460','372476','372491','372517','372560','372569','372579','372580','370012','370060','370065','370096','370106','370175','370188','370383','370855','370962','372000','372019','372095','372097','372102','372147','372306','372365','372437','372438','372452','372534','372646','370189','370214','370296','370396','370399','370582','370995','372009','372038','372140','372391','372504','372545','372568','372600','372713')
+		    		</when>
+		    		<when test="rtnMapf == 'ET'">
+		    			AND LCM.U_DLR_CD IN ('312928','100005','100016','372623','372636','378188','310387','314057','314058','315397','314386','313368','314033','900578','900915','370080','314441','371299','372469','378184','314270','310159','311546','311946','313349','313917','314686','314885','315389','312559','313001','315022','315434','311952','311978','311983','312089','312356','312732','313161','313907','314084','314107','314371','314967','315359','315408','315473','315594','316304','316325','311632','311633','312224','316259','316308','316309','316311','316312','316313','316314','314195','314934','314998','315810','316373','641551','314265','315197','315989','316089','316151','311663','316105','316423','315286','314070','316139','310157','312439','314137','314188','314189','314190','315701','315876','315914','315917','315918','315919','315945','315950','315965','316108','316123','316321','315523','315524','315525','315526','315531','315533','315536','315733','316122','316287','316323','316326','316331','316337','316393','316446','316464','315520','315522','315931','315539','315540','315543','315549','315552','315578','315640','316174','316267','316376','315588')
+		    		</when>
+		    		<otherwise>
+		    			<if test="rtnMapf != 'ALLIANCE'">
+		    				AND LCM.U_DLR_CD LIKE '%' || #{rtnMapf} || '%'
+		    			</if>
+		    		</otherwise>
+		    	</choose>
+		    </if>
+			<if test="f == 1">	
+		 		AND LCM.ID_NO LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 2">	
+		 		AND LCM.AGENT_EMP_NM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 4">	
+		 		AND LCM.NAME LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 5">
+				AND REPLACE(LCM.HP, '-', '') LIKE '%' || REPLACE(#{q}, '-', '') || '%'
+			</if>
+			<if test="id == 'lguplus'">
+				<if test="f == 6">	
+			 		AND TARGET.CNSR_NM LIKE '%' || #{q} || '%'
+				</if>
+			</if>
+			<if test="f == 25">
+	 			AND LCM.HOME_PRD_NUM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 26">
+				AND LCM.U_DLR_CD LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 37">
+				AND 1 = CASE WHEN LCM.JOIN_METHOD = 'fixedLine' AND #{q} = 'TM' THEN 1
+							 WHEN LCM.JOIN_METHOD != 'fixedLine' AND #{q} = '전자서명' THEN 1
+							 ELSE 0 END
+			</if>
+			<if test="f == 38">
+				AND 1  = CASE WHEN '윌앤비전' = #{q} AND SUBSTR(LCM.HP, -1, 1) IN ( '0', '1', '2', '3' ) THEN 1 
+						 WHEN '리딩아이' = #{q} AND SUBSTR(LCM.HP, -1, 1) IN ( '4', '5', '6' ) THEN 1
+						 WHEN '효성ITX' = #{q} AND SUBSTR(LCM.HP, -1, 1) IN ( '7', '8', '9' ) THEN 1
+						 ELSE 0 END 
+			</if>
+			<if test="id == 'lgusawon'">
+				<choose>
+					<when test="callStts != null and callStts != ''">
+						<choose>
+							<when test="callStts == 'no'.toString()">
+								AND LCM.CALL_STTS IS NULL
+							</when>
+							<otherwise>
+								AND LCM.CALL_STTS = #{callStts}	
+							</otherwise>
+						</choose>					
+					</when>
+					<otherwise></otherwise>
+				</choose>
+			</if>
+			<if test="id == 'lguplus'">
+				<choose>
+					<when test="callStts != null and callStts != ''">
+						<choose>
+							<when test="callStts == 'no'.toString()">
+								AND TARGET.DPMS_RESL_NM IS NULL
+							</when>
+							<otherwise>
+								AND TARGET.DPMS_RESL_NM = #{callStts}	
+							</otherwise>
+						</choose>					
+					</when>
+					<otherwise></otherwise>
+				</choose>
+			</if>			
+			<if test="id == 'lgusawon' and rtnMapf != null and rtnMapf != 'ALLIANCE'">
+		    	AND LCM.REG_DTM <![CDATA[>=]]> ADD_MONTHS(sysdate, -3)
+		    </if>		    
+			<if test="strtDt != null and strtDt != ''">
+				AND LCM.REG_DTM <![CDATA[>=]]> TO_DATE(#{strtDt}, 'yyyy-MM-dd')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND LCM.REG_DTM <![CDATA[<=]]> TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1
+			</if>
+			ORDER BY LCM.REG_DTM DESC
+	)  
+	WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+
+	
+
+    
+    </select>
+
+	<!--
+         쿼리명 : OMACounselMngDAO.selectCounselMng
+         설  명 : 외주업체 상담관리 상세를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.15   김필기     최초 생성
+    -->	
+	<select id="OMACounselMngDAO.selectCounselMng" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMACounselMngDAO.selectCounselMng */
+			   A.OSC_CNSL_SEQ
+			   , A.AGENT_NM
+			   , A.AGENT_EMP_NM
+			   , A.NAME
+			   , A.ZIPCD
+			   , A.ADR
+			   , A.ADR_DTL
+			   , A.TEL
+			   , SUBSTR(A.HP,-4) AS HP_SHORT
+			   , A.HP
+			   , A.EMAIL
+			   , A.CALLTIME
+			   , A.CALL_STTS
+			   , A.MEMO
+			   , A.B2B_CD
+			   , A.B2B_STTS
+			   , A.B2B_NM
+			   , A.B2B_EMP_CD
+			   , A.PRDCT_CD
+			   , A.PRDCT_NM
+			   , A.PRDCT_CD2
+			   , A.PRDCT_NM2
+			   , A.PRDCT_CD3
+			   , A.PRDCT_NM3
+			   , A.AGENT_EMP_ID
+			   , A.AGENT_EMP_TEL
+			   , A.TELECOM
+			   , A.AGENT_CALL_STTS
+			   , A.SUB_HP
+			   , A.EMART_A
+			   , A.CI
+			   , TO_CHAR(TO_DATE(A.BIRTH, 'YYYYMMDD'), 'YYYY-MM-DD') AS BIRTH
+			   , A.SEX
+			   , A.ID_NO
+		   	   , A.CODE_1
+			   , A.CODE_2
+			   , A.CODE_3
+			   , A.CODE_4
+			   , A.REG_IP
+			   , A.REG_DTM
+			   , A.CNSLR
+			   , A.COMPANY_NM
+			   , A.FUSION_PRDCT_NM
+			   , A.FUSION_PRDCT_NM2
+			   , A.LGU_HOME_NO
+			   , A.LGU_MOBILE_NO
+			   , A.PREPAID_CARD_NUM
+			   , A.AGENT_CD
+			   , A.SKB_JOIN
+			   , A.SKB_JOIN_MEMO
+			   , A.STORE_NM
+			   , A.AGENT_CODE1
+			   , A.ORDER_NUM
+			   , A.AGENT_EMP_NUM
+			   , A.AGENT_NUM
+			   , A.AGENT_CODE2
+			   , A.AGENT_ETC
+			   , A.AGENT_UNQ_NUM
+			   , A.SLLR_NUM
+			   , A.SLLR_PART
+			   , A.SLLR_CTEL
+			   , A.CSTMR_CODE1
+			   , A.CSTMR_UNQ_NUM
+			   , A.CARD_NUM
+			   , A.CSTMR_NUM
+			   , A.CSTMR_CODE2
+			   , A.CSTMR_ETC
+			   , A.HANSS_MBSP_NUM
+			   , A.MBSP_NUM
+			   , A.FUNNEL
+			   , A.TRAVEL
+			   , A.JAU_NUM
+			   , A.DM_TOUR_NUM
+			   , A.LOTTE_CARD
+			   , A.SLLR_AGENT_NM
+			   , A.LOTTE_CARD_PAY
+			   , A.TOUR_BOOK_NO
+			   , A.JOIN_PROD
+			   , DECODE(A.AGENT_GUBUN, 'Y', 'FM사원(점장)', '-') AS AGENT_GUBUN
+			   , A.HOME_PRD_NUM
+			   , A.U_DLR_CD
+			   , A.U_INDC_EMPNO
+			   , A.U_INTG_USER_ID
+			   , A.CARD_PAY
+			   , A.EXPIRE_RENEW_ACCNT_NO
+			   , NVL(A.EXPIRE_RENEW_ACCNT_NAME, '-') AS EXPIRE_RENEW_ACCNT_NAME
+			   , A.EXPIRE_RENEW_GIFT_NO
+			   , A.EXPIRE_RENEW_ACCNT_CNT
+			   , A.UNQ_NO
+			   , A.CONTRACT_NO
+			   , A.SERIAL_NO
+			   , A.PRODUCT_NM
+	           , A.DISCOUNT_CTN
+	           , A.DISCOUNT_PIN
+	           , A.ESTIMATE_PRICE
+	           , A.WEDDING_DATE
+			   , A.MAIN_CONT_TYPE
+			   , A.SALES_TYPE
+			   , A.INVITE_CODE
+			   , A.U_PROD_NM
+			   , A.U_CMMN_CD
+			   , A.U_CMMN_CD_NM
+			   , A.U_DLR_NM
+			   , A.U_PROD_NO
+			   , A.WH_POS_CD
+			   , A.WH_STORE_NM
+			, A.CONTRACTOR_NAME
+			, A.CONTRACTOR_BIRTH
+			, A.CONTRACTOR_PHONE
+			, A.CARD_COMPANY
+			, A.CREDIT_CARD_NUM
+			, A.VALID_THRU
+			, A.PLATE_NUM
+			, A.ORDER_QTY
+			, A.MAIN_CONT_SERVICE_1
+			, A.MAIN_CONT_SERVICE_2
+			, A.TERM_AGREE
+		<if test="id == 'dlive' or id == 'dlivesales'">
+			, (SELECT LISTAGG(C.ACCNT_NO, ',')  WITHIN GROUP(ORDER BY C.ACCNT_NO) AS ACCNT_NO FROM MEM_PROD_ACCNT@DMLIFE C WHERE C.ID_NO = B.ID_NO) AS ACCNT_NO
+			, CASE WHEN B.PAY_MTHD = '01' THEN '손수'
+			WHEN B.PAY_MTHD = '03' THEN '자동이체'
+			WHEN B.PAY_MTHD = '04' THEN 'CMS'
+			WHEN B.PAY_MTHD = '05' THEN '채권해지(무통장)'
+			WHEN B.PAY_MTHD = '06' THEN '카드'
+			WHEN B.PAY_MTHD = '07' THEN '가상계좌'
+			ELSE ''
+			END AS PAY_MTHD
+			, TO_CHAR(B.REG_DM, 'yyyymmdd') AS REG_DM
+			, B.PROD_CD
+			, B.JOIN_DT
+			, (SELECT COUNT(*) FROM PAY_MNG@DMLIFE WHERE DEL_FG = 'N' AND ACCNT_NO = B.ACCNT_NO) AS TRUE_COUNT
+			, DECODE(FN_ACCNT_STAT@DMLIFE(B.ACCNT_NO), 'Y', '정상', 'R', '해약', 'E', '행사', '청약철회') AS ACC_STAT
+		</if>
+		  FROM OM_OSC_CNSL_MST A
+		<if test="id == 'dlive' or id == 'dlivesales'">
+			LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.CSTMR_UNQ_NUM  = TRIM(B.ID_NO)  AND TO_CHAR(A.OSC_CNSL_SEQ) = B.KB_NO)
+			-- LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.CSTMR_UNQ_NUM  = TRIM(B.ID_NO))
+		</if>
+		 WHERE OSC_CNSL_SEQ = #{idx}
+		  AND 2 > ROWNUM
+<!--		<if test="id == 'dlive'">-->
+<!--		GROUP BY A.OSC_CNSL_SEQ-->
+<!--		</if>-->
+
+	</select>
+	
+	<!--
+         쿼리명 : OMACounselMngDAO.selectCounselMng
+         설  명 : 외주업체 상담관리 상세를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.15   김필기     최초 생성
+    -->	
+	<select id="OMACounselMngDAO.selectCounselLGMng" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMACounselMngDAO.selectCounselLGMng */
+    		ID_NO,
+			HOME_PRD_NUM,
+			U_DLR_CD,
+			U_DLR_NM,
+			U_INDC_EMPNO,
+			U_INTG_USER_ID,
+			WH_POS_CD,
+			WH_STORE_NM,
+			MAIN_CONT_TYPE,
+			U_CMMN_CD_NM,
+			SALES_TYPE,
+			PRDCT_NM,
+			PRDCT_NM2,
+			PRDCT_NM3,
+			NAME,
+			HP,
+			DISCOUNT_CTN,
+			U_PROD_NO,
+			U_PROD_NM,
+			REG_DTM,
+			CALL_STTS,
+			MEMO,
+			AGENT_EMP_NM,
+			PRDCT_CD,
+			PRDCT_CD2,
+			PRDCT_CD3,
+			AGENT_EMP_TEL
+		FROM
+		    TB_LGUPLUS_CNSL_MAIN
+		WHERE
+		    ID_NO = #{idx}
+	</select>
+
+	<!--
+         쿼리명 : OMACounselMngDAO.insertCounselMng
+         설  명 : 외주업체 상담관리를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.15   김필기     최초 생성
+    -->	
+	<insert id="OMACounselMngDAO.insertCounselMng" parameterType="emfMap">
+	
+	</insert>
+	
+	<!--
+         쿼리명 : OMACounselMngDAO.updateCounselMng
+         설  명 : 외주업체 상담관리(상담자)를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.29   김필기     최초 생성
+    -->		
+	<update id="OMACounselMngDAO.updateCounselMng" parameterType="emfMap">
+		UPDATE /* OMACounselMngDAO.updateCounselMng */ OM_OSC_CNSL_MST 
+		   SET CNSLR = #{answer}
+			   , CALL_STTS = #{callStts}
+		 WHERE OSC_CNSL_SEQ = #{idx}
+	</update>
+	
+	<!--
+         쿼리명 : OMACounselMngDAO.updateCounselLGUMng
+         설  명 : 외주업체 상담관리(상담자)를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.29   김필기     최초 생성
+    -->		
+	<update id="OMACounselMngDAO.updateCounselLGUMng" parameterType="emfMap">
+		UPDATE /* OMACounselMngDAO.updateCounselLGUMng */ TB_LGUPLUS_CNSL_MAIN
+		   SET CNSLR = #{answer}
+			   , CALL_STTS = #{callStts}
+		 WHERE ID_NO = #{idNo}
+	</update>
+	
+	<!--
+         쿼리명 : OMACounselMngDAO.deleteCounselMng
+         설  명 : 외주업체 상담관리를 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.15   김필기     최초 생성
+    -->		
+	<delete id="OMACounselMngDAO.deleteCounselMng" parameterType="emfMap">
+	
+	</delete>
+
+	<!--
+         쿼리명 : OMACounselMngDAO.selectCounselDtlList
+         설  명 : 외주업체 상담관리 상담내역 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.29   김필기     최초 생성
+    -->	
+	<select id="OMACounselMngDAO.selectCounselDtlList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMACounselMngDAO.selectCounselDtlList */
+		 	   NAME
+		 	   , CNTN
+		 	   , IP
+		 	   , REG_DTM
+		  FROM OM_OSC_CNSL_DTL
+		 WHERE OSC_CNSL_SEQ = #{oscCnslSeq}
+		 ORDER BY REG_DTM DESC
+	</select>
+	
+	<!--
+         쿼리명 : OMACounselMngDAO.selectCounselDtlList
+         설  명 : 외주업체 상담관리 상담내역 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.29   김필기     최초 생성
+    -->	
+	<select id="OMACounselMngDAO.selectCounselLGUDtlList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMACounselMngDAO.selectCounselLGUDtlList */
+		 	   NAME
+		 	   , CNTN
+		 	   , IP
+		 	   , REG_DTM
+		  FROM TB_LGUPLUS_CNSL_DTL
+		 WHERE ID_NO = #{idNo}
+		 ORDER BY REG_DTM DESC
+	</select>
+	
+	<!--
+         쿼리명 : OMACounselMngDAO.insertCounselDtl
+         설  명 : 외주업체 상담관리 답변을 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.29   김필기     최초 생성
+    -->
+	<insert id="OMACounselMngDAO.insertCounselDtl" parameterType="emfMap">
+		INSERT INTO OM_OSC_CNSL_DTL
+			(OSC_CNSL_SEQ
+			, NAME
+			, CNTN
+			, IP	
+			, OSC_CNSL_DTL_SEQ
+			)
+		VALUES 
+			(#{idx}
+			, #{answer}
+			, #{cntn}
+			, #{ip}
+			, #{oscCnslDtlSeq}
+			)		
+	</insert>
+	
+	<!--
+         쿼리명 : OMACounselMngDAO.insertCounselLGUDtl
+         설  명 : 외주업체 상담관리 답변을 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.29   김필기     최초 생성
+    -->
+	<insert id="OMACounselMngDAO.insertCounselLGUDtl" parameterType="emfMap">
+		INSERT INTO TB_LGUPLUS_CNSL_DTL
+			(ID_NO
+			, NAME
+			, CNTN
+			, IP	
+			, OSC_CNSL_DTL_SEQ
+			, REG_DTM
+			)
+		VALUES 
+			(#{idNo}
+			, #{answer}
+			, #{cntn}
+			, #{ip}
+			, #{oscCnslDtlSeq}
+			, SYSDATE
+			)		
+	</insert>
+	
+	<select id="OMACounselMngDAO.selectCounselMngExcelList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMACounselMngDAO.selectCounselMngExcelList */
+			    A.OSC_CNSL_SEQ,
+				A.B2B_STTS,
+				A.B2B_CD,
+				A.B2B_NM,
+				A.PREPAID_CARD_NUM,
+				A.AGENT_EMP_ID,
+				A.AGENT_EMP_NM,
+				A.AGENT_CD,
+				A.ID_NO,
+				A.AGENT_NM,
+				A.AGENT_EMP_TEL,
+				A.COMPANY_NM,
+				A.B2B_EMP_CD,
+				A.CODE_1,
+				A.CODE_2,
+				A.CODE_3,
+				A.CODE_4,
+				A.PRDCT_CD,
+				A.PRDCT_NM,
+				A.PRDCT_CD2,
+				A.PRDCT_NM2,
+				A.PRDCT_CD3,
+				A.PRDCT_NM3,
+				A.FUSION_PRDCT_CD,
+				A.FUSION_PRDCT_NM,
+				A.FUSION_PRDCT_NM2,
+				A.NAME,
+				A.STORE_NM,
+				A.TELECOM,
+				SUBSTR(A.HP,-4) AS HP_SHORT,
+				A.HP,
+				A.TEL,
+				A.EMAIL,
+				A.ZIPCD,
+				A.ADR,
+				A.ADR_DTL,
+				A.CALLTIME,
+				A.EMART_A,
+				A.LOT_CARD_NUM,
+				A.SKB_JOIN,
+				A.SKB_JOIN_MEMO,
+				A.MEMO,
+				A.CI,
+				TO_CHAR(TO_DATE(A.BIRTH, 'YYYYMMDD'), 'YYYY-MM-DD') AS BIRTH,
+				A.SEX,
+				A.SUB_HP,
+				A.LGU_HOME_NO,
+				A.LGU_MOBILE_NO,
+				NVL(A.CALL_STTS, '미상담') AS CALL_STTS,
+				A.AGENT_CALL_STTS,
+				A.CNSLR,
+				A.SID,
+				A.REG_IP,
+				A.REG_DTM,
+				A.AGENT_CODE1,
+				A.ORDER_NUM,
+				A.AGENT_EMP_NUM,
+				A.AGENT_NUM,
+				A.AGENT_CODE2,
+				A.AGENT_ETC,
+				A.AGENT_UNQ_NUM,
+				A.SLLR_NUM,
+				A.SLLR_PART,
+				A.SLLR_CTEL,
+				A.CSTMR_CODE1,
+				A.CSTMR_UNQ_NUM,
+				A.CARD_NUM,
+				A.CSTMR_NUM,
+				A.CSTMR_CODE2,
+				A.CSTMR_ETC,
+				A.HANSS_MBSP_NUM,
+				A.MBSP_NUM,
+			    A.REG_DTM,
+			    A.FUNNEL,
+			    A.TRAVEL,
+			    A.JAU_NUM,
+			    A.DM_TOUR_NUM,
+			    A.LOTTE_CARD,
+			    A.SLLR_AGENT_NM,
+			    A.LOTTE_CARD_PAY,
+			    A.TOUR_BOOK_NO,
+			    A.JOIN_PROD,
+			    A.HOME_PRD_NUM
+		    	, A.U_DLR_CD
+			   , A.U_INDC_EMPNO
+			   , A.U_INTG_USER_ID
+			   , A.CARD_PAY
+			<if test="b2bStts.toString() == 'LGU'">
+			   , DECODE(A.AGENT_GUBUN, 'Y', 'FM사원(점장)', '-') AS AGENT_GUBUN
+			</if>
+			<if test="b2bStts.toString() == 'SONE'">
+			   , B.JOIN_DT
+			</if>
+			<if test="b2bStts.toString() == 'KBCAR'">
+			   , B.JOIN_DT
+			   , B.ACCNT_NO
+			   , B.PROD_CD
+         	   , (SELECT COUNT(*) FROM PAY_MNG@DMLIFE WHERE DEL_FG = 'N' AND ACCNT_NO = B.ACCNT_NO) AS TRUE_COUNT
+			   , DECODE(FN_ACCNT_STAT@DMLIFE(B.ACCNT_NO), 'Y', '정상', 'R', '해약', 'E', '행사', '청약철회') AS ACC_STAT
+			</if>
+			<if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR' or b2bStts.toString() == 'CHUNGHO' or b2bStts.toString() == 'WEDDING' or b2bStts.toString() == 'DLIVE' ">
+			   , B.ACCNT_NO
+               , CASE WHEN B.PAY_MTHD = '01' THEN '손수' 
+		              WHEN B.PAY_MTHD = '03' THEN '자동이체' 
+		              WHEN B.PAY_MTHD = '04' THEN 'CMS' 
+		              WHEN B.PAY_MTHD = '05' THEN '채권해지(무통장)' 
+		              WHEN B.PAY_MTHD = '06' THEN '카드' 
+		              WHEN B.PAY_MTHD = '07' THEN '가상계좌'
+		              ELSE ''
+		         END AS PAY_MTHD
+               , TO_CHAR(B.REG_DM, 'yyyymmdd') AS REG_DM
+			   , B.KB_NO
+			   , B.PROD_CD
+         	   , B.JOIN_DT
+         	   , (SELECT COUNT(*) FROM PAY_MNG@DMLIFE WHERE DEL_FG = 'N' AND ACCNT_NO = B.ACCNT_NO) AS TRUE_COUNT
+			   , DECODE(FN_ACCNT_STAT@DMLIFE(B.ACCNT_NO), 'Y', '정상', 'R', '해약', 'E', '행사', '청약철회') AS ACC_STAT
+			</if>
+
+			<if test="id.toString() == 'lgusawon' or id.toString() == 'lgumanager'">
+				, EV.EVENT_COMP_DAY
+			</if>
+         	   , C.CNTN AS CNSL_DTL_CNTN
+               , C.REG_DTM AS CNSL_DTL_DTM
+               <if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR'">
+               <if test="id == 'lgusawon' or id == 'lgumanager'">
+               , D.RESN_PROC_DAY
+               </if>
+            </if>
+            <if test="b2bStts.toString() =='EXPIRATION'"> 
+				, A.EXPIRE_RENEW_ACCNT_NO
+				, A.EXPIRE_RENEW_GIFT_NO
+				, NVL(A.EXPIRE_RENEW_ACCNT_NAME, '-') AS EXPIRE_RENEW_ACCNT_NAME
+				, A.EXPIRE_RENEW_ACCNT_CNT
+				, A.UNQ_NO
+				, A.ZIPCD
+				, A.ADR
+				, A.ADR_DTL
+				, CASE A.SEX WHEN '0001' THEN '남' WHEN '0002' THEN '여' ELSE '' END AS GENDER
+			</if>
+				, A.CONTRACT_NO
+				, A.SERIAL_NO
+				, A.PRODUCT_NM
+				, A.DISCOUNT_CTN
+				, A.DISCOUNT_PIN
+				, A.ESTIMATE_PRICE
+				, A.WEDDING_DATE
+				, A.MAIN_CONT_TYPE
+				, A.SALES_TYPE
+				, A.INVITE_CODE
+				, A.U_PROD_NM
+				, A.U_CMMN_CD
+				, A.U_CMMN_CD_NM
+				, A.U_DLR_NM
+				, A.U_PROD_NO
+				, A.WH_POS_CD
+				, A.WH_STORE_NM
+				, A.CONTRACTOR_NAME
+				, A.CONTRACTOR_BIRTH
+				, A.CONTRACTOR_PHONE
+				, A.CARD_COMPANY
+				, A.CREDIT_CARD_NUM
+				, A.VALID_THRU
+				, A.PLATE_NUM
+				, A.ORDER_QTY
+				, A.MAIN_CONT_SERVICE_1
+				, A.MAIN_CONT_SERVICE_2
+				, A.TERM_AGREE
+		  FROM OM_OSC_CNSL_MST A 
+		  				<if test="b2bStts.toString() == 'SONE'">
+	                    LEFT JOIN (
+	                        SELECT
+	                            TMP.*
+	                        FROM
+	                            (
+	                                SELECT ROW_NUMBER() OVER(PARTITION BY A.ORDER_NUM, B.MEM_NM, B.CELL ORDER BY ACCNT_NO DESC) AS RNUM, A.ORDER_NUM, A.JOIN_DT, B.MEM_NM, B.CELL
+	                                FROM MEM_PROD_ACCNT@DMLIFE A LEFT JOIN MEMBER@DMLIFE B ON (A.MEM_NO = B.MEM_NO)
+	                            ) TMP
+	                        WHERE TMP.RNUM = 1
+	                    ) B ON (A.AGENT_EMP_NUM = B.ORDER_NUM AND A.NAME=B.MEM_NM AND A.HP=B.CELL)		  				
+		  				</if>		  
+		  				<if test="b2bStts.toString() == 'KBCAR'">
+	                    LEFT JOIN (
+	                        SELECT
+	                            TMP.*
+	                        FROM
+	                            (
+	                                SELECT ROW_NUMBER() OVER(PARTITION BY ID_NO ORDER BY ACCNT_NO DESC) AS RNUM,
+	                                    ID_NO,
+	                                    JOIN_DT,
+	                                    ACCNT_NO,
+	                                    PROD_CD
+	                                FROM MEM_PROD_ACCNT@DMLIFE
+	                            ) TMP
+	                        WHERE TMP.RNUM = 1                        
+	                    ) B ON A.ORDER_NUM = B.ID_NO		  				
+		  				</if>
+						<if test="idNoYn == 'Y'.toString() or b2bStts.toString() == 'HANSSEM' or b2bStts.toString() == 'JAUTOUR' or b2bStts.toString() == 'MODETOUR' or b2bStts.toString() == 'DMTOUR' or b2bStts.toString() == 'CHUNGHO' or b2bStts.toString() == 'WEDDING' or b2bStts.toString() == 'DLIVE'   ">
+		  					<choose>
+		  						<when test="(uplussaveYn == 'Y'.toString()) or (uplussave3Yn == 'Y'.toString())">
+		  							LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.CSTMR_UNQ_NUM = TRIM(B.ID_NO) )
+		  						</when>
+								<when test="b2bStts.toString() == 'HANSSEM'">
+									LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.HANSS_MBSP_NUM || '_' || A.OSC_CNSL_SEQ = TRIM(B.ID_NO) )
+								</when>
+								<when test="b2bStts.toString() == 'JAUTOUR'">
+								 	LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.JAU_NUM = TRIM(B.ID_NO) )
+								</when>
+								<when test="b2bStts.toString() == 'DMTOUR'">
+								 	LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.DM_TOUR_NUM = TRIM(B.ID_NO) )
+								</when>
+								<when test="b2bStts.toString() == 'MODETOUR'">
+								 	LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (TO_CHAR(A.OSC_CNSL_SEQ) = TRIM(B.ID_NO) )
+								</when>
+								<when test="b2bStts.toString() == 'CHUNGHO'">
+									LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (TO_CHAR(A.CONTRACT_NO) = TRIM(B.ID_NO) )
+								</when>
+								<when test="b2bStts.toString() == 'WEDDING'">
+									LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.ID_NO = TRIM(B.ID_NO) )
+								</when>
+								<when test="b2bStts.toString() == 'DLIVE'">
+									LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.CSTMR_UNQ_NUM  = TRIM(B.ID_NO)  AND TO_CHAR(A.OSC_CNSL_SEQ) = B.KB_NO)
+									-- LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.CSTMR_UNQ_NUM  = TRIM(B.ID_NO))
+								</when>
+								<when test="id == 'lgusawon' or id == 'lgumanager'">
+									LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.ID_NO = TRIM(B.ID_NO) )
+									LEFT JOIN EVENT@DMLIFE EV ON (B .ACCNT_NO = TRIM(EV.ACCNT_NO))
+									LEFT JOIN RESCISSION@DMLIFE D ON (B.ACCNT_NO = D.ACCNT_NO)
+								</when>
+		  						<otherwise>
+		  						 	LEFT JOIN MEM_PROD_ACCNT@DMLIFE B ON (A.ID_NO = TRIM(B.ID_NO) )
+		  						</otherwise>
+		  					</choose>
+		  				</if>
+						 LEFT JOIN (
+							SELECT TMP.*
+							FROM (
+								SELECT ROW_NUMBER() OVER (PARTITION BY OSC_CNSL_SEQ ORDER BY REG_DTM DESC) AS RNUM
+									   , OSC_CNSL_SEQ, CNTN, REG_DTM
+								  FROM OM_OSC_CNSL_DTL
+							) TMP
+							WHERE TMP.RNUM = 1
+
+						 ) C ON A.OSC_CNSL_SEQ = C.OSC_CNSL_SEQ
+		<if test="(uplussaveYn == 'N'.toString()) and (uplussave3Yn == 'N'.toString()) and (smartYn == 'N'.toString())">
+		 WHERE A.B2B_STTS = #{b2bStts}
+		</if>
+		<if test="uplussaveYn == 'Y'.toString()">
+		 WHERE (A.B2B_STTS = 'UPLUSSAVE1' OR A.B2B_STTS = 'UPLUSSAVE2') 
+		</if>
+		<if test="(smartYn == 'Y'.toString())">
+		 WHERE (A.B2B_STTS = 'SMART' OR A.B2B_STTS = 'SMARTMOBILE')
+		</if>
+		<if test="code1 != null and code1 != ''">
+      		AND A.CODE_1 = #{code1}
+      	</if>
+		<if test="strtDt != null and strtDt != ''">
+			AND A.REG_DTM <![CDATA[>=]]> TO_DATE(#{strtDt}, 'yyyy-MM-dd')
+		</if>
+		<if test="endDt != null and endDt != ''">
+			AND A.REG_DTM <![CDATA[<]]> TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1
+		</if>
+		<if test="q != null and q != ''">
+			<if test="f == 1">	
+		 		AND A.ID_NO LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 2">	
+		 		AND A.AGENT_EMP_NM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 3">
+				<if test="q == '온라인'.toString()">	
+		 			AND A.AGENT_NM IS NULL
+		 		</if>
+				<if test="q != '온라인'.toString()">	
+		 			AND A.AGENT_NM LIKE '%' || #{q} || '%'
+		 		</if>
+			</if>
+			<if test="f == 4">	
+		 		AND A.NAME LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 5">
+				AND REPLACE(A.HP, '-', '') LIKE '%' || REPLACE(#{q}, '-', '') || '%'
+			</if>
+			<if test="f == 6">	
+		 		AND A.CNSLR LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 7">	
+		 		AND A.AGENT_CODE1 LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 8">	
+		 		AND A.AGENT_CODE2 LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 9">	
+		 		AND A.AGENT_EMP_NUM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 10">	
+		 		AND A.AGENT_EMP_TEL LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 11">	
+		 		AND A.CSTMR_UNQ_NUM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 12">	
+		 		AND A.HANSS_MBSP_NUM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 13">	
+		 		AND A.MBSP_NUM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 14">	
+		 		AND A.SLLR_NUM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 15">	
+		 		AND A.SLLR_PART LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 16">
+				<if test="q == '온라인'.toString()">	
+		 			AND A.FUNNEL = '1'
+		 		</if>
+				<if test="q == '홈쇼핑'.toString()">	
+		 			AND A.FUNNEL = '2'
+		 		</if>
+				<if test="q == '가전'.toString()">	
+		 			AND A.FUNNEL = '3'
+		 		</if>
+				<if test="q == '모바일'.toString()">	
+		 			AND A.FUNNEL = '4'
+		 		</if>
+		 		<if test="q == '투어캐빈'.toString()">	
+		 			AND A.FUNNEL = '5'
+		 		</if>
+		 		<if test="q == '홈플러스'.toString()">	
+		 			AND A.FUNNEL = '6'
+		 		</if>
+			</if>
+			<if test="f == 17">	
+		 		AND A.JAU_NUM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 18">	
+		 		AND A.SLLR_AGENT_NM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 19">	
+		 		AND A.DM_TOUR_NUM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 20">	
+		 		AND A.TOUR_BOOK_NO LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 21">	
+				<if test="b2bStts.toString() == 'HANSSEM'">
+			 		AND  A.HANSS_MBSP_NUM || A.OSC_CNSL_SEQ like '%' || #{q} || '%'
+			 	</if>
+				<if test="b2bStts.toString() == 'MODETOUR'">	
+			 		AND A.OSC_CNSL_SEQ = #{q}
+				</if>
+			</if>
+			<if test="f == 22">
+					AND 1 = 1
+				<if test="q == '결제'.toString()">	
+		 			AND A.LOTTE_CARD_PAY = '1'
+		 		</if>
+				<if test="q == '미결제'.toString()">	
+		 			AND A.LOTTE_CARD_PAY = '2'
+		 		</if>
+			</if>
+			<if test="f == 23">
+					AND B.JOIN_DT LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 24">
+	 			AND A.AGENT_GUBUN = UPPER(#{q}) 
+			</if>
+			<if test="f == 25">
+	 			AND A.HOME_PRD_NUM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 26">
+				AND A.U_DLR_CD LIKE '%' || #{q} || '%'
+			</if>
+
+			<if test="f == 27">
+				AND A.PRDCT_NM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 28">
+				AND A.PRDCT_NM2 LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 29">
+				AND A.FUSION_PRDCT_NM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 30">
+				AND A.SERIAL_NO LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 31">
+				AND A.CONTRACT_NO LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 32">
+				AND A.INVITE_CODE LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 33">
+				AND A.CONTRACTOR_NAME LIKE '%' || #{q} || '%'
+			</if>			
+			<if test="f == 34">
+				AND A.SLLR_CTEL = #{q}
+			</if>					
+			<if test="f == 35">
+				AND A.AGENT_CD = #{q}
+			</if>			
+			<if test="f == 36">
+				AND A.MAIN_CONT_TYPE LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 39">
+				AND A.SLLR_NUM = #{q}
+			</if>
+						
+		</if>
+		<choose>
+			<when test="callStts != null and callStts != ''">
+				<choose>
+					<when test="callStts == 'no'.toString()">
+						AND A.CALL_STTS IS NULL
+					</when>
+					<otherwise>
+						AND A.CALL_STTS = #{callStts}	
+					</otherwise>
+				</choose>					
+			</when>
+			<otherwise></otherwise>
+		</choose>
+		<choose>
+			<when test="(b2bStts == 'ONLIFECC'.toString()) or (b2bStts == 'EZWEL'.toString())">
+		 		ORDER BY A.OSC_CNSL_SEQ DESC
+		 	</when>
+		 	<otherwise>
+		 		ORDER BY A.REG_DTM DESC, A.OSC_CNSL_SEQ
+		 	</otherwise>
+		 </choose>
+	</select> 
+    
+    <select id="OMACounselMngDAO.selectCounselMngLGUExcelList" parameterType="emfMap" resultType="emfMap">
+    SELECT
+	    *
+	FROM
+	(
+	SELECT
+	    ROWNUM AS RNUM,
+	    COUNT(*) OVER() AS TOT_CNT,
+	    LCM.DISCOUNT_CTN,
+	    LCM.MAIN_CONT_TYPE,
+	    LCM.ID_NO,
+	    LCM.HOME_PRD_NUM,
+	    LCM.U_CMMN_CD_NM,
+	    LCM.U_DLR_NM,
+	    LCM.U_DLR_CD,
+	    LCM.U_INDC_EMPNO,
+	    LCM.U_INTG_USER_ID,
+	    LCM.SALES_TYPE,
+	    LCM.WH_POS_CD,
+	    LCM.WH_STORE_NM,
+		LCM.U_PROD_NM,
+		LCM.U_PROD_NO,
+		LCM.HP,
+		CASE SUBSTR(LCM.HP, -1, 1) 
+			 WHEN '0' THEN '윌앤비전'
+			 WHEN '1' THEN '윌앤비전'
+			 WHEN '2' THEN '윌앤비전'
+			 WHEN '3' THEN '윌앤비전'
+			 WHEN '4' THEN '윌앤비전'
+			 WHEN '5' THEN '리딩아이'
+			 WHEN '6' THEN '효성ITX'
+			 WHEN '7' THEN '효성ITX'
+			 WHEN '8' THEN '효성ITX'
+			 WHEN '9' THEN '효성ITX'
+	    ELSE '' END AS REG_CENTER,
+		LCM.JOIN_METHOD,
+	    LCM.AGENT_EMP_TEL,
+        LCM.NAME,    
+        LCM.AGENT_EMP_NM,
+	    LCM.PRDCT_CD,
+	    LCM.PRDCT_NM,
+	    LCM.PRDCT_CD2,
+	    LCM.PRDCT_NM2,
+	    LCM.REG_DTM,   
+ 		LCM.MEMO,
+		LCM.CNSLR
+		<if test="id == 'lguplus'">
+	    ,NVL(TARGET.DPMS_RESL_NM, '미상담') AS CALL_STTS,
+		TARGET.DPMS_STAT_NM AS TARGET_STTS,
+	    TARGET.CNSR_NM AS CNSL_DTL_CNTN
+	    </if>              
+	    <if test="id == 'lgusawon'">
+	    ,MPA.ACCNT_NO,
+	    MPA.REG_DM,                             
+	    MPA.JOIN_DT,                            
+	    RS.RESN_PROC_DAY,
+		( SELECT EVENT_PROC_DAY FROM  EVENT@DMLIFE ED WHERE MPA.ACCNT_NO = ED.ACCNT_NO AND ED.DEL_FG = 'N' ) AS EVENT_PROC_DAY,
+	    NVL(LCM.CALL_STTS, '미상담') AS CALL_STTS,
+	    CASE WHEN MPA.KSTBIT IN ('01') THEN '대기'
+             WHEN MPA.KSTBIT IN ('02') THEN '가입'
+             WHEN MPA.KSTBIT IN ('03') THEN '해약'
+	         WHEN MPA.KSTBIT IN ('04') THEN '행사'
+             WHEN MPA.KSTBIT IN ('09') THEN '만기'
+	    ELSE '' 
+	    END AS ACC_STAT,
+	
+	    (SELECT COUNT(*) FROM PAY_MNG_DTL@DMLIFE WHERE ACCNT_NO = MPA.ACCNT_NO AND DEL_FG = 'N') AS TRUE_COUNT,
+	    
+	    CASE WHEN MPA.PAY_MTHD = '01' THEN '손수' 
+	        WHEN MPA.PAY_MTHD = '03' THEN '자동이체' 
+	        WHEN MPA.PAY_MTHD = '04' THEN 'CMS' 
+	        WHEN MPA.PAY_MTHD = '05' THEN '채권해지(무통장)' 
+	        WHEN MPA.PAY_MTHD = '06' THEN '카드' 
+	        WHEN MPA.PAY_MTHD = '07' THEN '가상계좌'
+	    ELSE ''
+	    END AS PAY_MTHD,
+	    LCM.CALL_TYPE,
+		LCM.CALL_DATE,
+		LCM.CALL_TIME,
+		TCA.DPMS_RESL_CD,
+		(SELECT TC.CD_NM FROM PS_WILLVI.TB_CD@DMLIFE TC WHERE 1=1 AND TC.CD = TCA.DPMS_RESL_CD AND TC.CD_SET_CD = 'CAM090' AND TC.CNTR_CD = 'CCA') AS DPMS_RESL_NM,
+        CASE WHEN HP.STAT = '01' THEN '승인'
+            WHEN HP.STAT = '011' THEN '재승인'
+            WHEN HP.STAT = '03' THEN '철회'
+            WHEN HP.STAT = '10' THEN '보류'
+            WHEN HP.STAT = '14' THEN '신용등급제한'
+            WHEN HP.STAT = '17' THEN '대리납대기'
+            WHEN HP.STAT = '18' THEN '삼성상담'
+            WHEN HP.STAT = '20' THEN '직권해지'
+            WHEN HP.STAT = '21' THEN '전자서명대기'
+            WHEN HP.STAT = '22' THEN '더블구좌보류'
+            WHEN HP.STAT = '23' THEN '장례이행보증'
+            WHEN HP.STAT = '24' THEN '전환'
+        ELSE ''
+        END AS STAT
+	    </if>
+	                   
+	FROM TB_LGUPLUS_CNSL_MAIN LCM 
+		<if test="id == 'lguplus'">
+        LEFT OUTER JOIN PS_WILLVI.LGU_TARGET_STAT_VIEW@DMLIFE TARGET ON  LCM.ID_NO = TARGET.ID_NO 
+        </if>
+        <if test="id == 'lgusawon'">
+        LEFT OUTER JOIN
+	    MEM_PROD_ACCNT@DMLIFE MPA ON LCM.ID_NO = TRIM(MPA.ID_NO) AND MPA.DEL_FG = 'N' LEFT OUTER JOIN
+	     PRODUCT@DMLIFE PD ON MPA.PROD_CD = PD.PROD_CD AND SECTION_THR = '0008' LEFT OUTER JOIN
+	     RESCISSION@DMLIFE RS ON MPA.ACCNT_NO = RS.ACCNT_NO AND RS.DEL_FG = 'N' LEFT OUTER JOIN
+         PS_WILLVI.TB_LGUPLUS_TARGET@DMLIFE TA ON TA.ID_NO = LCM.ID_NO LEFT OUTER JOIN 
+         PS_WILLVI.TB_TRGT_CUST_ALCT@DMLIFE TCA ON TCA.TRGT_CUST_DTPT_ID = TA.TRGT_CUST_DTPT_ID LEFT OUTER JOIN 
+         LF_DMUSER.HP_CALL@DMLIFE HP ON MPA.ACCNT_NO = HP.ACCNT_NO and HP.ACCNT_NO IS NOT NULL
+	     </if>
+	WHERE 1=1
+		    <if test="id == 'lgusawon'">
+		    	<choose>
+		    		<when test="rtnMapf == 'GN'">
+		    			AND LCM.U_DLR_CD IN ('301767','306787','308080','308499','309759','310266','312279','312664','314433','314622','315155','315326','315333','316067','316231','316239','316248','316347','314217','314574','316181','316183','316185','316188','316189','316193','307473','307978','309464','309765','309793','310257','310276','310639','310986','311049','311289','311309','311609','312354','312406','312622','312787','313567','313702','314661','316026','316027','316115','316348','313344','314798','316044','316190','316209','316213','316292','306889','308498','310968','311836','311861','312014','312275','312473','312736','312776','314423','316043','372768','301054','301799','306804','306899','307965','310996','311114','311224','311418','311687','311727','312394','312465','313220','313327','313353','313618','314828','315455','315793','315925','316232','316240','316339','301545','306896','307442','311202','311726','312273','312464','312536','312663','312913','313228','313863','314089','314820','315229','315973','316062','316241','316329','316408','316409','307544','307848','307861','308053','308063','308065','309775','310083','310833','311034','311394','311601','312211','312404','312410','312534','312981','312986','313364','313574','313820','314186','314287','315340','315927','315929','316024','316070','316113','316411','316412','372769','300497','301367','306803','306810','306865','306884','307986','310633','311789','312180','313622','313701','313703','313705','314429','314638','315233','315381','315425','315436','315606')
+		    		</when>
+		    		<when test="rtnMapf == 'GB'">
+		    			AND LCM.U_DLR_CD IN ('316197','316198','316199','316420','316421','307044','308281','309606','309624','309633','310664','310864','312396','312470','312959','313807','314609','315962','316397','316404','315171','316211','316214','316316','316413','372634','307854','308099','309598','309602','309615','309631','310045','310398','310559','310926','311722','311856','312038','312804','313096','313315','314150','314855','307054','309603','309853','309861','310121','310335','310736','311233','312017','312350','312814','313305','313323','314849','315373','316279','300288','300729','308485','309955','310104','310967','311135','312636','313023','313030','313949','314042','314790','315327','316116','316342','316432','307549','310471','311751','311908','312215','312286','312413','312742','313331','313510','314051','315963','316327','300273','308433','308480','308496','310047','312471','312546','312734','312973','313942','315928','316346','300175','307498','307558','307695','307830','309616','312753','313578','313918','313999','315236','315325','316038','316114','316143','316236','316405','306903','307813','309294','309860','310555','311612','312992','313173','314148','315174','308394','310326','310973','311051','311845','312352','313326','314097','314829','314830','315006','315565','315575','316406','307674','307958','309979','312042','312749','313352','314094','314179','314311','314959','315211','315267','315367','315374','316445')
+		    		</when>
+		    		<when test="rtnMapf == 'BB'">
+		    			AND LCM.U_DLR_CD IN ('307676','310124','310327','310462','310505','310597','310690','310691','311041','311528','311540','311551','311570','311730','311895','312012','312308','312417','312542','312550','312813','312948','313105','313730','313745','313747','313882','313910','314031','314180','314223','314555','314890','314897','315245','315360','315390','315519','315617','315703','315839','316263','316273','316290','316291','316293','316433','900551','900568','900645','900646','900664','310427','311399','312035','312475','312852','313676','313879','314220','314457','314472','314684','315237','315937','316111','316242','316278','316330','316361','316363','316387','310179','310291','310771','311319','311898','312323','312564','312941','314434','314524','314533','315582','315628','315836','315948','316050','316100','316171','316265','316402','900462','900599','900670','310600','310888','311298','311894','312741','312976','313140','313147','313992','314133','314458','314499','314734','315278','315366','315445','315502','315597','315702','315829','316227','316229','316234','316247','316266','316269','316271','316324','316382','900502','900634','900673','301700','301889','301981','307839','310170','310623','310761','311056','311614','312036','312131','312562','312634','312711','313867','314092','314138','314237','314343','314641','314648','314704','315295','315697','316130','316161','316422','900642','900650','310173','310585','310599','310856','311139','311576','311843','314130','314140','314171','314507','314713','314938','315203','315240','315584','315608','315858','316054','316277','316295','316378','316407','900647','309803','310800','310806','310812','310816','310858','310898','311248','311506','311522','311677','313206','313219','313342','313835','313888','314224','314365','314367','315047','315080','315249','315406','315500','315517','315542','315710','315727','315801','315832','315902','315912','316041','316374','316383','316401','316403','316434','316443','313492','315596','315975','315979','315981','315982','316389')
+		    		</when>
+		    		<when test="rtnMapf == 'DM1'">
+		    			AND LCM.U_DLR_CD IN ('309862','310473','314358','314612','316075','370432','370454','370455','370640','370680','371563','371564','300481','306858','306891','311536','311759','313760','313916','314021','314296','314492','315251','315441','370423','370628','370860','370976','371742','372290','307509','310077','310337','310627','310938','311573','313307','313621','313995','314039','314705','314940','316319','370194','370252','370306','370370','370380','370436','370439','370537','370672','370691','370692','301652','301891','305107','307821','307951','308051','309447','311425','311840','313819','314565','315352','316336','370028','370193','370229','370236','370334','370412','370461','370594','370676','370897','370903','371313','371573','371743','372268','309856','311398','312940','313697','314226','314323','314351','314453','315132','315482','316426','370394','370437','370534','370626','370794','370817','310453','312420','314960','315321','315518','315795','370197','370239','370404','370585','370793','371261','371351','371608','308497','310917','311417','311442','312346','313872','313923','314115','314215','314699','315055','315056','315388','315835','316282','316352','370184','370336','370373','370385','370653','370745','370956','371260','371324','371331','371373','372447','306758','307992','309035','309455','310224','312824','312830','313002','314308','314510','315137','315416','315936','316442','370203','370250','370269','370393','370442','370483','370493','370565','370566','370569','370644','370646','370673','370780','370882','370889','371227','371308','371370')
+		    		</when>
+		    		<when test="rtnMapf == 'DM2'">
+		    			AND LCM.U_DLR_CD IN ('304891','310237','310859','312009','312359','312972','313495','313502','313792','313845','314298','314597','314689','314726','314942','315451','315498','316058','316084','316254','370268','370390','370409','370452','370524','370620','370662','370671','370685','370918','370919','370926','370955','370960','372004','372050','372189','304692','304727','305892','305961','308306','308340','309283','310940','311185','311972','312893','313795','314459','314680','314884','315154','316425','370308','370356','370512','370583','370586','370636','370642','370649','370661','370664','370683','370784','370949','372180','309056','309096','309280','309431','309432','309434','310475','311239','311592','312838','313304','314428','315028','315988','370195','370410','370514','370517','370608','370630','370658','370688','372013','372082','372246','310063','310239','310434','310960','311615','311830','311880','312678','312793','313738','313786','313901','314748','370224','370320','370444','370557','370650','370651','370789','370941','370999','372010','372042','312048','312788','312936','313834','314617','314962','316053','370222','370341','370610','370617','370665','370928','370954','309414','309480','310532','311015','311173','314355','315243','370213','370285','370462','370558','370666','370785','370967','372040','372107','372173','308831','310950','312217','312834','313673','314435','315636','315901','370301','370528','370614','370684','370728','370853','370920','370947','372317','309175','309644','309826','310871','311326','313060','313079','313905','313915','314420','315234','315696','316025','370221','370253','370515','370605','370606','370667','370682','372012','372111','372177','372181','372719')
+		    		</when>
+		    		<when test="rtnMapf == 'DB'">
+		    			AND LCM.U_DLR_CD IN ('302710','304698','304711','308389','308453','308458','311263','311264','311274','311554','311676','312573','312778','312860','313940','313994','314626','314955','316322','316343','316344','304529','304585','304668','304767','304935','312015','312041','312707','313873','314080','315019','315257','315563','316436','315737','315898','316201','316203','316216','316294','372629','308369','308390','310682','311025','311111','311284','312091','312745','313133','314432','314827','314911','315010','315215','315881','315883','316068','316340','316438','316441','304781','309671','309675','310890','310891','312103','312466','312524','312618','312738','312739','312790','313225','313617','313709','313866','313947','314345','314534','315377','316112','316388','304714','304900','304932','304973','308379','308467','309669','310141','310488','313358','313805','314087','314912','315328','316071','309664','315946','316182','316184','316206','316208','316210','316298','316465','372617','302015','304651','304949','304951','308457','309404','311178','312528','312766','312974','313365','314430','314535','314752','315264','315266','315574','315768','316117','316414','316440','304622','304791','305156','308468','308469','309674','309679','309985','309992','310160','310863','312979','313142','313712','314120','314909','315930','315971','316284')
+		    		</when>
+		    		<when test="rtnMapf == 'SB'">
+		    			AND LCM.U_DLR_CD IN ('302103','302659','308916','308981','309062','309223','309695','309931','309965','311184','311825','311841','312325','312980','313093','313688','313869','314081','314333','314709','314749','314788','315271','315272','315335','315830','316166','302559','302908','302963','309149','309206','309216','309243','309496','309837','309887','310139','310246','311827','312314','312744','312820','313108','313644','313919','314000','314183','314251','314484','314654','314660','315170','315427','315826','316328','316345','308987','309078','309099','310067','311958','312786','313033','313716','315230','315280','316437','302186','309097','309930','310252','311378','313176','313177','313351','313362','313696','313858','314398','314480','314483','314848','315232','315259','315882','316069','316109','316121','316334','304550','304917','304976','310933','311127','311467','312322','312817','312951','314044','314239','314825','315228','315368','316018','309538','309840','310575','310830','310832','311558','311857','311976','312983','312987','312993','314048','314658','315224','315265','315923','316233','316380','316381','308970','309168','309531','310408','310731','311821','311915','311982','312263','312462','312665','312815','313134','313188','313699','313937','314608','314610','316142','316341','314771','316021','316176','316177','316178','316353','372733','314281','315009','315042','316186','316187','316196','316419')
+		    		</when>
+		    		<when test="rtnMapf == 'CX'">
+		    			AND LCM.U_DLR_CD IN ('370073','370103','370125','370132','370172','370228','370230','370256','370347','370645','370655','370896','371270','371325','371329','371715','371720','371741','372314','372318','372387','372479','372482','372616','372707','370005','370025','370029','370037','370044','370062','370143','370157','370231','370284','370468','370621','370772','370778','370866','370899','370974','371258','371454','372269','372270','372272','372277','372289','372331','372358','372359','372362','372366','372384','372464','372468','372480','372537','372559','372615','642268','370116','370212','370293','370491','370639','370800','370822','370986','370988','371237','371303','371305','371306','371343','371344','371364','371585','372483','372488','372588','372620','372718','370048','370053','370069','370075','370083','370105','370120','370135','370166','370277','370365','370753','370865','370944','370950','370951','370953','372071','372075','372131','372148','372258','372263','372597','372622','372758','372766','370043','370546','370572','370663','370867','372390','372397','372451','372460','372476','372491','372517','372560','372569','372579','372580','370012','370060','370065','370096','370106','370175','370188','370383','370855','370962','372000','372019','372095','372097','372102','372147','372306','372365','372437','372438','372452','372534','372646','370189','370214','370296','370396','370399','370582','370995','372009','372038','372140','372391','372504','372545','372568','372600','372713')
+		    		</when>
+		    		<when test="rtnMapf == 'ET'">
+		    			AND LCM.U_DLR_CD IN ('312928','100005','100016','372623','372636','378188','310387','314057','314058','315397','314386','313368','314033','900578','900915','370080','314441','371299','372469','378184','314270','310159','311546','311946','313349','313917','314686','314885','315389','312559','313001','315022','315434','311952','311978','311983','312089','312356','312732','313161','313907','314084','314107','314371','314967','315359','315408','315473','315594','316304','316325','311632','311633','312224','316259','316308','316309','316311','316312','316313','316314','314195','314934','314998','315810','316373','641551','314265','315197','315989','316089','316151','311663','316105','316423','315286','314070','316139','310157','312439','314137','314188','314189','314190','315701','315876','315914','315917','315918','315919','315945','315950','315965','316108','316123','316321','315523','315524','315525','315526','315531','315533','315536','315733','316122','316287','316323','316326','316331','316337','316393','316446','316464','315520','315522','315931','315539','315540','315543','315549','315552','315578','315640','316174','316267','316376','315588')
+		    		</when>
+		    		<otherwise>
+		    			<if test="rtnMapf != 'ALLIANCE'">
+		    				AND LCM.U_DLR_CD LIKE '%' || #{rtnMapf} || '%'
+		    			</if>
+		    		</otherwise>
+		    	</choose>
+		    </if>
+			<if test="f == 1">	
+		 		AND LCM.ID_NO LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 2">	
+		 		AND LCM.AGENT_EMP_NM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 4">	
+		 		AND LCM.NAME LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 5">
+				AND REPLACE(LCM.HP, '-', '') LIKE '%' || REPLACE(#{q}, '-', '') || '%'
+			</if>
+			<if test="id == 'lguplus'">
+				<if test="f == 6">	
+			 		AND TARGET.CNSR_NM LIKE '%' || #{q} || '%'
+				</if>
+			</if>
+			<if test="f == 25">
+	 			AND LCM.HOME_PRD_NUM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 26">
+				AND LCM.U_DLR_CD LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 37">
+				AND 1 = CASE WHEN LCM.JOIN_METHOD = 'fixedLine' AND #{q} = 'TM' THEN 1
+							 WHEN LCM.JOIN_METHOD != 'fixedLine' AND #{q} = '전자서명' THEN 1
+							 ELSE 0 END
+			</if>
+			<if test="f == 38">
+				AND 1  = CASE WHEN '윌앤비전' = #{q} AND SUBSTR(LCM.HP, -1, 1) IN ( '0', '1', '2', '3' ) THEN 1 
+						 WHEN '리딩아이' = #{q} AND SUBSTR(LCM.HP, -1, 1) IN ( '4', '5', '6' ) THEN 1
+						 WHEN '효성ITX' = #{q} AND SUBSTR(LCM.HP, -1, 1) IN ( '7', '8', '9' ) THEN 1
+						 ELSE 0 END 
+			</if>
+			<if test="id == 'lgusawon'">
+				<choose>
+					<when test="callStts != null and callStts != ''">
+						<choose>
+							<when test="callStts == 'no'.toString()">
+								AND LCM.CALL_STTS IS NULL
+							</when>
+							<otherwise>
+								AND LCM.CALL_STTS = #{callStts}	
+							</otherwise>
+						</choose>					
+					</when>
+					<otherwise></otherwise>
+				</choose>
+			</if>
+			<if test="id == 'lguplus'">
+				<choose>
+					<when test="callStts != null and callStts != ''">
+						<choose>
+							<when test="callStts == 'no'.toString()">
+								AND TARGET.DPMS_RESL_NM IS NULL
+							</when>
+							<otherwise>
+								AND TARGET.DPMS_RESL_NM = #{callStts}	
+							</otherwise>
+						</choose>					
+					</when>
+					<otherwise></otherwise>
+				</choose>
+			</if>
+			<if test="id == 'lgusawon' and rtnMapf != null and rtnMapf != 'ALLIANCE'">
+		    	AND LCM.REG_DTM <![CDATA[>=]]> ADD_MONTHS(sysdate, -3)
+		    </if>
+			<if test="strtDt != null and strtDt != ''">
+				AND LCM.REG_DTM <![CDATA[>=]]> TO_DATE(#{strtDt}, 'yyyy-MM-dd')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND LCM.REG_DTM <![CDATA[<=]]> TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1
+			</if>
+			ORDER BY LCM.REG_DTM DESC
+	)  
+    </select>
+    
+	<!--
+         쿼리명 : OMACounselMngDAO.selectPrdctCd
+         설  명 : PRDCT_CD 조회
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.22   김필기     최초 생성
+    -->	
+	<select id="OMACounselMngDAO.selectPrdctCd" parameterType="emfMap" resultType="emfMap">
+		SELECT /*  OMACounselMngDAO.selectPrdctCd */
+		 	   PRDCT_CD 
+		  FROM OM_OSC_CNSL_MST
+		 WHERE B2B_CD = '5111' 
+		   AND ID_NO = #{idNo}	
+		   AND ROWNUM <![CDATA[<]]> 2	 
+	</select>
+	
+	<!--
+         쿼리명 : OMACounselMngDAO.selectOutsourcingAdmMngInfo
+         설  명 : 외주업체 관리자 조건 정보를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.20   김필기     최초 생성
+    -->
+    <select id="OMACounselMngDAO.selectOutsourcingAdmMngInfo" parameterType="java.lang.String" resultType="emfMap">
+		SELECT /* OMACounselMngDAO.selectOutsourcingAdmMngInfo */
+	    	   *
+		  FROM OM_OSC_ADM_MST
+		 WHERE ADM_ID = #{admId}
+    </select>
+   
+    <!--
+         쿼리명 : OMACounselMngDAO.selectOutsourcingPageMngInfo
+         설  명 : 외주업체 코드별 관리 정보를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.20   김필기     최초 생성
+    -->
+    <select id="OMACounselMngDAO.selectOutsourcingPageMngInfo" parameterType="java.lang.String" resultType="emfMap">
+		SELECT /* OMACounselMngDAO.selectOutsourcingPageMngInfo */
+	    	   *
+		  FROM OM_OSC_INPUT_MST
+		 WHERE OSC_CD = #{oscCd}
+    </select>
+    
+    <!--
+         쿼리명 : OMACounselMngDAO.selectOutsourcingPageLGUMngInfo
+         설  명 : 외주업체 코드별 관리 정보를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.20   김필기     최초 생성
+    -->
+    <select id="OMACounselMngDAO.selectOutsourcingPageLGUMngInfo" parameterType="java.lang.String" resultType="emfMap">
+		SELECT /* OMACounselMngDAO.selectOutsourcingPageLGUMngInfo */
+	    	   *
+		  FROM TB_LGUPLUS_CNSL_MAIN
+    </select>
+
+	<!--
+         쿼리명 : OMACounselMngDAO.updateSkbJoinMng
+         설  명 : 외주업체 SKB 가입상태를 변경한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.25   김필기     최초 생성
+    -->		
+	<update id="OMACounselMngDAO.updateSkbJoinMng" parameterType="emfMap">
+		UPDATE /* OMACounselMngDAO.updateSkbJoinMng */ OM_OSC_CNSL_MST 
+		   SET SKB_JOIN = #{skbJoin}
+			   , SKB_JOIN_MEMO = #{skbJoinMemo}
+		 WHERE OSC_CNSL_SEQ = #{idx}
+	</update>
+	
+	<!--
+         쿼리명 : OMACounselMngDAO.insertExcelInf
+         설  명 : 외주업체 상담 엑셀데이터를 저장한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.30   손의균      최초생성
+    -->
+	<insert id="OMACounselMngDAO.insertExcelInf" parameterType="emfMap">
+		INSERT /* OMACounselMngDAO.insertExcel
+		          Inf */ INTO OM_OSC_CNSL_MST
+			(OSC_CNSL_SEQ
+			, NAME
+			, HP
+			, ID_NO
+			, B2B_STTS
+			, B2B_NM
+			, REG_IP
+			, REG_DTM
+			, SID
+			)
+		VALUES
+			(#{seq}
+			, #{name, jdbcType=VARCHAR}
+			, #{hp, jdbcType=VARCHAR}
+			, #{idNo, jdbcType=VARCHAR}
+			, #{b2bStts, jdbcType=VARCHAR}
+			, #{b2bNm, jdbcType=VARCHAR}
+			, #{regIp, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{sid, jdbcType=VARCHAR}
+			)
+	</insert>
+	<!--
+	쿼리명 : OMACounselMngDAO.selectLgusawonUserData
+	설  명 : U라이프클럽 사용자 Data 조회.
+	수정일     수정자      수정내용
+	==========   ========   ===========
+	2019.07.09   이한미르    최초생성
+	-->
+	<select id="OMACounselMngDAO.selectLgusawonUserData" parameterType="emfMap" resultType="emfMap" fetchSize="10000" timeout="600">
+           
+			SELECT
+			    *
+			FROM
+			(
+			SELECT
+			    CASE WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('M5_') THEN 'D'
+			         WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('AO', 'LGU1', 'GR') THEN 'AB'
+			         WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('CO', 'LGU2') THEN 'AC'
+			         WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('CP', 'LGU3') THEN 'AD'
+			         WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('CY', 'LGU4', 'FD', 'GT') THEN 'AE'
+			         WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('LGU5', 'LGU6', 'DM', 'GS') THEN 'AF'
+			         WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('LGU7') THEN 'AE'
+			         WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('LGU8') THEN 'EX'
+			         WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('LGU9','KY','NY','OY') THEN 'AG'
+			         WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('LGU10','LZ','NZ','OZ') THEN 'AH'
+					 WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('LGU11', 'OX') THEN 'AI'
+					 WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('LGU12', 'OW') THEN 'AJ'
+					 WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('LGU13', 'OV') THEN 'AK'
+			         WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('M5') THEN 'A'
+			         WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('M6') THEN 'B'
+			         WHEN NVL(MPA.PROD_CD,NVL(LCM.PRDCT_CD,NVL(LCM.PRDCT_CD2,LCM.PRDCT_CD3))) IN ('ERR') THEN 'ERR'
+			    ELSE 'C'
+			    END CODE1,
+			    CASE WHEN NVL(KSTBIT,'00') IN ('00') THEN 1
+			        WHEN NVL(KSTBIT,'00') IN ('01') THEN 2 
+			        WHEN NVL(KSTBIT,'00') IN ('02') THEN 3 
+			        WHEN NVL(KSTBIT,'00') = '03' AND RESN_CL = '02' THEN 4
+			        WHEN NVL(KSTBIT,'00') = '03' AND RESN_CL != '02' THEN 5
+			    ELSE 6 END AS CODE2, 
+			    LCM.MAIN_CONT_TYPE,
+			    LCM.ID_NO,
+			    LCM.HOME_PRD_NUM,
+			    LCM.U_CMMN_CD_NM,
+                LCM.U_DLR_CD,
+			    LCM.U_DLR_NM,
+			    LCM.U_INDC_EMPNO,
+			    LCM.U_INTG_USER_ID,
+			    LCM.DISCOUNT_CTN,
+			    LCM.SALES_TYPE,
+			    LCM.WH_POS_CD,
+			    LCM.WH_STORE_NM,
+                LCM.AGENT_EMP_NM,
+			    TO_CHAR(MPA.REG_DM, 'YYYY-MM-DD HH24:MI:SS') REG_DM,                             
+			    MPA.JOIN_DT,                            
+                (SELECT COUNT(*) FROM PAY_MNG_DTL@DMLIFE WHERE ACCNT_NO = MPA.ACCNT_NO AND DEL_FG = 'N') AS TRUE_COUNT,
+                CASE WHEN MPA.PAY_MTHD = '01' THEN '손수' 
+			        WHEN MPA.PAY_MTHD = '03' THEN '자동이체' 
+			        WHEN MPA.PAY_MTHD = '04' THEN 'CMS' 
+			        WHEN MPA.PAY_MTHD = '05' THEN '채권해지(무통장)' 
+			        WHEN MPA.PAY_MTHD = '06' THEN '카드' 
+			        WHEN MPA.PAY_MTHD = '07' THEN '가상계좌'
+			    ELSE ''
+			    END AS PAY_MTHD,
+				CASE WHEN MPA.KSTBIT IN ('01') THEN '대기'
+				WHEN MPA.KSTBIT IN ('02') THEN '가입'
+				WHEN MPA.KSTBIT IN ('03') THEN '해약'
+				WHEN MPA.KSTBIT IN ('04') THEN '행사'
+				WHEN MPA.KSTBIT IN ('09') THEN '만기'
+				ELSE ''
+				END AS ACC_STAT,
+			    RS.RESN_PROC_DAY,
+				( SELECT EVENT_PROC_DAY FROM  EVENT@DMLIFE ED WHERE MPA.ACCNT_NO = ED.ACCNT_NO AND ED.DEL_FG = 'N' ) AS EVENT_PROC_DAY,
+                LCM.PRDCT_NM,
+                LCM.PRDCT_NM2,
+                LCM.PRDCT_NM3,
+                LCM.REG_DTM,
+			    NVL(LCM.CALL_STTS, '미상담') AS CALL_STTS,   
+			    '' AS MEMO,
+			    '' AS CNSL_DTL_CNTN,
+			    LCM.CALL_TYPE,
+				LCM.CALL_DATE,
+				LCM.CALL_TIME,
+				TCA.DPMS_RESL_CD,
+      			(SELECT TC.CD_NM FROM PS_WILLVI.TB_CD@DMLIFE TC WHERE 1=1 AND TC.CD = TCA.DPMS_RESL_CD AND TC.CD_SET_CD = 'CAM090' AND TC.CNTR_CD = 'CCA') AS DPMS_RESL_NM
+			FROM TB_LGUPLUS_CNSL_MAIN LCM LEFT OUTER JOIN
+			     MEM_PROD_ACCNT@DMLIFE MPA ON LCM.ID_NO = TRIM(MPA.ID_NO) AND MPA.DEL_FG = 'N' LEFT OUTER JOIN
+			     PRODUCT@DMLIFE PD ON MPA.PROD_CD = PD.PROD_CD AND SECTION_THR = '0008' LEFT OUTER JOIN
+			     RESCISSION@DMLIFE RS ON MPA.ACCNT_NO = RS.ACCNT_NO AND RS.DEL_FG = 'N'  LEFT OUTER JOIN 
+			     PS_WILLVI.TB_LGUPLUS_TARGET@DMLIFE TA ON TA.ID_NO = LCM.ID_NO LEFT OUTER JOIN 
+			     PS_WILLVI.TB_TRGT_CUST_ALCT@DMLIFE TCA ON TCA.TRGT_CUST_DTPT_ID = TA.TRGT_CUST_DTPT_ID
+			WHERE 1=1   
+			<![CDATA[       
+                AND LCM.REG_DTM >= TO_DATE('2016-11-01', 'yyyy-MM-dd')
+                AND LCM.REG_DTM <= TO_DATE(#{now}, 'yyyy-MM-dd')
+            ]]>
+			)
+			<if test="order_by != null">
+				ORDER BY ${order_by}
+			</if>
+	</select>
+	<select id="OMACounselMngDAO.selectLgusawonSecurityCode" resultType="String" parameterType="emfMap">
+		SELECT SECURITY_CODE FROM TB_LGUPLUS_DLR_CD_SEC LDCS WHERE  LDCS.U_DLR_CD = #{rtnMapf}
+	</select>
+</mapper>

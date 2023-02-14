@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MBAMemChngDAO">
+    
+    <!--
+         쿼리명 : MBAMemChngDAO.selectMemChngList
+         설  명 : 회원 정보 변경로그 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영     최초 생성
+    -->
+    <select id="MBAMemChngDAO.selectMemChngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBAMemChngDAO.selectMemChngList */
+			   TBL.* 
+			   , (SELECT UNQ_NO FROM MB_MEM_MST WHERE ID = TBL.ID) AS MEM_NO
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = TBL.ID) AS NAME
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , CHNG_SEQ
+					   , ID
+					   , BFR_NAME
+					   , BFR_EMAIL
+					   , BFR_HP
+					   , BFR_TEL
+					   , BFR_ZIPCD
+					   , BFR_ADR
+					   , BFR_ADR_DTL
+					   , AFT_NAME
+					   , AFT_EMAIL
+					   , AFT_HP
+					   , AFT_TEL
+					   , AFT_ZIPCD
+					   , AFT_ADR
+					   , AFT_ADR_DTL
+					   , PRCS_YN
+					   , REG_DTM
+					   , MOD_DTM
+			      FROM MB_MEM_CHNG_PTC
+				 WHERE 1=1
+				<if test="prcsYn != null and prcsYn != ''">
+					AND PRCS_YN = #{prcsYn}
+			 	</if>
+				<if test="strtDt != null and strtDt != ''">
+					<![CDATA[	AND REG_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+				</if>
+				<if test="endDt != null and endDt != ''">
+					<![CDATA[	AND REG_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND ID = (SELECT ID FROM MB_MEM_MST WHERE NAME = #{q})	]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND ID = #{q} 	]]>
+					</if>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+    </select>
+    
+    <!--
+         쿼리명 : MBAMemChngDAO.updateChngPtcPrcsYn
+         설  명 : 회원정보 변경내역 처리현황을 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.20   허진영      최초생성
+    -->
+    <update id="MBAMemChngDAO.updateChngPtcPrcsYn" parameterType="emfMap">
+    	UPDATE /* MBAMemChngDAO.updateChngPtcPrcsYn */ MB_MEM_CHNG_PTC
+    	   SET PRCS_YN = #{prcsYn}
+    	       , MOD_ID = #{modId}
+    	       , MOD_IP = #{modIp}
+    	       , MOD_DTM = SYSDATE
+    	 WHERE CHNG_SEQ = #{chngSeq}
+    </update>
+    
+	<!--
+         쿼리명 : MBAMemChngDAO.excelMemChngList
+         설  명 : 회원 정보 변경로그 목록을 조회한다. (엑셀 다운로드)
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.18   허진영     최초 생성
+    -->
+    <select id="MBAMemChngDAO.excelMemChngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBAMemChngDAO.excelMemChngList */
+			   COUNT(*) OVER() AS TOT_CNT
+			   , ID
+			   , (SELECT UNQ_NO FROM MB_MEM_MST WHERE ID = A.ID) AS UNQ_NO
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = A.ID) AS NAME
+			   , BFR_NAME
+			   , BFR_EMAIL
+			   , BFR_HP
+			   , BFR_TEL
+			   , BFR_ZIPCD
+			   , BFR_ADR
+			   , BFR_ADR_DTL
+			   , AFT_NAME
+			   , AFT_EMAIL
+			   , AFT_HP
+			   , AFT_TEL
+			   , AFT_ZIPCD
+			   , AFT_ADR
+			   , AFT_ADR_DTL
+			   , (SELECT SMS_RCV_YN FROM MB_MEM_MST WHERE ID = A.ID) AS SMS_RCV_YN
+			   , (SELECT TEL_RCV_YN FROM MB_MEM_MST WHERE ID = A.ID) AS TEL_RCV_YN
+			   , (SELECT CTLG_RCV_YN FROM MB_MEM_MST WHERE ID = A.ID) AS CTLG_RCV_YN
+			   , (SELECT EMAIL_RCV_YN FROM MB_MEM_MST WHERE ID = A.ID) AS EMAIL_RCV_YN
+			   , PRCS_YN
+			   , REG_DTM
+			   , MOD_DTM
+	      FROM MB_MEM_CHNG_PTC A
+		 WHERE 1=1
+		<if test="prcsYn != null and prcsYn != ''">
+			AND PRCS_YN = #{prcsYn}
+	 	</if>
+		<if test="strtDt != null and strtDt != ''">
+			<![CDATA[	AND REG_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+		</if>
+		<if test="endDt != null and endDt != ''">
+			<![CDATA[	AND REG_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+		</if>
+		<if test="q != null and q != ''">
+			<if test="f == 1">
+				<![CDATA[	AND ID = (SELECT ID FROM MB_MEM_MST WHERE NAME = #{q})	]]>
+			</if>
+			<if test="f == 2">
+				<![CDATA[	AND ID = #{q} 	]]>
+			</if>
+		</if>
+		 ORDER BY REG_DTM DESC
+    </select>
+    
+</mapper>

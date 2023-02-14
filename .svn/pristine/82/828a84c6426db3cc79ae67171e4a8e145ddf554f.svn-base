@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CMDMbspCardDAO">
+	
+	<resultMap id="emfMap" type="emfMap">
+		<result property="MEMO" column="MEMO" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+	
+	<!--
+         쿼리명 : CMDMbspCardDAO.selectMbspCardList
+         설  명  : 멤버십카드신청 내역 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   허진영      최초생성
+    -->
+    <select id="CMDMbspCardDAO.selectMbspCardList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CMDMbspCardDAO.selectMbspCardList */
+			   TBL.* 
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = TBL.ID) AS NAME
+               , (SELECT HP FROM MB_MEM_MST WHERE ID = TBL.ID) AS HP
+               , (SELECT MAX(MOD_DTM) FROM CM_MBSP_CARD_LOG WHERE RQST_SEQ = TBL.RQST_SEQ AND PRCS_CD = '02') AS ACPT_DTM
+               , (SELECT MAX(MOD_DTM) FROM CM_MBSP_CARD_LOG WHERE RQST_SEQ = TBL.RQST_SEQ AND PRCS_CD = '03') AS COMP_DTM
+               , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PROCESS_TYPE' AND CD = TBL.PRCS_CD) AS PRCS_NM
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+			           , RQST_SEQ
+			           , ID
+			           , ACCNT_NO
+			           , PRCS_CD
+			           , REG_DTM
+				  FROM CM_MBSP_CARD_MST
+				 WHERE 1=1
+				<if test="prcsCd != null and prcsCd != ''">
+					AND PRCS_CD = #{prcsCd}
+			 	</if>
+				<if test="strtDt != null and strtDt != ''">
+					<![CDATA[	AND REG_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+				</if>
+				<if test="endDt != null and endDt != ''">
+					<![CDATA[	AND REG_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+				</if>	 
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND ID IN(SELECT ID FROM MB_MEM_MST WHERE NAME LIKE '%' || #{q} || '%')	]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND ID LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 3">
+						<![CDATA[	AND ACCNT_NO LIKE '%' || #{q} || '%'  ]]>
+					</if>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) A
+		) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}            
+    </select>
+    
+	<!--
+         쿼리명 : CMDMbspCardDAO.selectMbspCard
+         설  명  : 멤버십카드신청 내역을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   허진영      최초생성
+    -->
+    <select id="CMDMbspCardDAO.selectMbspCard" parameterType="emfMap" resultMap="emfMap">
+     	SELECT /* CMDMbspCardDAO.selectMbspCard */      
+	           RQST_SEQ
+	           , ID
+	           , (SELECT NAME FROM MB_MEM_MST WHERE ID = A.ID) AS NAME
+			   , (SELECT HP FROM MB_MEM_MST WHERE ID = A.ID) AS HP
+               , (SELECT TEL FROM MB_MEM_MST WHERE ID = A.ID) AS TEL
+			   , (SELECT EMAIL FROM MB_MEM_MST WHERE ID = A.ID) AS EMAIL
+	           , ACCNT_NO
+	           , ZIPCD
+	           , ADR
+	           , ADR_DTL
+	           , MEMO
+			   , PRCS_CD
+			   , REG_ID
+			   , (SELECT COUNT(*) FROM CM_MBSP_CARD_LOG WHERE RQST_SEQ = A.RQST_SEQ AND PRCS_CD = '03') AS RQST_COMP_CNT
+		  FROM CM_MBSP_CARD_MST A
+         WHERE RQST_SEQ = #{rqstSeq}
+   	</select>
+   	
+	<!--
+         쿼리명 : CMDMbspCardDAO.updateMbspCard
+         설  명  : 멤버십카드신청 내역을 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   허진영      최초생성
+    -->
+    <update id="CMDMbspCardDAO.updateMbspCard" parameterType="emfMap">
+    	UPDATE /* CMDMbspCardDAO.updateMbspCard */ CM_MBSP_CARD_MST
+    	   SET MEMO = #{memo}
+	    	   , PRCS_CD = #{prcsCd}
+	    	   , MOD_ID = #{modId}
+	    	   , MOD_IP = #{modIp}
+	    	   , MOD_DTM = SYSDATE
+    	 WHERE RQST_SEQ = #{rqstSeq}
+    </update>
+	
+	<!--
+         쿼리명 : CMDMbspCardDAO.updateMbspCardPrcsCd
+         설  명 : 멤버십카드신청 내역 처리현황를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.23   허진영      최초생성
+    -->
+    <update id="CMDMbspCardDAO.updateMbspCardPrcsCd" parameterType="emfMap">
+    	UPDATE /* CMDMbspCardDAO.updateMbspCardPrcsCd */ CM_MBSP_CARD_MST
+    	   SET PRCS_CD = #{prcsCd}
+    	 WHERE RQST_SEQ = #{rqstSeq}
+    </update>
+ 	
+	<!--
+         쿼리명 : CMDMbspCardDAO.insertMbspCardPrcsLog
+         설  명 : 멤버십카드신청 내역 로그를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.23   허진영      최초생성
+    -->   
+   	<insert id="CMDMbspCardDAO.insertMbspCardPrcsLog" parameterType="emfMap">
+        INSERT /* CMDMbspCardDAO.insertMbspCardPrcsLog */ INTO CM_MBSP_CARD_LOG
+        	(RQST_SEQ
+			, PRCS_CD
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+        	)
+		SELECT #{rqstSeq}
+			   , #{prcsCd}
+	       	   , #{modId}
+	       	   , #{modIp}
+	       	   , SYSDATE
+          FROM DUAL
+         WHERE EXISTS (SELECT 'X' FROM CM_MBSP_CARD_MST WHERE RQST_SEQ = #{rqstSeq} AND PRCS_CD != #{prcsCd})
+   </insert>
+   
+   <!--
+         쿼리명 : CMDMbspCardDAO.excelMbspCardList
+         설  명  : 멤버십카드신청 내역 목록을 조회한다. (엑셀 다운로드)
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.20   허진영      최초생성
+    -->
+    <select id="CMDMbspCardDAO.excelMbspCardList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CMDMbspCardDAO.excelMbspCardList */
+			   TBL.* 
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = TBL.ID) AS NAME
+               , (SELECT HP FROM MB_MEM_MST WHERE ID = TBL.ID) AS HP
+               , (SELECT MAX(MOD_DTM) FROM CM_MBSP_CARD_LOG WHERE RQST_SEQ = TBL.RQST_SEQ AND PRCS_CD = '02') AS ACPT_DTM
+               , (SELECT MAX(MOD_DTM) FROM CM_MBSP_CARD_LOG WHERE RQST_SEQ = TBL.RQST_SEQ AND PRCS_CD = '03') AS COMP_DTM
+               , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PROCESS_TYPE' AND CD = TBL.PRCS_CD) AS PRCS_NM
+		FROM (
+			SELECT COUNT(*) OVER() AS TOT_CNT
+		           , RQST_SEQ
+		           , ID
+		           , ACCNT_NO
+		           , PRCS_CD
+		           , REG_DTM
+			  FROM CM_MBSP_CARD_MST
+			 WHERE 1=1
+			<if test="prcsCd != null and prcsCd != ''">
+				AND PRCS_CD = #{prcsCd}
+		 	</if>
+			<if test="strtDt != null and strtDt != ''">
+				<![CDATA[	AND REG_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+			</if>
+			<if test="endDt != null and endDt != ''">
+				<![CDATA[	AND REG_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+			</if>	 
+			<if test="q != null and q != ''">
+				<if test="f == 1">
+					<![CDATA[	AND ID IN(SELECT ID FROM MB_MEM_MST WHERE NAME LIKE '%' || #{q} || '%')	]]>
+				</if>
+				<if test="f == 2">
+					<![CDATA[	AND ID LIKE '%' || #{q} || '%'	]]>
+				</if>
+				<if test="f == 3">
+					<![CDATA[	AND ACCNT_NO LIKE '%' || #{q} || '%'  ]]>
+				</if>
+			</if>
+			 ORDER BY REG_DTM DESC
+		) TBL
+    </select>
+   
+</mapper>

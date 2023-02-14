@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SCAQscnSchdDAO">
+
+	<!--
+         쿼리명 : SCAQscnSchdDAO.updateQscnMemList
+         설  명 : 1년이상 미로그인 시 휴면계정으로 전환한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.28   허진영      최초생성
+    -->
+	<update id="SCAQscnSchdDAO.updateQscnMemList" parameterType="emfMap">
+		UPDATE /* SCAQscnSchdDAO.updateQscnMemList */ MB_MEM_MST
+		   SET QSCN_YN = 'Y'
+			   , REG_ID = 'schedular'
+			   , REG_IP = '127.0.0.1'
+			   , REG_DTM = SYSDATE
+		 WHERE QSCN_YN = 'N'
+		   AND DROT_YN = 'N'
+		   AND TO_CHAR(SYSDATE, 'yyyyMMdd') <![CDATA[>=]]> TO_CHAR(ADD_MONTHS(LAST_LGN_DTM, 12), 'yyyyMMdd') 
+	</update>
+	
+	<!--
+         쿼리명 : SCAQscnSchdDAO.selectQscnMemList
+         설  명 : 휴면계정 전환 30일전인 회원을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.28   허진영      최초생성
+    -->
+	<select id="SCAQscnSchdDAO.selectQscnMemList" resultType="emfMap">
+		SELECT /* SCAQscnSchdDAO.selectQscnMemList */
+			   ID
+			   , NAME
+			   , EMAIL
+			   , TO_CHAR(ADD_MONTHS(LAST_LGN_DTM, 12), 'yyyy"년" MM"월" dd"일"') QSCN_CHNG_DTM 
+		  FROM MB_MEM_MST
+		 WHERE QSCN_YN = 'N'
+		   AND DROT_YN = 'N'
+		   AND TO_CHAR(SYSDATE, 'yyyyMMdd') = TO_CHAR(ADD_MONTHS(LAST_LGN_DTM, 12) - 30, 'yyyyMMdd')
+	    ORDER BY LAST_LGN_DTM ASC
+	</select>
+	
+</mapper>            

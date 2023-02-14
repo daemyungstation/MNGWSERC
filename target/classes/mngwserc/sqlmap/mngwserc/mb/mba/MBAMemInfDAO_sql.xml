@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MBAMemInfDAO">
+    
+    <!--
+         쿼리명 : MBAMemInfDAO.selectMemInfList
+         설  명 : 회원 정보 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+    <select id="MBAMemInfDAO.selectMemInfList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBAMemInfDAO.selectMemInfList */
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , ID
+					   , UNQ_NO
+					   , NAME
+					   , EMAIL
+					   , SMS_RCV_YN
+					   , EMAIL_RCV_YN
+					   , LAST_LGN_DTM
+					   , REG_DTM
+					   , MARKETING_YN
+					   , AGREEMENT_FOR_THIRD_PARTY
+					   , CI
+			      FROM MB_MEM_MST
+				 WHERE DROT_YN = 'N'
+				<if test="unqExstYn != null and unqExstYn != ''">
+					AND NVL2(UNQ_NO, 'Y', 'N') = #{unqExstYn}
+			 	</if>
+			 	<if test="emailRcvYn != null and emailRcvYn != ''">
+					AND EMAIL_RCV_YN = #{emailRcvYn}
+			 	</if>
+			 	<if test="smsRcvYn != null and smsRcvYn != ''">
+					AND SMS_RCV_YN = #{smsRcvYn}
+			 	</if>
+				<if test="strtDt != null and strtDt != ''">
+					<if test="dtGb == 1">
+						<![CDATA[	AND LAST_LGN_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+					</if>
+					<if test="dtGb == 2">
+						<![CDATA[	AND REG_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+					</if>
+				</if>
+				<if test="endDt != null and endDt != ''">
+					<if test="dtGb == 1">
+						<![CDATA[	AND LAST_LGN_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+					</if>
+					<if test="dtGb == 2">
+						<![CDATA[	AND REG_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+					</if>
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND NAME = #{q}]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND ID = #{q}]]>
+					</if>
+					<if test="f == 3">
+						<![CDATA[	AND CI = #{ci}]]>
+					</if>
+					<if test="f == 4">
+						<![CDATA[	AND UNQ_NO = #{q}]]>
+					</if>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+    </select>
+    
+    <!--
+         쿼리명 : MBAMemInfDAO.selectMemInf
+         설  명 : 회원 정보 상세를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+    <select id="MBAMemInfDAO.selectMemInf" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBAMemInfDAO.selectMemInf */      
+			   A.ID
+			   , A.PWD
+			   , A.UNQ_NO
+			   , A.NAME
+			   , A.BIRTH
+			   , A.EMAIL
+			   , A.HP
+			   , A.TEL
+			   , A.ZIPCD
+			   , A.ADR
+			   , A.ADR_DTL
+			   , A.USE_YN
+			   , A.LAST_LGN_DTM
+			   , A.REG_DTM
+			   , A.SMS_RCV_YN
+			   , A.EMAIL_RCV_YN
+			   , A.AGREEMENT_FOR_THIRD_PARTY
+			   , A.MARKETING_YN
+			   , A.CI
+			   , B.MRRG_YN
+			   , B.CHDRN_GB
+			   , B.INTR_PTC
+			   , B.JOIN_PATH
+			   , B.JOIN_PATH_ETC
+			   , B.PFRN_PTC
+			   , B.PFRN_ETC
+		  FROM MB_MEM_MST A, MB_ETC_INF B
+         WHERE A.ID = B.ID(+)
+           AND A.ID = #{id}
+   	</select>
+   	
+   	<!--
+         쿼리명 : MBAMemInfDAO.updateMemInf
+         설  명 : 회원 정보를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+    <update id="MBAMemInfDAO.updateMemInf" parameterType="emfMap">
+		UPDATE /* MBAMemInfDAO.updateMemInf */ MB_MEM_MST
+		   SET UNQ_NO = #{unqNo, jdbcType=VARCHAR}
+		   	<if test='chgPwdYN != null and chgPwdYN == "Y"'> <!--//회원정보 패스워드 수정(http://183.111.69.197:8080/issues/76)-->
+		   	   , PWD = #{chgPwd, jdbcType=VARCHAR}
+		   	</if>
+		   	   , NAME = #{name}
+		   	   , BIRTH = #{birth}
+			   , EMAIL = #{email}
+			   , HP = #{hp} 
+			   , TEL = #{tel, jdbcType=VARCHAR}
+			   , ZIPCD = #{zipcd}
+			   , ADR = #{adr}
+			   , ADR_DTL = #{adrDtl}
+			   , USE_YN = #{useYn}
+			   , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = SYSDATE
+         WHERE ID = #{id}
+   	</update>
+   	
+   	<!--
+         쿼리명 : MBAMemInfDAO.updateEtcInf
+         설  명 : 회원 기타 정보를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+    <update id="MBAMemInfDAO.updateEtcInf" parameterType="emfMap">
+		UPDATE /* MBAMemInfDAO.updateEtcInf */ MB_ETC_INF
+		   SET MRRG_YN = #{mrrgYn, jdbcType=VARCHAR}
+			   , CHDRN_GB = #{chdrnGb, jdbcType=VARCHAR}
+			   , INTR_PTC = #{intrPtc, jdbcType=VARCHAR}
+			   , JOIN_PATH = #{joinPath, jdbcType=VARCHAR}
+			   , JOIN_PATH_ETC = #{joinPathEtc, jdbcType=VARCHAR}
+			   , PFRN_PTC = #{pfrnPtc, jdbcType=VARCHAR}
+			   , PFRN_ETC = #{pfrnEtc, jdbcType=VARCHAR}
+			   , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = SYSDATE
+         WHERE ID = #{id}
+   	</update>
+
+   	<!--
+         쿼리명 : MBAMemInfDAO.selectSrvcRcvModLog
+         설  명 : 회원 서비스수신 변경 로그를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+    <select id="MBAMemInfDAO.selectSrvcRcvModLog" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBAMemInfDAO.selectSrvcRcvModLog */
+    		   	CASE TBL.RCV_GB WHEN 'sms' THEN '4'
+									WHEN 'email' THEN '3'
+									WHEN 'marketingInfo' THEN '2'
+									WHEN 'agreementForThirdParty' THEN '1'
+   				ELSE '0' END AS DATAORDER
+   			   , TBL.RCV_GB
+    		   , MAX(DECODE(RNK, 2, TBL.MOD_DTM)) AS BFR_MOD_DTM
+           	   , MAX(DECODE(RNK, 1, TBL.MOD_DTM)) AS LAST_MOD_DTM
+    	FROM (
+    		SELECT ROW_NUMBER() OVER(PARTITION BY RCV_GB ORDER BY MOD_DTM DESC) RNK
+             	   , RCV_GB
+			   	   , MOD_DTM
+		  	  FROM MB_RCV_MOD_LOG
+		  	 WHERE ID = #{id}
+		  	   AND RCV_GB IN('sms', 'email', 'marketingInfo', 'agreementForThirdParty')
+    	) TBL
+    	GROUP BY TBL.RCV_GB
+    	ORDER BY DATAORDER 
+   	</select>
+   	
+	<!--
+         쿼리명 : MBAMemInfDAO.updateMemDrot
+         설  명 : 회원을 탈퇴한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+    <update id="MBAMemInfDAO.updateMemDrot" parameterType="emfMap">
+		UPDATE /* MBAMemInfDAO.updateMemDrot */ MB_MEM_MST
+		   SET PWD = null
+			   , UNQ_NO = null
+			   , NAME = null
+			   , BIRTH = null
+			   , EMAIL = null
+			   , HP = null
+			   , TEL = null
+			   , ZIPCD = null
+			   , ADR = null
+			   , ADR_DTL = null
+			   , SMS_RCV_YN = null
+			   , TEL_RCV_YN = null
+			   , CTLG_RCV_YN = null
+			   , EMAIL_RCV_YN = null
+			   , USE_YN = null
+			   , LAST_LGN_DTM = null
+			   , DROT_YN = 'Y'
+			   , DROT_RSN = '관리자 탈퇴처리'
+			   , DROT_DTM = SYSDATE
+			   , QSCN_YN = null
+			   , USER_GB = null
+			   , OLD_AUTH_YN = null
+			   , CI = null
+			   , REG_ID = null
+			   , REG_IP = null
+			   , REG_DTM = null
+			   , MOD_ID = null
+			   , MOD_IP = null
+			   , MOD_DTM = null
+         WHERE ID = #{id}
+   	</update>
+   	
+   	<!--
+         쿼리명 : MBAMemInfDAO.deleteIdntInf
+         설  명 : 부가 식별 정보를 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+    <select id="MBAMemInfDAO.deleteIdntInf" parameterType="emfMap">
+		DELETE /* MBAMemInfDAO.deleteIdntInf */
+		FROM MB_IDNT_INF
+		WHERE ID = #{homepageId}
+   	</select>
+   	
+   	<!--
+         쿼리명 : MBAMemInfDAO.deleteMemEtcDrot
+         설  명 : 부가 식별 정보를 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2020.01.06   원종한      최초생성
+    -->
+    <delete id="MBAMemInfDAO.deleteMemEtcDrot" parameterType="emfMap">
+		DELETE /* MBAMemInfDAO.deleteMemEtcDrot */
+		  FROM MB_ETC_INF
+         WHERE ID = #{homepageId}
+   	</delete>
+
+	<!--
+         쿼리명 : MBAMemInfDAO.insertMemInfModLog
+         설  명 : 회원 정보 변경 로그를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+    <insert id="MBAMemInfDAO.insertMemInfModLog" parameterType="emfMap">
+		INSERT /* MBAMemInfDAO.insertMemInfModLog */ INTO MB_MEM_CHNG_PTC
+			(CHNG_SEQ
+			, ID
+			, BFR_NAME
+			, BFR_EMAIL
+			, BFR_HP
+			, BFR_TEL
+			, BFR_ZIPCD
+			, BFR_ADR
+			, BFR_ADR_DTL
+			, AFT_NAME
+			, AFT_EMAIL
+			, AFT_HP
+			, AFT_TEL
+			, AFT_ZIPCD
+			, AFT_ADR
+			, AFT_ADR_DTL
+			, PRCS_YN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			<if test='chgPwdYN != null and chgPwdYN == "Y"'> <!-- 회원정보 패스워드 수정(http://183.111.69.197:8080/issues/76) -->
+			, BFR_PWD
+			, AFT_PWD
+			</if>
+			,BFR_BIRTH
+			,AFT_BIRTH
+			)
+		SELECT #{chngSeq}
+			   , ID
+			   , NAME
+			   , EMAIL
+			   , HP
+			   , TEL
+			   , ZIPCD
+			   , ADR
+			   , ADR_DTL
+			   , #{name}
+			   , #{email}
+			   , #{hp}
+			   , #{tel, jdbcType=VARCHAR}
+			   , #{zipcd}
+			   , #{adr}
+			   , #{adrDtl}
+			   , 'N'
+			   , #{regId}
+			   , #{regIp}
+			   , SYSDATE
+			   , #{modId}
+			   , #{modIp}
+			   , SYSDATE
+			   <if test='chgPwdYN != null and chgPwdYN == "Y"'> <!-- 회원정보 패스워드 수정(http://183.111.69.197:8080/issues/76) -->
+			   , PWD
+			   , #{chgPwd, jdbcType=VARCHAR}
+			   </if>
+			   , BIRTH
+			   , #{birth, jdbcType=VARCHAR}
+		  FROM MB_MEM_MST A
+		 WHERE ID = #{id}
+		   AND EXISTS(
+		   	SELECT 'X' FROM MB_MEM_MST 
+		   	WHERE ID = A.ID 
+		   	AND (
+		   		EMAIL != #{email} 
+		   		OR HP != #{hp} 
+		   		OR NVL(TEL, 'N') != NVL(#{tel, jdbcType=VARCHAR}, 'N') 
+		   		OR ZIPCD != #{zipcd} 
+		   		OR ADR != #{adr} 
+		   		OR ADR_DTL != #{adrDtl}
+		   		OR NAME != #{name}
+		   		OR BIRTH != #{birth, jdbcType=VARCHAR}
+		   		<if test='chgPwdYN != null and chgPwdYN == "Y"'> <!-- 회원정보 패스워드 수정(http://183.111.69.197:8080/issues/76) -->
+		   			OR PWD != #{chgPwd, jdbcType=VARCHAR}
+		   		</if>
+		   )) 
+   	</insert>
+   	
+	<!--
+         쿼리명 : MBAMemInfDAO.excelMemInfList
+         설  명 : 회원 정보 목록을 조회한다. (엑셀 다운로드)
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.10   허진영     최초 생성
+    -->
+    <select id="MBAMemInfDAO.excelMemInfList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBAMemInfDAO.excelMemInfList */
+			   TBL.* 
+		FROM (
+			SELECT COUNT(*) OVER() AS TOT_CNT
+				, ID
+				, UNQ_NO
+				, NAME
+				, SEX
+				, BIRTH
+				, EMAIL
+				, SMS_RCV_YN
+				, TEL_RCV_YN
+				, CTLG_RCV_YN
+				, EMAIL_RCV_YN
+				, MARKETING_YN
+				, AGREEMENT_FOR_THIRD_PARTY
+				, LAST_LGN_DTM
+				, REG_DTM
+		      FROM MB_MEM_MST
+			 WHERE DROT_YN = 'N'
+			<if test="unqExstYn != null and unqExstYn != ''">
+				AND NVL2(UNQ_NO, 'Y', 'N') = #{unqExstYn}
+		 	</if>
+		 	<if test="emailRcvYn != null and emailRcvYn != ''">
+				AND EMAIL_RCV_YN = #{emailRcvYn}
+		 	</if>
+		 	<if test="smsRcvYn != null and smsRcvYn != ''">
+				AND SMS_RCV_YN = #{smsRcvYn}
+		 	</if>
+			<if test="strtDt != null and strtDt != ''">
+				<if test="dtGb == 1">
+					<![CDATA[	AND LAST_LGN_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+				</if>
+				<if test="dtGb == 2">
+					<![CDATA[	AND REG_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+				</if>
+			</if>
+			<if test="endDt != null and endDt != ''">
+				<if test="dtGb == 1">
+					<![CDATA[	AND LAST_LGN_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+				</if>
+				<if test="dtGb == 2">
+					<![CDATA[	AND REG_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+				</if>	
+			</if>
+			<if test="q != null and q != ''">
+				<if test="f == 1">
+					<![CDATA[	AND NAME = #{q}]]>
+				</if>
+				<if test="f == 2">
+					<![CDATA[	AND ID = #{q}]]>
+				</if>
+			</if>
+			 ORDER BY REG_DTM DESC
+		) TBL
+    </select>
+    
+    <!--
+         쿼리명 : MBAMemInfDAO.excelRcvModList
+         설  명 : 고객서비스 변경 목록을 조회한다. (엑셀 다운로드)
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.16   허진영     최초 생성
+    -->
+    <select id="MBAMemInfDAO.excelRcvModList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBAMemInfDAO.excelRcvModList */
+			   COUNT(*) OVER() AS TOT_CNT
+			   , A.ID
+		       , A.UNQ_NO
+		       , A.NAME
+		       , A.SMS_RCV_YN
+		       , A.TEL_RCV_YN
+		       , A.CTLG_RCV_YN
+		       , A.EMAIL_RCV_YN
+		       , B.RCV_GB
+		       , B.MOD_ID
+		       , B.MOD_IP
+		       , B.MOD_DTM
+		  FROM MB_MEM_MST A, MB_RCV_MOD_LOG B
+		 WHERE A.ID = B.ID
+		   AND A.DROT_YN = 'N'
+		<if test="rcvModStrtDt != null and rcvModStrtDt != ''">
+			<![CDATA[	AND B.MOD_DTM >= TO_DATE(#{rcvModStrtDt}, 'yyyy-MM-dd')	]]>
+		</if>
+		<if test="rcvModEndDt != null and rcvModEndDt != ''">
+			<![CDATA[	AND B.MOD_DTM < TO_DATE(#{rcvModEndDt}, 'yyyy-MM-dd') + 1	]]>
+		</if>
+		 ORDER BY B.MOD_DTM DESC, B.RCV_GB DESC
+    </select>
+
+	<!--
+         쿼리명 : MLHMemDrotDAO.insertMemDropInfo
+         설  명 : 회원정보테이블에서 탈퇴회원정보로 등록.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2017.12.28   KJS     최초 생성
+    -->
+	<select id="MBAMemInfDAO.getIntegrationMember" parameterType="emfMap" resultType="emfMap">
+		SELECT
+		I.INTEGRATION_ID,
+		I.INTEGRATION_PW,
+		I.HOMEPAGE_ID,
+		H.NAME,
+		H.EMAIL,
+		I.MALL_ID,
+		I.MEMBER_ID,
+		I.CI,
+		I.HOMEPAGE_ONLINE_YN,
+		I.HOMEPAGE_JOIN_DATE,
+		I.SECESSION_DATE,
+		I.SECESSION_DELETE_DIV,
+		I.MALL_JOIN_DATE,
+		I.INTEGRATION_DATE,
+		I.INTEGRATION_TYPE
+		FROM
+			INTEGRATION_MEMBER@DM_INTEGRATION I
+		INNER JOIN
+			MB_MEM_MST H
+		ON
+			I.CI = H.CI
+		WHERE 1=1
+		<if test="homepageId != null and HomepageId != ''">
+		AND
+			I.HOMEPAGE_ID = #{homepageId}
+		</if>
+		AND
+			I.SECESSION_DATE IS NULL
+		AND ROWNUM = 1
+	</select>
+
+	<update id="MBAMemInfDAO.dropOutIntegrationMember" parameterType="emfMap">
+		UPDATE INTEGRATION_MEMBER@DM_INTEGRATION
+		SET
+			SECESSION_DATE = SYSDATE,
+			SECESSION_DELETE_DIV =
+				CASE WHEN SECESSION_DELETE_DIV = 'M' THEN 'A'
+				WHEN SECESSION_DELETE_DIV = 'A' THEN 'A'
+				ELSE 'H' END
+		WHERE HOMEPAGE_ID = #{homepageId}
+		<if test="INTEGRATION_ID != null and INTEGRATION_ID != ''">
+		AND
+			INTEGRATION_ID = #{integrationId}
+		</if>
+	</update>
+
+	<!--
+         쿼리명 : MLHMemDrotDAO.deleteMemDrot
+         설  명 : 회원정보테이블에서 삭제.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2017.12.28   KJS     최초 생성
+    -->
+	<insert id="MBAMemInfDAO.insertMemDropInfo" parameterType="emfMap">
+	INSERT INTO MB_DROT_MEM_MST(
+		SELECT
+			ID
+			, SEX
+			, '관리자 탈퇴처리'
+			, SYSDATE
+			, MARKETING_YN
+			, AGREEMENT_FOR_THIRD_PARTY
+			, MARKETING_INFO_YN
+			, RETRY
+			, REG_ID
+			, REG_IP
+			, SYSDATE
+			, EMAIL
+		FROM
+			MB_MEM_MST
+		WHERE
+			ID = #{homepageId}
+			<if test="ci != null and ci != ''">
+			AND
+			CI = #{ci}
+			</if>
+	)
+	</insert>
+
+	<delete id="MBAMemInfDAO.deleteMemDrot" parameterType="emfMap">
+		 DELETE FROM MB_MEM_MST
+		 WHERE
+		 	ID = #{homepageId}
+			<if test="ci != null and ci != ''">
+			AND
+				CI = #{ci}
+			</if>
+	</delete>
+
+</mapper>

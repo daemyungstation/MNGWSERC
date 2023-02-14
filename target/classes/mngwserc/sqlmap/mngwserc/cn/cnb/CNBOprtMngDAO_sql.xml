@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CNBOprtMngDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+	    <result property="cntn" column="CNTN" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+	
+	<!--
+         쿼리명 : CNBOprtMngDAO.selectOprtGuideList
+         설  명 : 이용안내 목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.01.26   허진영      최초생성
+    -->
+	<select id="CNBOprtMngDAO.selectOprtGuideList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CNBOprtMngDAO.selectOprtGuideList */
+			   TBL.*
+		FROM (
+			SELECT ROWNUM AS RNUM, A.*
+			FROM ( 
+				SELECT COUNT(*) OVER() AS TOT_CNT
+			   		   , OPRT_GUIDE_SEQ
+	               	   , OPRT_GUIDE_GB
+	               	   , PTUP_DT
+	                   , USE_YN
+	                   , REG_ID
+	                   , REG_DTM
+			      FROM CN_OPRT_GUIDE_MST
+			     WHERE OPRT_GUIDE_GB = #{oprtGuideGb}
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND TITL LIKE '%' || #{q} || '%' ]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND CNTN LIKE '%' || #{q} || '%' ]]>
+					</if>
+              	</if>
+				 ORDER BY REG_DTM DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+	
+	<!--
+         쿼리명 : CNBOprtMngDAO.selectOprtGuide
+         설  명 : 이용안내 상세를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.01.26   허진영      최초생성
+    -->
+	<select id="CNBOprtMngDAO.selectOprtGuide" parameterType="emfMap" resultMap="emfMap">	
+        SELECT /* CNBOprtMngDAO.selectOprtGuide */ 
+               OPRT_GUIDE_SEQ
+               , PTUP_DT
+               , CNTN
+               , USE_YN
+               , REG_ID
+               , REG_DTM
+		  FROM CN_OPRT_GUIDE_MST
+		 WHERE OPRT_GUIDE_SEQ = #{oprtGuideSeq}
+	</select>
+	
+	<!--
+         쿼리명 : CNBOprtMngDAO.insertOprtGuide
+         설  명 : 이용안내를 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.01.26   허진영      최초생성
+    -->
+	<insert id="CNBOprtMngDAO.insertOprtGuide" parameterType="emfMap">
+		INSERT /* CNBOprtMngDAO.insertOprtGuide */ INTO CN_OPRT_GUIDE_MST 
+			(OPRT_GUIDE_SEQ
+ 			, OPRT_GUIDE_GB
+ 			, PTUP_DT
+ 			, CNTN
+ 			, USE_YN
+ 			, REG_ID
+ 			, REG_IP
+ 			, REG_DTM
+ 			, MOD_ID
+ 			, MOD_IP
+ 			, MOD_DTM
+ 			)
+		VALUES        
+			(#{oprtGuideSeq}
+			, #{oprtGuideGb}
+			, #{ptupDt}
+			, #{cntn}
+			, #{useYn}
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+		  	)
+	</insert>
+	
+	<!--
+         쿼리명 : CNBOprtMngDAO.updateOprtGuide
+         설  명 : 이용안내를 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.01.26   허진영      최초생성
+    -->
+ 	<update id="CNBOprtMngDAO.updateOprtGuide" parameterType="emfMap">
+		UPDATE /* CNBOprtMngDAO.updateOprtGuide */ CN_OPRT_GUIDE_MST
+ 		   SET  PTUP_DT = #{ptupDt}
+ 		   	   , CNTN = #{cntn}
+	  		   , USE_YN = #{useYn}
+	  		   , MOD_ID = #{modId}
+	  		   , MOD_IP = #{modIp}
+	  		   , MOD_DTM = SYSDATE
+		 WHERE OPRT_GUIDE_SEQ = #{oprtGuideSeq}
+	</update>
+	
+	<!--
+         쿼리명 : CNBOprtMngDAO.deleteOprtGuide
+         설  명 : 이용안내를 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.01.26   허진영      최초생성
+    -->
+	<delete id="CNBOprtMngDAO.deleteOprtGuide" parameterType="emfMap">
+		DELETE /* CNBOprtMngDAO.deleteOprtGuide */ 
+		  FROM CN_OPRT_GUIDE_MST
+		 WHERE OPRT_GUIDE_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+	<!--
+         쿼리명 : CNBOprtMngDAO.insertOprtGuideCopy
+         설  명 : 이용안내를 복사한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.01.26   허진영      최초생성
+    -->
+	<insert id="CNBOprtMngDAO.insertOprtGuideCopy" parameterType="emfMap">
+		INSERT /* CNBOprtMngDAO.insertOprtGuideCopy */ INTO CN_OPRT_GUIDE_MST
+			(OPRT_GUIDE_SEQ
+ 			, OPRT_GUIDE_GB
+			, PTUP_DT
+			, CNTN
+			, USE_YN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		SELECT #{oprtGuideSeq}
+	           , OPRT_GUIDE_GB
+	           , PTUP_DT
+	           , CNTN
+	           , 'N'
+	           , #{regId}
+	           , #{regIp}
+	           , SYSDATE
+	           , #{modId}
+	           , #{modIp}
+	           , SYSDATE
+		  FROM CN_OPRT_GUIDE_MST 
+		 WHERE OPRT_GUIDE_SEQ = #{delSeq}
+	</insert>
+	
+</mapper>

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DmLifeDAO">
+	<!--
+         쿼리명 : DmLifeDAO.getProductList
+         설  명 : 상품 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   김필기     최초 생성
+    -->
+    <select id="DmLifeDAO.getProductList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* DmLifeDAO.getProductList */
+	      	   TBL.*
+	    FROM (
+			SELECT ROWNUM AS RNUM, A.*
+	      	FROM (
+	        	SELECT COUNT(*) OVER() AS TOT_CNT
+	        		   , PROD_CD
+	        		   , PROD_NM
+	        		   , REG_DM
+			 	  FROM PRODUCT
+			     WHERE DEL_FG = 'N'	
+			<if test="q != null and q != ''">	
+				<if test="f == 1">	
+					AND PROD_CD LIKE '%' || #{q} || '%'
+				</if>
+				<if test="f == 2">	
+					AND PROD_NM LIKE '%' || #{q} || '%'
+				</if>					
+			</if>
+			   ORDER BY REG_DM DESC		  	
+			) A
+		) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}		
+	</select>	 
+
+	<!--
+         쿼리명 : DmLifeDAO.getPaymentMethod
+         설  명 : 납입방식 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.25   김필기     최초 생성
+    -->
+    <select id="DmLifeDAO.getPaymentMethod" parameterType="emfMap" resultType="emfMap">
+		SELECT /* DmLifeDAO.getPaymentMethod */
+		       PROD_CD 
+		       , PROD_NM
+		       , MON_PAY_AMT
+		       , EXPR_NO
+		       , PROD_AMT  
+		  FROM PRODUCT
+		 WHERE DEL_FG = 'N'
+		   AND SALE_CL = 'Y'
+		   AND PROD_CD IN 
+		<foreach collection="prodCd" item="item" index="index" separator=", " open="(" close=")">
+			#{item}
+		</foreach>
+	</select>
+	
+	<!--
+         쿼리명 : DmLifeDAO.getDetailProduct
+         설  명 : 상세상품을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.25   김필기     최초 생성
+    -->
+    <select id="DmLifeDAO.getDetailProduct" parameterType="emfMap" resultType="emfMap">
+		SELECT /* DmLifeDAO.getDetailProduct */
+		       MODEL_CL_CD
+		       , MODEL_CL_NM
+		       , PROD_JOIN_PRT_NM 
+		  FROM PRODUCT_MODEL_CL_CD
+		 WHERE MODEL_CL_CD IN (SELECT B.PROD_KIND FROM PRODUCT A, PRODUCT_MODEL_MST B WHERE A.PROD_CD = B.PROD_CD AND A.PROD_CD = #{prodCd})
+	</select>	
+
+	<!--
+         쿼리명 : DmLifeDAO.getEmployeeList
+         설  명 : 담당자를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.26   김필기     최초 생성
+    -->
+    <select id="DmLifeDAO.getEmployeeList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* DmLifeDAO.getEmployeeList */
+	      	   TBL.*
+	    FROM (
+			SELECT ROWNUM AS RNUM, A.*
+	      	FROM (
+	        	SELECT COUNT(*) OVER() AS TOT_CNT
+					   , EMPLE_NO
+					   , EMPLE_NM 
+					   , DEPT_NM
+			 	  FROM EMPLOYEE A, DEPARTMENT B
+			  	 WHERE A.DEPT_CD = B.DEPT_CD
+				<if test="q != null and q != ''">	
+					<if test="f == 1">	
+				 		AND EMPLE_NM LIKE '%' || #{q} || '%'
+					</if>
+				</if>
+				 ORDER BY EMPLE_NO
+			) A
+		) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}		
+	</select>
+	
+	<!--
+         쿼리명 : DmLifeDAO.getB2bComCdList
+         설  명 : 상품 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.10   김필기     최초 생성
+    -->
+    <select id="DmLifeDAO.getB2bComCdList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* DmLifeDAO.getB2bComCdList */
+	      	   TBL.*
+	    FROM (
+			SELECT ROWNUM AS RNUM, A.*
+	      	FROM (
+	        	SELECT COUNT(*) OVER() AS TOT_CNT
+	        		   , COM_CD
+	        		   , COM_NM
+			 	  FROM B2BCOMCD
+			  	 WHERE USE_YN = 'Y'
+				<if test="q != null and q != ''">	
+					<if test="f == 1">	
+				 		AND COM_NM LIKE '%' || #{q} || '%'
+					</if>
+				</if>
+				 ORDER BY COM_CD DESC
+			) A
+		) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}		
+	</select>	 
+	
+	<!--
+         쿼리명 : DmLifeDAO.selectComCdInf
+         설  명 : 공통 코드 정보를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.11   김필기     최초 생성
+    -->	
+	<select id="DmLifeDAO.selectComCdInf" parameterType="emfMap" resultType="emfMap">
+		SELECT /* DmLifeDAO.selectComCdInf */
+		       GRP_CD
+		       , COM_CD
+		       , CD_NM
+		  FROM COM_CD
+		 WHERE GRP_CD = #{pmtCoGrpGb}
+		   AND COM_CD = #{pmtCoGb}
+	</select>
+	
+	<!--
+         쿼리명 : DmLifeDAO.selectDMLifeMemInf
+         설  명 : 회원 정보를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.08.02   김필기     최초 생성
+    -->	
+	<select id="DmLifeDAO.selectDMLifeMemInf" parameterType="emfMap" resultType="emfMap">
+		SELECT /* DmLifeDAO.selectDMLifeMemInf */
+			   MEM_NO
+			   , REPLACE(CELL, '-', '') AS CELL
+			   , ACCNT_NO
+			   , PROD_NM
+			   , JOIN_DT
+		FROM (
+			SELECT A.MEM_NO
+				   , A.CELL
+				   , A.REG_DM
+				   , B.ACCNT_NO
+				   , NVL(C.PROD_PRT_NM, C.PROD_NM) AS PROD_NM
+				   , B.JOIN_DT
+			  FROM MEMBER A, MEM_PROD_ACCNT B, PRODUCT C
+			 WHERE A.MEM_NO = B.MEM_NO
+			   AND B.PROD_CD = C.PROD_CD
+			   AND A.DEL_FG = 'N'
+			   AND B.DEL_FG = 'N'
+			   AND A.MEM_NM IN
+			<foreach collection="name" item="item" index="index" separator=", " open="(" close=")">
+				#{item}
+			</foreach>
+		) TBL
+		WHERE REPLACE(CELL, '-', '') IN
+		<foreach collection="cell" item="item" index="index" separator=", " open="(" close=")">
+			#{item}
+		</foreach>
+		ORDER BY REG_DM DESC
+	</select>	
+
+</mapper>

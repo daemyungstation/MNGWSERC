@@ -1,0 +1,557 @@
+<%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%><%@include file="/WEB-INF/jsp/include/el.jspf"%>
+<!-- 
+	######################################################################
+	파일명 		:	OMBOrderList.jsp
+	프로그램 명 : 	발주관리 목록
+	설명		: 	목록
+	작성자		: 	김필기
+	작성일		:	2016.03.18
+	수정일자	 			수정자				수정내용
+	=====================================================================
+	2016.03.18				김필기				최초작성
+	######################################################################
+-->
+<style>
+	.well-small input[type="checkbox"] { margin: 2px 5px 2px 0; height: 100%;}
+	.order_id_sear_each_box {border-left: solid 1px;margin-left: 20px;padding-left: 10px;}
+	.order_id_sear_box { display: flex;padding: 3px 10px; justify-content: flex-start; align-items: center; line-height: 18px;}
+	.order_id_sear_tit {background-color: #f4f4f4;border-style: inset;border-width: 1px;display: inline-block;padding: 0px 5px;}
+</style>
+<form name="frm" id="frm" method="post" style="overflow:hidden;">
+	<input type="hidden" id="pageIndex" name="pageIndex" value="${rtnMap.pageIndex}" />
+	<input type="hidden" id="type" name="type" value="" />
+	<div class="well well-small">
+
+		<c:choose>
+			<c:when test="${orderdateMng eq 'Y'}">
+				<div class="order_id_sear_tit">
+				발주관리 아이디
+				</div>
+				<div class="order_id_sear_box">
+					<div class="order_id_sear_all_box">
+					<input type="checkbox" class="id_list_all" id="idListAll" name="idListAll" value="">전체</input>
+					</div>
+					<div class="order_id_sear_each_box">
+					<c:forEach var="list" items="${rtnMap.admList}">
+						<c:if test='${list.id ne "ordermng"}'>
+							<input type="checkbox" class="id_list"  name="idList" value="${list.id}" <c:if test="${empty rtnMap.idList || fn:containsIgnoreCase(fn:join(rtnMap.idList, ';'), list.id )}">checked</c:if>>${list.id}</input>
+						</c:if>
+					</c:forEach>
+					</div>
+				</div>
+			<br>
+
+				<%--				<select name="id">--%>
+				<%--					<option value="">[발주관리아이디]</option>--%>
+				<%--					<c:forEach var="list" items="${rtnMap.admList}">--%>
+				<%--						<option value="${list.id}" <c:if test="${rtnMap.id eq list.id}">selected</c:if>>${list.id}</option>--%>
+				<%--					</c:forEach>	--%>
+				<%--				</select>--%>
+				<select name="daysel">			
+					<option value="joinDt" <c:if test="${rtnMap.daysel eq 'joinDt'}">selected</c:if>>가입일</option>
+				</select>
+			</c:when>
+			<c:otherwise>
+				<select name="daysel">
+					<option value="orderDt" <c:if test="${rtnMap.daysel eq 'orderDt'}">selected</c:if>>발주일</option>
+					<option value="joinDt" <c:if test="${rtnMap.daysel eq 'joinDt'}">selected</c:if>>가입일</option>
+					<option value="confirmDt" <c:if test="${rtnMap.daysel eq 'confirmDt'}">selected</c:if>>배송상황일</option>
+					<option value="rescc" <c:if test="${rtnMap.daysel eq 'rescc' }">selected</c:if>>청약철회검색</option>
+					<option value="deliveryDt" <c:if test="${rtnMap.daysel eq 'deliveryDt'}">selected</c:if>>납품일</option>
+					<option value="holdDt" <c:if test="${rtnMap.daysel eq 'holdDt'}">selected</c:if>>보류일</option>
+					<option value="orderChk" <c:if test="${rtnMap.daysel eq 'orderChk'}">selected</c:if>>수정된회원</option>
+					<option value="allAccnt" <c:if test="${rtnMap.daysel eq 'allAccnt'}">selected</c:if>>다구좌가입</option>
+					<option value="noSetup" <c:if test="${rtnMap.daysel eq 'noSetup'}">selected</c:if>>노설치</option>
+				</select> 
+			</c:otherwise>
+		</c:choose>
+
+		<div class="input-append" style="margin-bottom:0px;">
+			<input type="text" id="strtDt" name="strtDt" class="datepicker_input input-small" value="${rtnMap.strtDt}" readonly="readonly" />
+			<button class="btn" type="button" onclick="jQuery(this).prev().focus();"><i class="icon-calendar"></i></button>
+		</div>
+		~
+		<div class="input-append" style="margin-bottom:0px;">
+			<input type="text" id="endDt" name="endDt" class="datepicker_input input-small" value="${rtnMap.endDt}" readonly="readonly" />
+			<button class="btn" type="button" onclick="jQuery(this).prev().focus();"><i class="icon-calendar"></i></button>
+		</div>
+		&nbsp;&nbsp;	 
+		<select name="f">
+			<option value="1" <c:if test="${rtnMap.f eq '1'}">selected</c:if>>이름</option>
+			<option value="2" <c:if test="${rtnMap.f eq '2'}">selected</c:if>>회원번호</option>    
+			<option value="3" <c:if test="${rtnMap.f eq '3'}">selected</c:if>>핸드폰번호</option>
+			<option value="4" <c:if test="${rtnMap.f eq '4'}">selected</c:if>>상품명</option>
+			<option value="5" <c:if test="${rtnMap.f eq '5'}">selected</c:if>>상품모델</option>
+			<option value="6" <c:if test="${rtnMap.f eq '6'}">selected</c:if>>상품코드</option>
+			<option value="7" <c:if test="${rtnMap.f eq '7'}">selected</c:if>>특이사항</option>
+			<option value="8" <c:if test="${rtnMap.f eq '8'}">selected</c:if>>B2B업체명</option>
+			<option value="9" <c:if test="${rtnMap.f eq '9'}">selected</c:if>>발주없음</option>
+			<option value="10" <c:if test="${rtnMap.f eq '10'}">selected</c:if>>납품일없음</option>
+			<option value="11" <c:if test="${rtnMap.f eq '11'}">selected</c:if>>보류일없음</option>
+			<option value="12" <c:if test="${rtnMap.f eq '12'}">selected</c:if>>발주일있음</option>
+		</select>
+		<input type="text" name="q" value="${rtnMap.q}" class="inputType w146" maxlength="15" onKeydown="enter();"/>
+		&nbsp;&nbsp;목록수
+		<select name="p">
+			<option value="10" <c:if test="${rtnMap.p eq '10'}">selected</c:if>>10</option>
+			<option value="50" <c:if test="${rtnMap.p eq '50'}">selected</c:if>>50</option>    
+			<option value="100" <c:if test="${rtnMap.p eq '100'}">selected</c:if>>100</option>
+		</select>
+		<input type="checkbox" name="cancelViewYn" <c:if test="${rtnMap.cancelViewYn ne null}">checked</c:if> />청약철회포함조회
+		<a href="javascript: getPageList();" class="btn" title="검색"><i class="icon-search"></i></a>
+		<a href="${pageLink}" class="btn " title="전체검색"><i class="icon-refresh"></i></a>
+	</div>	
+	
+	<p>전체 회원 수 : ${rtnMap.totalCount} / 전체 발주 수 : ${rtnMap.ordCnt}</p>
+	<div style="overflow-x:scroll;">
+		<table class="table table-bordered table-hover" style="width: 2700px; max-width: 2700px; font-size: 12px">
+			<caption style="display: none;">외주업체 발주 관리</caption>
+			<thead>
+				<tr>
+					<th width="25"><input type="checkbox" id="chkall" /></th>
+					<th width="60">번호</th>
+					<th width="120">발주관리<br>아이디</th>
+					<th width="120">발주일</th>
+					<th width="100">배송상황일</th>
+					<th width="100">납품일</th>
+					<th width="100">보류일</th>
+					<th width="100">회원번호</th>
+					<th width="100">회원명</th>
+					<th width="120">가입일</th>
+					<th width="150">가입상태</th>
+					<th width="100">사전해피콜</th>
+					<th width="250">상품명</th>
+					<th width="250">상품모델</th>
+					<th width="150">상품코드</th>
+					<th width="150">제품타입</th>
+					<th width="120">핸드폰번호</th>
+					<!--
+					<th>주소(자택)</th>
+					-->
+					<th width="350">변경전 주소</th>
+					<th width="350">주소(설치)</th>
+					<th width="250">B2B 업체명</th>,
+					<c:choose>
+						<c:when test="${loginId eq 'lgorder'}">
+							<th width="350">B2B 사원코드</th>
+						</c:when>
+					</c:choose>
+					<th width="200">미설치사유</th>
+					<!-- 
+					<th>KBNO</th> 
+					<th>고객청약사유</th>
+					<th>회사청약사유</th>
+					-->
+					<th width="350">특이사항(대명)</th>
+					<c:choose>
+						<c:when test="${loginId eq 'lgorder'}">
+							<th width="350">특이사항(LG)</th>
+						</c:when>
+						<c:when test="${loginId eq 'csvorder'}">
+							<th width="350">특이사항(CSV)</th>
+						</c:when>
+						<c:when test="${loginId eq 'wmnetwork'}">
+							<th width="350">특이사항(위드민)</th>
+						</c:when>
+					</c:choose>
+					<th width="200">비고</th>
+					<c:if test="${orderdateMng ne 'Y'}">
+						<th width="40">&nbsp;</th>
+					</c:if>
+				</tr> 
+			</thead>
+			<tbody>
+				<%-- 데이터를 없을때 화면에 메세지를 출력해준다 --%>
+				<c:if test="${fn:length(rtnMap.list) eq 0}">
+					<tr>
+						<td class="lt_text3" colspan="23" style="text-align:center">
+							<fmt:message key="common.nodata.msg" />
+						</td>
+					</tr>
+				</c:if>
+				<c:forEach var="list" items="${rtnMap.list}" varStatus="status">
+					<c:set var="insplAddr" value="${list.insplZip})${list.insplAddr} ${list.insplAddr2}" />
+					<c:set var="orderChk" value="" />
+					<c:set var="style" value="" />
+					<c:set var="readonly" value="" />
+					
+					<c:if test="${fn:replace(list.updateAddr, ' ', '') ne fn:replace(insplAddr, ' ', '')}">
+						<c:set var="orderChk" value="${orderChk}${insplAddr}<br />" />
+					</c:if>
+					<c:if test="${list.updateType ne list.prodKindNm}">
+						<c:set var="orderChk" value="${orderChk}${list.prodKindNm}<br />" />
+					</c:if>
+					<c:if test="${list.updateCell ne list.cell}">
+						<c:set var="orderChk" value="${orderChk}${list.cell}" />
+					</c:if>
+									
+					<c:if test="${not empty orderChk}">
+						<c:set var="style" value="background:yellow;" />
+					</c:if>
+					
+					<c:choose>
+						<c:when test="${orderdateMng eq 'Y'}">
+							<c:set var="readonly" value="readonly" />
+						</c:when>
+						<c:otherwise>
+							<c:if test="${list.accStat ne '정상'}">
+								<c:set var="style" value="background:red;" />
+								<c:set var="readonly" value="readonly" />
+							</c:if>
+						</c:otherwise>
+					</c:choose>
+					
+					<tr id="row_${list.accntNo}">
+						<td style="text-align:center"><input type="checkbox" name="accntNo" value="${list.accntNo}" /></td>
+						<td style="${style} text-align:center">${rtnMap.totCnt - (rtnMap.pageIndex - 1) * rtnMap.paginationInfo.recordCountPerPage - status.count + 1}</td>
+						<td style="${style} text-align:center">
+							<input type="hidden" name="admId" value="${list.accntNo}_${list.admId}" style="display: none" />
+								${list.admId}</td>
+						<td style="${style} text-align:center;">${egov:convertDate(list.orderDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}</td>
+					
+						<c:choose>
+							<c:when test="${readonly eq 'readonly'}">
+								<td style="${style} text-align:center">${egov:convertDate(list.confirmDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}</td>
+								<td style="${style} text-align:center">${egov:convertDate(list.deliveryDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}</td>					
+								<td style="${style} text-align:center">${egov:convertDate(list.holdDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}</td>					
+							</c:when>
+							<c:otherwise>
+								<td style="${style} text-align:center"><input name="reqdt" value="${egov:convertDate(list.confirmDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}"  class="datepicker_input" style="width:80px" /></td>
+								<td style="${style} text-align:center"><input name="delvdt" value="${egov:convertDate(list.deliveryDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}" class="datepicker_input" style="width:80px" /></td>					
+								<td style="${style} text-align:center"><input name="holddt" value="${egov:convertDate(list.holdDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}" class="datepicker_input" style="width:80px" /></td>					
+							</c:otherwise>					
+						</c:choose>
+						
+						<td style="${style} text-align:center">
+							<c:choose>
+								<c:when test="${not empty list.orderDt}">
+									<a href="./view.do?accntNo=${list.accntNo}">${list.accntNo}</a>		
+								</c:when>
+								<c:otherwise>
+									${list.accntNo}
+								</c:otherwise>					
+							</c:choose>
+						</td>	
+						<td style="${style} text-align:center">${list.memNm}</td>
+						<td style="${style} text-align:center">${egov:convertDate(list.joinDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}</td>				
+						<td style="${style} text-align:center">${list.accStat}</td>
+						<td style="${style} text-align:center">
+							<c:set var="hpcallYn" value="${egov:nvl(list.hpcallYn, 'X')}" />
+							<c:choose>
+								<c:when test="${readonly eq 'readonly'}">
+									${hpcallYn}
+								</c:when>
+								<c:otherwise>
+									<select name="opthpcall" style="min-width:30px">
+										<option value="O" <c:if test="${hpcallYn eq 'O'}">selected</c:if>>O</option>
+										<option value="X" <c:if test="${hpcallYn eq 'X'}">selected</c:if>>X</option>							
+									</select>
+								</c:otherwise>					
+							</c:choose>		
+						</td>		
+						<td style="${style}">${list.prodNm}</td>
+						<td style="${style}">${list.prodModel}</td>
+						<td style="${style}">${list.prodModelNm}</td>
+						<td style="${style} text-align:center">
+							<c:set var="prodKind" value="${egov:nvl(list.updateType, list.prodKindNm)}" />
+							<c:choose>
+								<c:when test="${readonly eq 'readonly'}">
+									${prodKind}
+								</c:when>
+								<c:otherwise>
+									<select name="prodKind" style="min-width:30px">
+										<option value="">선택하세요.</option>
+										<option value="스탠드-기본" <c:if test="${prodKind eq '스탠드-기본'}">selected</c:if>>스탠드-기본</option>
+										<option value="회전 벽걸이-기본" <c:if test="${prodKind eq '회전 벽걸이-기본'}">selected</c:if>>회전 벽걸이-기본</option>							
+									</select>
+								</c:otherwise>					
+							</c:choose>		
+						</td>					
+						<td style="${style} text-align:center">
+							<c:set var="cell" value="${egov:nvl(list.updateCell, list.cell)}" />
+							<c:choose>
+								<c:when test="${true}">
+									${cell}		
+								</c:when>
+								<c:otherwise>
+									<input type="text" name="cell" value="${cell}" style="width:100px" />
+								</c:otherwise>					
+							</c:choose>
+
+						</td>
+						<td style="${style}">${list.updatePaddr}</td>
+						<td style="${style}">${egov:nvl(list.updateAddr, insplAddr)}</td>
+						<td style="${style} text-align:center">${list.b2bCompNm}</td>
+						<c:choose>
+							<c:when test="${loginId eq 'lgorder'}">
+								<td style="${style} text-align:center">${list.b2bEmpleNo}</td>
+							</c:when>
+						</c:choose>
+						<td style="background-color:green; text-align:center;">
+							<select name="nosetupEtc">
+								<option value="">선택하세요</option>
+								<option value="부재" <c:if test="${list.nosetupEtc eq '부재'}">selected</c:if>>부재
+								<option value="고객 설치 보류" <c:if test="${list.nosetupEtc eq '고객 설치 보류'}">selected</c:if>>고객 설치 보류
+								<option value="재설치-불량 가전 회수" <c:if test="${list.nosetupEtc eq '재설치-불량 가전 회수'}">selected</c:if>>재설치-불량 가전 회수
+								<option value="재설치-기타 회수" <c:if test="${list.nosetupEtc eq '재설치-기타 회수'}">selected</c:if>>재설치-기타 회수
+								<option value="청약철회-고객요청" <c:if test="${list.nosetupEtc eq '청약철회-고객요청'}">selected</c:if>>청약철회-고객요청
+								<option value="청약철회-가전회수" <c:if test="${list.nosetupEtc eq '청약철회-가전회수'}">selected</c:if>>청약철회-가전회수
+								<option value="가전 재고 부족" <c:if test="${list.nosetupEtc eq '가전 재고 부족'}">selected</c:if>>가전 재고 부족
+								<option value="전화번호 오류" <c:if test="${list.nosetupEtc eq '전화번호 오류'}">selected</c:if>>전화번호 오류
+							</select>			
+						</td>
+						<!-- 
+						<td style="${style} text-align:center">${list.kbNo}</td> 
+						-->
+						<td style="${style}">
+							${list.note2}<br /><span style="font-weight:bold; color:red;">${orderChk}</span>
+						</td>
+						<c:choose>
+							<c:when test="${loginId eq 'lgorder'}">
+								<td style="${style}">${list.etc}</td>
+							</c:when>
+							<c:when test="${loginId eq 'csvorder'}">
+								<td style="${style}">${list.etc}</td>
+							</c:when>
+							<c:when test="${loginId eq 'wmnetwork'}">
+								<td style="${style}">${list.etc}</td>
+							</c:when>
+						</c:choose>
+						<td style="${style}">${list.note}</td>
+						<c:if test="${orderdateMng ne 'Y'}">
+							<td style="${style} text-align:center">
+								<c:if test="${readonly ne 'readonly'}">
+									<input type="button" value="저장" class="btn btn-mini" onclick="Update('rowudt', this)" />
+								</c:if>
+							</td>
+						</c:if>
+					</tr>
+				</c:forEach>
+			</tbody>
+		</table>
+	</div>
+	
+	<div style="float:left;">
+		<c:choose>
+			<c:when test="${rtnMap.f eq 9}">
+				발주일 :
+				<input type="text" value="" name="orderdate" class="datepicker_input" style="width:80px;" /> 
+				<input type="button" value="발주일 넣기" class="btn btn-success"  onclick="Update('ord')"  />
+			</c:when>
+			<c:otherwise>
+				배송상황일 :
+				<input type="text" value="" name="reqdate" class="datepicker_input" style="width:80px;" /> 
+				<input type="button" value="배송상황 넣기" class="btn btn-success"  onclick="Update('req')"  />
+				
+				납품일 :
+				<input type="text" value="" name="delvdate" class="datepicker_input" style="width:80px;" /> 
+				<input type="button" value="납품 넣기" class="btn btn-success"  onclick="Update('delv')"  />			
+
+				보류일 :
+				<input type="text" value="" name="holddate" class="datepicker_input" style="width:80px;" /> 
+				<input type="button" value="보류일 넣기" class="btn btn-success"  onclick="Update('hold')"  />			
+			</c:otherwise>
+		</c:choose>
+	</div>
+</form>	
+
+<div style="float:right;">
+	<input type="button" value="엑셀 다운로드" class="btn btn-info2"  onclick="Excel()" />
+</div>
+
+<div class="paging" style="clear:both;">
+	<ul>
+		<ui:pagination paginationInfo="${rtnMap.paginationInfo}" type="text" jsFunction="getPageList" />
+	</ul>
+</div>
+
+<script type="text/javascript">
+	function Update(type, rowObj)
+	{
+		var confirmMsg = "";
+		var data = "";
+		var delvdate = "", holddate = "", reqdate = "", accntNo = "", hpcallYn = "", updateType = "", updateCell = "";
+		
+		if(type == "req")
+		{
+			confirmMsg = "배송요청을 진행하시겠습니까?";
+			
+			$("#frm").find('#type').val(type);
+			
+			$('input[name=orderdate]').val('');
+			$('input[name=delvdate]').val('');
+			$('input[name="holddate"]').val('');
+			
+			data = $("#frm").serialize();			
+		}
+		else if(type == "delv")
+		{			
+			confirmMsg = "납품을 진행하시겠습니까?";
+			
+			$("#frm").find('#type').val(type);
+			
+			$('input[name=orderdate]').val('');
+			$('input[name=reqdate]').val('');
+			$('input[name="holddate"]').val('');
+
+			data = $("#frm").serialize();
+		}
+		else if(type == "hold")
+		{			
+			confirmMsg = "보류를 진행하시겠습니까?";
+			
+			$("#frm").find('#type').val(type);
+			
+			$('input[name=orderdate]').val('');
+			$('input[name=reqdate]').val('');
+			$('input[name=delvdate]').val('');
+
+			data = $("#frm").serialize();
+		}
+		else if(type == "ord")
+		{
+			confirmMsg = "발주를 진행하시겠습니까?";
+			
+			$("#frm").find('#type').val(type);
+			
+			$('input[name=reqdate]').val('');
+			$('input[name=delvdate]').val('');
+			$('input[name="holddate"]').val('');
+			
+			data = $("#frm").serialize();
+		}
+		else if(type == "rowudt")
+		{
+			var parentObj = $(rowObj).parent().parent();
+			
+			confirmMsg = "저장 하시겠습니까?";
+			
+			delvdate = parentObj.find('input[name=delvdt]').val();
+			holddate = parentObj.find('input[name=holddt]').val();
+			reqdate = parentObj.find('input[name=reqdt]').val();
+			accntNo = parentObj.find('input[name=accntNo]').val();
+			hpcallYn = parentObj.find('select[name=opthpcall]').val();
+			updateType = parentObj.find('select[name=prodKind]').val();
+			updateCell = parentObj.find('input[name=cell]').val();
+			nosetupEtc = parentObj.find('select[name=nosetupEtc]').val();
+			
+			data = "type=" + type + "&delvdate=" + delvdate + "&holddate=" + holddate + "&reqdate=" + reqdate + "&accntNo=" + accntNo + "&hpcallYn=" + hpcallYn + "&updateType=" + updateType + "&nosetupEtc="+ nosetupEtc;
+			if (updateCell) data += "&updateCell=" + updateCell;
+		}
+		
+		if (confirm(confirmMsg)) 
+		{
+			document.frm.type.value = type;
+			
+			$.ajax({
+				type : 'POST',
+				url : './csv_db.ajax',
+				data : data,
+				success : function(e){
+					if(e.errorMsg != ""){
+						alert(e.errorMsg);
+					}else{
+						alert("업데이트 되었습니다");
+						location.reload(true);
+					}
+				}
+			});
+		}		
+	}
+	
+	function Excel()
+	{
+		var strtDt = parseInt(jQuery("#strtDt").val().replace(/-/gi, ""));
+		var endDt = parseInt(jQuery("#endDt").val().replace(/-/gi, ""));
+	
+		if(!strtDt || !endDt)
+		{
+			alert("* 검색 기간을 입력해주세요.");
+			return;
+		}
+		else if(strtDt > endDt)
+		{
+			alert("* 검색 시작일이 종료일보다 클 수 없습니다.");
+			return;
+		}
+		else
+		{
+			var arrStrgDt = jQuery("#strtDt").val().split("-");
+			var arrEndDt = jQuery("#endDt").val().split("-");
+			
+			var strtDate = new Date(arrStrgDt[0], parseInt(arrStrgDt[1]) - 1, arrStrgDt[2]); 
+			var endDate = new Date(arrEndDt[0], parseInt(arrEndDt[1]) - 1, arrEndDt[2]); 
+
+			if((endDate.getTime() - strtDate.getTime()) / (24 * 60 * 60 * 1000) > 30)
+			{
+				alert("* 검색 기간을 30일 이하로 입력해주세요.");
+				return;
+			}
+		}
+
+		var f = document.frm;
+		
+		frm.action = "excel.do";
+		frm.submit();
+	}
+
+	//리스트 가져오기
+	function getPageList()
+	{	
+		var f = document.frm;
+		
+		if(arguments.length > 0)
+		{
+			f.pageIndex.value = arguments[0];
+		}
+		else
+		{
+			f.pageIndex.value = 1;
+		}
+		
+		f.action = "list.do";
+		f.submit();
+	}
+	
+	$('#chkall').click(function(){
+		if($(this).is(':checked')){
+			$('input[name=accntNo]').prop('checked',true);	
+		}else{
+			
+			$('input[name=accntNo]').prop('checked', false);
+		}
+	});
+	$('input.id_list_all').click(function(){
+		if($(this).is(':checked')){
+			$('input.id_list').prop('checked',true);
+		}else{
+			$('input.id_list').prop('checked', false);
+		}
+	});
+
+	$('input.id_list').change(function(e){
+		if($(this).is(':checked')){
+			if( $('input:checked.id_list').length == $('input.id_list').length ) {
+				$('input.id_list_all').prop('checked',true);
+			}
+		}else{
+			$('input.id_list_all').prop('checked', false);
+		}
+	});
+	if( $('input:checked.id_list').length == $('input.id_list').length ) {
+		$('input.id_list_all').prop('checked',true);
+	}
+	function enter()
+	{
+		if(event.keyCode == 13)
+		{
+			document.frm.submit();
+		}
+	}
+	<c:if test='${id eq "ordermng"}'>
+	$(document).ready(function() {
+		$('#frm select[name=f]').val("9");
+		$('#frm select[name=f] option[value="9"]').attr('selected', 'true');
+	});
+	</c:if>
+</script>

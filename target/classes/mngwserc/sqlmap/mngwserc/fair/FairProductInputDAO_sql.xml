@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FairProductInputDAO">
+
+	<!--
+         쿼리명 : FairProductInputDAO.selectList
+         설  명 : 제품 입력폼 목록 조회
+    -->	
+	<select id="selectList" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.* 
+			  FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		                ,FPI_SEQ
+						,FPI_TITLE
+						,cast(FPI_INPUT as varchar2(4000)) FPI_INPUT
+		          FROM FAIR_PRODUCT_INPUT   
+				 ORDER BY REG_DTM DESC   
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}           
+	</select>	
+	
+	<!--
+         쿼리명 : FairProductInputDAO.select
+         설  명 : 제품 입력폼 상세 조회
+    -->	
+	<select id="select" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+             FPI_SEQ
+			,FPI_TITLE
+			,cast(FPI_INPUT as varchar2(4000)) FPI_INPUT
+         FROM FAIR_PRODUCT_INPUT   
+		 WHERE FPI_SEQ = #{seq}   
+	</select>
+	
+	<!--
+         쿼리명 : FairProductInputDAO.insert
+         설  명 : 제품 입력폼 등록
+    -->	
+	<insert id="insert" parameterType="emfMap">
+		INSERT INTO FAIR_PRODUCT_INPUT
+			(
+			FPI_SEQ
+			,FPI_TITLE
+			,FPI_INPUT
+			<if test="regId != null">
+			,REG_ID
+			</if>
+			<if test="regIp != null">
+			,REG_IP
+			</if>
+			,REG_DTM
+			)
+		VALUES
+			(
+			#{fpiSeq}
+			,#{fpiTitle, jdbcType=VARCHAR}
+			,#{fpiInput, jdbcType=VARCHAR}
+			<if test="regId != null">
+			,#{regId, jdbcType=VARCHAR}
+			</if>
+			<if test="regIp  != null">
+			,#{regIp, jdbcType=VARCHAR}
+			</if>
+			,SYSDATE
+			)					
+	</insert>
+	
+	<!--
+         쿼리명 : FairProductInputDAO.update
+         설  명 : 제품 입력폼 수정
+    -->	
+	<update id="update" parameterType="emfMap">
+		UPDATE FAIR_PRODUCT_INPUT SET
+			 FPI_TITLE = #{fpiTitle, jdbcType=VARCHAR}
+			,FPI_INPUT = #{fpiInput, jdbcType=VARCHAR}
+			<if test="modId != null">
+			,MOD_ID = #{modId}
+			</if>
+			<if test="modIp != null">
+			,MOD_IP = #{modIp}
+			</if>
+			,MOD_DTM = SYSDATE
+         WHERE FPI_SEQ = #{fpiSeq}
+	</update>
+	
+	<!--
+         쿼리명 : FairProductInputDAO.delete
+         설  명 : 제품 입력폼 삭제
+    -->		
+	<delete id="delete" parameterType="emfMap">
+		 DELETE FAIR_PRODUCT_INPUT
+	     WHERE FPI_SEQ = #{fpiSeq}
+	</delete>
+
+</mapper>

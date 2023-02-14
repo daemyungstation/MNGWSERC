@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="COECdMngDAO">
+	
+	<!--
+         쿼리명 : COECdMngDAO.selectCdIdList
+         설  명 : 상위코드 목록을 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.02  박주석     최초 생성
+    -->
+	<select id="COECdMngDAO.selectCdIdList" resultType="emfMap">
+		SELECT /* COECdMngDAO.selectCdIdList */
+			   CD_ID
+			   , CD_ID_NM
+			   , CD_ID_DSC
+			   , CO_CD
+			   , USE_YN
+		  FROM CO_CD_MST A
+		 ORDER BY CD_ID_NM
+	</select>
+	
+	<!--
+         쿼리명 : COECdMngDAO.selectCdIdDtl
+         설  명 : 소코드 리스트
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.02  박주석     최초 생성
+    -->
+	<select id="COECdMngDAO.selectCdIdDtl" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COECdMngDAO.selectCdIdDtl */
+			   CD_ID
+			   , CD
+			   , CD_NM
+			   , CD_DSC
+			   , USE_YN
+			   , CD_ORD
+			<if test="gubun == 'last'.toString()">
+				, (SELECT COUNT(*) FROM CO_CD_REL WHERE HIGHR_CD = #{highrCd} AND HIGHR_DTL_CD = #{highrDtlCd} AND LOWR_CD = #{lowrCd} AND LOWR_DTL_CD = A.CD) AS LINK_CNT
+			</if>
+		  FROM CO_CD_DTL A
+	     WHERE CD_ID = #{cdId}
+		 ORDER BY CD_ORD
+	</select>
+	
+	<!--
+         쿼리명 : COECdMngDAO.insertCode
+         설  명 : 대코드 등록
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.02  박주석     최초 생성
+    -->
+	<insert id="COECdMngDAO.insertCode" parameterType="emfMap">
+		INSERT INTO /* COECdMngDAO.insertCode */ CO_CD_MST 
+			(CD_ID
+			, CD_ID_NM
+			, CO_CD
+			, USE_YN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		VALUES
+			(#{cdId}
+			, #{cdIdNm}
+			, null
+			, 'Y'
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+			)
+	</insert>
+	
+	<!--
+         쿼리명 : COECdMngDAO.updateCode
+         설  명 : 대코드 수정
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.02  박주석     최초 생성
+    -->
+	<update id="COECdMngDAO.updateCode" parameterType="emfMap" >
+		UPDATE /* COECdMngDAO.updateCode */ CO_CD_MST
+		   SET CD_ID_NM = #{cdIdNm}
+			   , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = SYSDATE
+		 WHERE CD_ID = #{cdId}
+	</update>
+	<!--
+         쿼리명 : COECdMngDAO.deleteCode
+         설  명 : 대코드 삭제
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.02  박주석     최초 생성
+    -->
+	<delete id="COECdMngDAO.deleteCode" parameterType="emfMap">
+		DELETE /* COECdMngDAO.deleteCode */
+     	  FROM CO_CD_MST 
+     	 WHERE CD_ID = #{cdId}
+    </delete>
+    
+    <!--
+         쿼리명 : COECdMngDAO.deleteCodeDtl
+         설  명 : 상세 코드 삭제
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.02  박주석     최초 생성
+    -->
+	<delete id="COECdMngDAO.deleteCodeDtl" parameterType="emfMap">
+		DELETE /* COECdMngDAO.deleteCodeDtl */
+     	  FROM CO_CD_DTL 
+     	 WHERE CD_ID = #{cdId}
+    </delete>
+    
+    <!--
+         쿼리명 : COECdMngDAO.insertCodeDetail
+         설  명 : 상세 코드 등록
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.02  박주석     최초 생성
+    -->
+	<insert id="COECdMngDAO.insertCodeDetail" parameterType="emfMap" >
+		INSERT INTO /* COECdMngDAO.insertCodeDetail */ CO_CD_DTL 
+			(CD_ID
+			, CD
+			, CD_NM
+			, CD_ORD
+			, USE_YN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		VALUES
+			(#{cdId}
+			, #{cd}
+			, #{cdNm}
+			, #{cdOrd}
+			, 'Y'
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+			)
+	</insert>
+	
+	<!--
+         쿼리명 : COECdMngDAO.updateCodeDetail
+         설  명 : 상세 코드 수정
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.02  박주석     최초 생성
+    -->
+	<update id="COECdMngDAO.updateCodeDetail" parameterType="emfMap">
+		UPDATE /* COECdMngDAO.updateCodeDetail */ CO_CD_DTL
+		   SET CD_NM = #{cdNm}
+		   	   , USE_YN = #{useYn}
+		   	   , CD_ORD = #{cdOrd}
+			   , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = SYSDATE
+		 WHERE CD_ID = #{cdId}
+		   AND CD = #{cd}
+	</update>
+	
+	<!--
+         쿼리명 : COECdMngDAO.deleteCodeDetail
+         설  명 : 상세 코드 삭제
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.02  박주석     최초 생성
+    -->
+	<delete id="COECdMngDAO.deleteCodeDetail" parameterType="emfMap">
+		DELETE /* COECdMngDAO.deleteCodeDetail */
+     	  FROM CO_CD_DTL 
+     	 WHERE CD_ID = #{cdId}
+     	   AND CD = #{cd}
+    </delete>
+	
+</mapper>

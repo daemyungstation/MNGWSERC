@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CODUserMenuDAO">
+	
+	<resultMap id="emfMap" type="emf.core.vo.EmfMap">
+		<result property="CNTN" column="CNTN" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>	
+	
+	<!--
+         쿼리명 : CODUserMenuDAO.getApprovalCntns
+         설  명 : 현재 배포중인거 있는지 찾기
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.19  안진용     최초 생성
+    -->
+	<select id="CODUserMenuDAO.getApprovalCntns" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* CODUserMenuDAO.getApprovalCntns */
+			   CNTS_SEQ
+		       , MENU_SEQ
+		       , CNTN
+		       , PRCS_STTS
+		  FROM CO_CNTS_MST
+		 WHERE MENU_SEQ = #{menuSeq}
+		   AND PRCS_STTS = '2'
+		   AND DEL_YN = 'N'
+	</select>
+	
+	<!--
+         쿼리명 : CODUserMenuDAO.selectMenuAdmList
+         설  명 : 페이지별 담당자 전체조회
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.19  안진용     최초 생성
+    -->
+	<select id="CODUserMenuDAO.selectMenuAdmList" parameterType="emfMap" resultType="emfMap">			
+		SELECT /* CODUserMenuDAO.selectMenuAdmList */
+			   A.ADM_SEQ
+			   , A.ID
+			   , A.NAME
+			   , A.EMAIL
+			   , A.TEL
+			   , A.LAST_LGN_DTM
+			   , A.USE_YN
+			   , B.MOD_DTM
+		  FROM CO_ADM_MST A LEFT JOIN CO_MENU_ASGNR_INF B ON A.ADM_SEQ = B.ADM_SEQ AND B.MENU_SEQ = #{menuSeq}
+		 WHERE A.USE_YN = 'Y'
+		<![CDATA[ AND A.NAME LIKE '%' || #{name} || '%' ]]>
+		 ORDER BY A.NAME DESC
+	</select>
+	
+	<!--
+         쿼리명 : CODUserMenuDAO.selectMenuAdm
+         설  명 : 페이지별 담당자 상세 조회
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.19  안진용     최초 생성
+    -->
+	<select id="CODUserMenuDAO.selectMenuAdm" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CODUserMenuDAO.selectMenuAdm */
+			   , A.ID
+        	   , A.NAME
+			   , A.EMAIL
+			   , A.TEL
+			   , A.LAST_LGN_DTM
+			   , A.USE_YN
+			   , B.MOD_DTM
+		  FROM CO_ADM_MST A JOIN CO_MENU_ASGNR_INF B ON A.ADM_SEQ = B.ADM_SEQ 
+		 WHERE A.USE_YN = 'Y'
+		   AND B.MENU_SEQ = #{menuSeq}
+	</select>
+	
+	<insert id="CODUserMenuDAO.insertMenuAdm" parameterType="emfMap">
+		INSERT /* CODUserMenuDAO.insertMenuAdm */ INTO CO_MENU_ASGNR_INF 
+			(MENU_SEQ
+			, ADM_SEQ
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		VALUES
+			(#{menuSeq}
+			, #{admSeq}
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+			)
+	</insert>
+	
+	<!--
+         쿼리명 : CODUserMenuDAO.deleteMenuAdm
+         설  명 : 페이지별 담당자 삭제
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.19  안진용     최초 생성
+    -->
+	<delete id="CODUserMenuDAO.deleteMenuAdm" parameterType="emfMap">
+		DELETE /* CODUserMenuDAO.deleteMenuAdm */ 
+		  FROM CO_MENU_ASGNR_INF
+	     WHERE MENU_SEQ = #{menuSeq}
+	</delete>
+	
+</mapper>

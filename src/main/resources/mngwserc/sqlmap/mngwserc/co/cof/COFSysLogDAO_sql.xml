@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="COFSysLogDAO">
+
+	<!--
+         쿼리명 : COFSysLogDAO.logInsertSysLog
+         설  명 : 시스템 로그 등록
+       	 수정일		수정자    수정내용 
+        ==========  ======  ============= 
+        2015.11.19  김대환    최초생성
+    -->	
+	<insert id="COFSysLogDAO.logInsertSysLog" parameterType="emfMap">
+		INSERT /* COFSysLogDAO.logInsertSysLog */ INTO CO_SYS_LOG
+			(LOG_ID
+			, TASK_CD
+			, SRVC_NM
+			, FNC_NM
+			, TRGT_MENU_NM
+			, INSTT_CD
+			, PRCS_CD
+			, PRCS_CNT
+			, PRCS_TIME
+			, ERR_CD
+			, ERR_CNT
+			, RSPN_CD
+			, REQN_ID
+			, REQN_IP
+			, OCCR_DTM
+			)
+		VALUES 
+			(#{logId, jdbcType=VARCHAR}
+			, #{taskCd, jdbcType=VARCHAR}
+			, #{srvcNm, jdbcType=VARCHAR}
+			, #{fncNm, jdbcType=VARCHAR}
+			, #{trgtMenuNm, jdbcType=VARCHAR}
+			, #{insttCd, jdbcType=VARCHAR}
+			, #{prcsCd, jdbcType=VARCHAR}
+			, #{prcsCnt, jdbcType=VARCHAR}
+			, #{prcsTime, jdbcType=VARCHAR}
+			, #{errCd, jdbcType=VARCHAR}
+			, #{errCnt, jdbcType=VARCHAR}
+			, #{rspnCd, jdbcType=VARCHAR}
+			, #{reqnId, jdbcType=VARCHAR}
+			, #{reqnIp, jdbcType=VARCHAR}  
+			, SYSDATE
+			)
+	</insert>
+	
+	<!--
+         쿼리명 : COFSysLogDAO.logSelectSysLogList
+         설  명 :  시스템 로그 목록 조회
+       	 수정일		수정자     수정내용 
+        ==========  ======  ============= 
+        2015.11.19  김대환     최초생성
+    -->	
+	<select id="COFSysLogDAO.logSelectSysLogList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COFSysLogDAO.logSelectSysLogList */
+			   TBL.* 
+		FROM (	
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , A.LOG_ID
+					   , A.TASK_CD
+					   , A.SRVC_NM
+					   , A.FNC_NM
+					   , A.TRGT_MENU_NM
+					   , A.INSTT_CD
+					   , A.PRCS_CD
+					   , C.CD_NM AS PRCS_NM
+					   , A.PRCS_CNT
+					   , A.PRCS_TIME
+					   , A.ERR_CD
+					   , A.ERR_CNT
+					   , A.RSPN_CD
+					   , A.REQN_ID
+					   , B.NAME AS REQN_NM
+					   , A.REQN_IP
+					   , A.OCCR_DTM
+				  FROM CO_SYS_LOG A LEFT JOIN CO_ADM_MST B ON A.REQN_ID = B.ID
+								    LEFT JOIN CO_CD_DTL C ON A.PRCS_CD = C.CD AND C.CD_ID = 'SYSTEM_LOG'
+				 WHERE 1=1
+			<if test="prcsCd != null and prcsCd != ''">
+				<![CDATA[	AND A.PRCS_CD = #{prcsCd}	]]>
+			</if>
+			<if test="strtDt != null and strtDt != ''">			
+				<![CDATA[	AND TO_CHAR(A.OCCR_DTM, 'YYYY-MM-DD') >= #{strtDt}	]]>
+			</if>
+			<if test="endDt != null and endDt != ''">
+				<![CDATA[	AND TO_CHAR(A.OCCR_DTM, 'YYYY-MM-DD') <= #{endDt}	]]>
+			</if>
+			<if test="q != null and q != ''">
+				<if test="f == 1">
+					<![CDATA[	AND B.NAME LIKE '%' || #{q} || '%'	]]>
+				</if>
+				<if test="f == 2">
+					<![CDATA[	AND A.REQN_ID LIKE '%' || #{q} || '%'	]]>
+				</if>
+			</if>
+			     ORDER BY LOG_ID DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}    
+	</select>
+	
+	<!--
+         쿼리명 : COFSysLogDAO.logExcelSysLogList
+         설  명 :  시스템 로그 엑셀 조회
+       		  수정일		 수정자    		 수정내용 
+        ==========  ======  ============= 
+        2015.11.19  	김대환    		 최초 생성
+    -->	
+	<select id="COFSysLogDAO.logExcelSysLogList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COFSysLogDAO.logExcelSysLogList */ 
+			   COUNT(*) OVER() AS TOT_CNT
+			   , A.LOG_ID
+			   , A.TASK_CD
+			   , A.SRVC_NM
+			   , A.FNC_NM
+			   , A.TRGT_MENU_NM
+			   , A.INSTT_CD
+			   , A.PRCS_CD
+			   , C.CD_NM AS PRCS_NM
+			   , A.PRCS_CNT
+			   , A.PRCS_TIME
+			   , A.ERR_CD
+			   , A.ERR_CNT
+			   , A.RSPN_CD
+			   , A.REQN_ID
+			   , B.NAME AS REQN_NM
+			   , A.REQN_IP
+			   , A.OCCR_DTM
+		  FROM CO_SYS_LOG A LEFT JOIN CO_ADM_MST B ON A.REQN_ID = B.ID
+		  					LEFT JOIN CO_CD_DTL C ON A.PRCS_CD = C.CD AND C.CD_ID = 'SYSTEM_LOG'
+		 WHERE 1=1  
+		<if test="prcsCd != null and prcsCd != ''">
+			<![CDATA[	AND A.PRCS_CD = #{prcsCd}	]]>
+		</if>
+		<if test="strtDt != null and strtDt != ''">			
+			<![CDATA[	AND TO_CHAR(A.OCCR_DTM, 'YYYY-MM-DD') >= #{strtDt}	]]>
+		</if>
+		<if test="endDt != null and endDt != ''">
+			<![CDATA[	AND TO_CHAR(A.OCCR_DTM, 'YYYY-MM-DD') <= #{endDt}	]]>
+		</if>
+		<if test="q != null and q != ''">
+			<if test="f == 1">
+				<![CDATA[	AND B.NAME LIKE '%' || #{q} || '%'	]]>
+			</if>
+			<if test="f == 2">
+				<![CDATA[	AND A.REQN_ID LIKE '%' || #{q} || '%'	]]>
+			</if>
+		</if>
+		 ORDER BY LOG_ID DESC
+	</select>
+
+</mapper>
+

@@ -1,0 +1,2 @@
+.easyEditViewStyle{padding:20px; font-size:13px; font-family:'맑은 고딕', 'Malgun Gothic', dotum,"돋움",sans-serif; color:#666; text-align:left;}
+.easyEditViewStyle .viewImg{padding-bottom:20px; text-align:center}

@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="BMABoardMngDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+		<result property="CONTENTS" column="CONTENTS" javaType="java.lang.String" jdbcType="CLOB" />
+		<result property="MOVIE_CONTENTS" column="MOVIE_CONTENTS" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+
+	<!--
+         쿼리명 : BMABoardMngDAO.selectMaster
+         설  명 : 게시판 속성정보 한 건을 상세조회 한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.24   안진용    	 최초생성
+    -->
+	<select id="BMABoardMngDAO.selectMaster" parameterType="emfMap" resultType="emfMap">
+		SELECT /* BMABoardMngDAO.selectMaster */ 
+			   A.*
+		  FROM TN_BOARD_CONFIG A
+		 WHERE 1=1
+		   AND DEL_YN = 'N'
+		   AND COMMUNITY_ID = #{communityId}
+	</select>
+	
+	<!--
+         쿼리명 : BMABoardMngDAO.selectNoticeBoardList
+         설  명 : 게시판 속성정보기반으로 공지사항 데이터를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.24   안진용    	 최초생성
+    -->
+	<select id="BMABoardMngDAO.selectNoticeBoardList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* BMABoardMngDAO.selectNoticeBoardList */ 
+			   A.*
+			   , (SELECT LISTAGG(MENU_NM, '-') WITHIN GROUP(ORDER BY LFT_VAL)
+	  		   		FROM CO_MENU_MST 
+	  		   	   WHERE LFT_VAL <![CDATA[<=]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = A.CATEGORY_ID)
+	  		   	     AND RHT_VAL <![CDATA[>=]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = A.CATEGORY_ID)
+	  		   	     AND DPTH <![CDATA[>]]> 2
+			   ) AS CATEGORY_NM
+		  FROM ${tablenm} A, CO_MENU_MST B
+		 WHERE A.CATEGORY_ID = B.MENU_SEQ(+)
+		   AND A.DEL_YN = 'N'
+		   AND A.NOTIFY_YN = 'Y'
+		<if test="categoryId != null and categoryId != ''">
+			AND ( B.LFT_VAL <![CDATA[>=]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = #{categoryId}) AND B.RHT_VAL <![CDATA[<=]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = #{categoryId}) )
+		</if>
+		 ORDER BY A.REGDATE DESC
+	</select>
+	
+	<!--
+         쿼리명 : BMABoardMngDAO.selectBoardList
+         설  명 : 게시판 속성정보기반으로 데이터를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.24   안진용    	 최초생성
+    -->
+	<select id="BMABoardMngDAO.selectBoardList" parameterType="emfMap" resultType="emfMap">				
+		SELECT /* BMABoardMngDAO.selectBoardList */
+	  		   TBL.*
+	  		   , (SELECT LISTAGG(MENU_NM, '-') WITHIN GROUP(ORDER BY LFT_VAL)
+	  		   		FROM CO_MENU_MST 
+	  		   	   WHERE LFT_VAL <![CDATA[<=]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = TBL.CATEGORY_ID)
+	  		   	     AND RHT_VAL <![CDATA[>=]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = TBL.CATEGORY_ID)
+	  		   	     AND DPTH <![CDATA[>]]> 2
+			   ) AS CATEGORY_NM
+	 	FROM (
+		    SELECT ROWNUM AS RNUM, A.*
+		    FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+	  			       , T1.*
+	      		  FROM ${tablenm} T1, CO_MENU_MST T2
+	      		 WHERE T1.CATEGORY_ID = T2.MENU_SEQ(+)
+	      		   AND T1.DEL_YN = 'N'
+	      		   AND T1.NOTIFY_YN = 'N'
+			<if test="categoryId != null and categoryId != ''">
+				AND ( T2.LFT_VAL <![CDATA[>=]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = #{categoryId}) AND T2.RHT_VAL <![CDATA[<=]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = #{categoryId}) )
+			</if>
+			<if test="q != null and q != ''">	
+				<if test="f == 1">	
+			 		<![CDATA[	AND T1.TITLE LIKE '%' || #{q} || '%'	]]>
+				</if>
+				<if test="f == 2">
+					<![CDATA[	AND T1.CONTENTS LIKE '%' || #{q} || '%'	]]>
+				</if>
+				<if test="f == 3">
+					<![CDATA[	AND T1.REGNAME LIKE '%' || #{q} || '%'	]]>
+				</if> 
+			</if>
+			<if test="useYn != null and useYn != ''">
+			 	AND T1.USE_YN = #{useYn}
+			</if>
+			<if test="strtDt != null and strtDt != ''">
+				<![CDATA[	AND T1.REGDATE >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+			</if>
+			<if test="endDt != null and regenddate != ''">
+				<![CDATA[	AND T1.REGDATE < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+			</if>
+			     ORDER BY T1.REGDATE DESC
+	 		) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+	
+	<!--
+         쿼리명 : BMABoardMngDAO.selectBoardRead
+         설  명 : 게시물 한 건에 대하여 상세 내용을 조회 한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.24   안진용    	 최초생성
+    -->
+	<select id="BMABoardMngDAO.selectBoardRead" parameterType="emfMap" resultMap="emfMap">
+		SELECT /*BMABoardMngDAO.selectBoardRead */
+			   A.*
+			   , (SELECT LISTAGG(MENU_NM, '-') WITHIN GROUP(ORDER BY LFT_VAL)
+	  		   		FROM CO_MENU_MST 
+	  		   	   WHERE LFT_VAL <![CDATA[<=]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = A.CATEGORY_ID)
+	  		   	     AND RHT_VAL <![CDATA[>=]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = A.CATEGORY_ID)
+	  		   	     AND DPTH <![CDATA[>]]> 2
+			   ) AS CATEGORY_NM
+		  FROM ${tablenm} A
+		 WHERE A.DEL_YN = 'N' 
+		   AND A.IDX = #{idx}
+	</select> 
+	
+	<!--
+         쿼리명 : BMABoardMngDAO.selectBoardPrev
+         설  명 : 해당 게시물에 이전글 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.24   안진용    	 최초생성
+    -->
+	<select id="BMABoardMngDAO.selectBoardPrev" parameterType="emfMap" resultType="emfMap">
+		SELECT /* BMABoardMngDAO.selectBoardPrev */ 
+			   A.* 
+		FROM (
+			SELECT IDX
+				   , TITLE
+				   , REGDATE 
+			  FROM ${tablenm}
+			 WHERE DEL_YN = 'N' 
+			   AND NOTIFY_YN = 'N'
+			   AND IDX <![CDATA[>]]> #{idx}
+			 ORDER BY REGDATE  
+		) A 
+		WHERE ROWNUM = 1
+	</select>
+	
+  	<!--
+         쿼리명 : BMABoardMngDAO.selectBoardNext
+         설  명 : 해당 게시물에 다음글 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.24   안진용    	 최초생성
+    -->
+	<select id="BMABoardMngDAO.selectBoardNext" parameterType="emfMap" resultType="emfMap">
+		 SELECT /*BMABoardMngDAO.selectBoardNext*/ 
+		 	    A.* 
+		 FROM (
+			SELECT IDX
+				   , TITLE
+				   , REGDATE 
+			  FROM ${tablenm}
+			 WHERE DEL_YN = 'N' 
+			   AND NOTIFY_YN = 'N' 
+			   AND IDX <![CDATA[<]]> #{idx}
+			 ORDER BY REGDATE DESC
+		) A
+		WHERE ROWNUM = 1
+	</select>
+	
+	<!--
+         쿼리명 : BMABoardMngDAO.insertBoardArticle
+         설  명 : 게시물을 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.24   안진용    	 최초생성
+    -->
+ 	<insert id="BMABoardMngDAO.insertBoardArticle" parameterType = "emfMap" >
+		INSERT /* BMABoardMngDAO.insertBoardArticle */ INTO ${tablenm}
+  			(IDX
+  			, COMMUNITY_ID
+  			, CATEGORY_ID
+  			, NOTIFY_YN
+            , TITLE
+            , MOVIE_URL
+  			, MOVIE_CONTENTS
+  			, LINK_URL	  
+  			, CONTENTS	
+  			, THUMNAIL_FILE_ID
+  			, ATCH_FILE_ID
+  			, CONTENTS_FILE_ID
+  			, USE_YN	
+  			, OPEN_YN
+  			, START_DT
+			, END_DT
+			, ODTM_YN
+			, READ_CNT
+			, ADMINISTRATOR_WRITE_YN
+			, USER_AUTHORITY
+  			, DEL_YN
+  			, REGID
+  			, REGNAME
+  			, REGIP
+  			, REGDATE
+  			, MODID
+  			, MODNAME
+  			, MODIP
+  			, MODDATE
+  			<if test="communityId != null and communityId == 6">
+				, REPLY_YN
+			</if>	 
+ 			<if test="communityId != null and communityId == 3">
+		 		, SORT_DT
+		    </if>			
+			)
+		VALUES        
+			(#{idx}
+			, #{communityId}
+  			, #{categoryId, jdbcType=VARCHAR}
+  			, #{notifyYn, jdbcType=VARCHAR}
+			, #{title, jdbcType=VARCHAR}
+			, #{movieUrl, jdbcType=VARCHAR}
+  			, #{movieContents, jdbcType=VARCHAR}
+  			, #{linkUrl, jdbcType=VARCHAR}
+  			, #{contents, jdbcType=CLOB}
+  			, #{thumnailFileId, jdbcType=VARCHAR}
+  			, #{atchFileId, jdbcType=VARCHAR}
+  			, #{contentsFileId, jdbcType=VARCHAR}
+  			, #{useYn, jdbcType=VARCHAR}
+  			, #{openYn, jdbcType=VARCHAR}
+			, TO_DATE(#{startDt, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+			, TO_DATE(#{endDt, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+			, #{odtmYn, jdbcType=VARCHAR} 
+			, 0	
+			, 'Y'
+			, #{userAuthority, jdbcType=VARCHAR}
+			, 'N'
+  			, #{regId}
+  			, #{regname, jdbcType=VARCHAR}
+  			, #{regIp}
+  			, SYSDATE 			  
+  			, #{modId}
+  			, #{modNm}
+  			, #{modIp}
+  			, SYSDATE 	
+  			<if test="communityId != null and communityId == 6">
+				, #{replyYn}
+			</if>
+  			<if test="communityId != null and communityId == 3">
+			    , TO_DATE(#{sortDt, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+			</if>			
+			)
+ 	</insert>
+ 	
+ 	<!--
+         쿼리명 : BMABoardMngDAO.updateBoardArticle
+         설  명 : 게시물을 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.24   안진용    	 최초생성
+    -->
+ 	<update id="BMABoardMngDAO.updateBoardArticle" parameterType="emfMap">
+		UPDATE /* BMABoardMngDAO.updateBoardArticle */ ${tablenm}
+		   SET CATEGORY_ID = #{categoryId, jdbcType=VARCHAR}
+		       , NOTIFY_YN = #{notifyYn, jdbcType=VARCHAR}
+			   , TITLE = #{title, jdbcType=VARCHAR}
+			   , MOVIE_URL = #{movieUrl, jdbcType=VARCHAR}
+			   , MOVIE_CONTENTS = #{movieContents, jdbcType=VARCHAR}
+			   , LINK_URL = #{linkUrl, jdbcType=VARCHAR}
+			   , CONTENTS = #{contents, jdbcType=VARCHAR}
+			   , THUMNAIL_FILE_ID = #{thumnailFileId, jdbcType=VARCHAR}
+			   , ATCH_FILE_ID = #{atchFileId, jdbcType=VARCHAR}
+			   , CONTENTS_FILE_ID = #{contentsFileId, jdbcType=VARCHAR}
+			   , USE_YN = #{useYn, jdbcType=VARCHAR}			
+			   , OPEN_YN = #{openYn, jdbcType=VARCHAR}
+			   , START_DT = TO_DATE(#{startDt, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+ 			   , END_DT = TO_DATE(#{endDt, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+ 			   , ODTM_YN = #{odtmYn, jdbcType=VARCHAR}
+ 			   , USER_AUTHORITY= #{userAuthority, jdbcType=VARCHAR}
+ 			   , MODID = #{modId}
+  			   , MODNAME = #{modNm}
+  			   , MODIP = #{modIp}
+  			   , MODDATE = SYSDATE
+  			   <if test="communityId != null and communityId == 6">
+			 		, REPLY_YN = #{replyYn}
+			   </if>
+  			   <if test="communityId != null and communityId == 3">
+			 		, SORT_DT = TO_DATE(#{sortDt, jdbcType=VARCHAR}, 'yyyy-MM-dd hh24:mi:ss')
+			   </if>			   
+		 WHERE DEL_YN = 'N'
+		   AND IDX = #{idx}
+ 	</update>	
+ 
+  	<!--
+         쿼리명 : BMABoardMngDAO.deleteBoardMulti
+         설  명 : 게시글을 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.24   안진용    	 최초생성
+    -->
+	<update id="BMABoardMngDAO.deleteBoardMulti" parameterType="emfMap">
+		UPDATE /* BMABoardMngDAO.deleteBoardMulti */ ${tablenm} 
+		   SET DEL_YN = 'Y'
+			   , USE_YN = 'N'
+		 WHERE IDX IN
+		<foreach collection="delidx" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+ 	</update>
+ 	
+  	<!--
+         쿼리명 : BMABoardMngDAO.blindBoardMulti
+         설  명 : 게시글 승인 / 미승인처리한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.24   안진용    	 최초생성
+    -->
+	<update id="BMABoardMngDAO.blindBoardMulti" parameterType="emfMap">
+		UPDATE /* BMABoardMngDAO.blindBoardMulti */ ${tablenm} 
+		   SET USE_YN = #{blind}
+		 WHERE IDX IN
+		<foreach collection="delidx" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+ 	</update>
+	
+</mapper>

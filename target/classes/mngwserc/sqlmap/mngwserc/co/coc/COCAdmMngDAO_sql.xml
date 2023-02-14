@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="COCAdmMngDAO">
+
+	<!--
+         쿼리명 : COCAdmMngDAO.selectAdmList
+         설  명 : 관리자 목록을 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+    -->
+	<select id="COCAdmMngDAO.selectAdmList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* COCAdmMngDAO.selectAdmList */
+	      	   TBL.*
+	      	   , (SELECT ROLE_NM FROM CO_ADM_ROLE_MST WHERE ROLE_CD = TBL.ROLE_CD) AS ROLE_NM
+	    FROM (
+			SELECT ROWNUM AS RNUM, A.*
+	      	FROM (
+	        	SELECT COUNT(*) OVER() AS TOT_CNT
+	        		   , ADM_SEQ
+	        		   , ROLE_CD
+	        		   , NAME
+				  	   , ID
+				  	   , LAST_LGN_DTM
+				  	   , USE_YN
+			  	  FROM CO_ADM_MST
+			  	 WHERE 1=1
+				<if test="useYn != null and useYn != ''">
+					AND USE_YN = #{useYn}
+		      	</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[ AND NAME LIKE '%' || #{q} || '%' ]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[ AND ID LIKE '%' || #{q} || '%' ]]>
+					</if>
+			  	</if>
+	      		 ORDER BY REG_DTM DESC
+			) A
+		) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+
+	<!--
+         쿼리명 : COCAdmMngDAO.selectAdm
+         설  명 : 관리자 상세를 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+    -->
+	<select id="COCAdmMngDAO.selectAdm" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COCAdmMngDAO.selectAdm */
+			   ADM_SEQ
+			   , ID
+			   , NAME
+			   , EMAIL
+			   , TEL
+			   , USE_YN
+			   , ALLW_IP
+			   , AUTH_CD
+			   , ROLE_CD
+			   , (SELECT ROLE_NM FROM CO_ADM_ROLE_MST WHERE ROLE_CD = A.ROLE_CD) ROLE_NM
+		  FROM CO_ADM_MST A
+		 WHERE ADM_SEQ = #{admSeq} 
+	</select> 
+	
+	<!--
+         쿼리명 : COCAdmMngDAO.insertAdm
+         설  명 : 관리자를 등록한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+
+ 	<insert id="COCAdmMngDAO.insertAdm" parameterType="emfMap">
+ 		MERGE INTO /* COCAdmMngDAO.insertAdm */ CO_ADM_MST
+ 		USING DUAL ON (
+ 			ID = #{id}
+ 		)
+ 		WHEN MATCHED THEN
+ 			UPDATE SET
+ 				PWD = #{pwd}
+		  		, AUTH_CD = #{authCd}
+		  		, ROLE_CD = #{roleCd, jdbcType=VARCHAR}
+		  		, NAME = #{name}
+		  		, TEL = #{tel, jdbcType=VARCHAR}
+		  		, EMAIL = #{email}
+		  		, ALLW_IP = #{allwIp, jdbcType=VARCHAR}
+		  		, USE_YN = #{useYn}
+		  		, REG_ID = #{regId, jdbcType=VARCHAR}
+				, REG_IP = #{regIp, jdbcType=VARCHAR}
+				, REG_DTM = SYSDATE
+				, MOD_ID = #{modId, jdbcType=VARCHAR}
+				, MOD_IP = #{modIp, jdbcType=VARCHAR}
+				, MOD_DTM = SYSDATE
+		WHEN NOT MATCHED THEN
+			INSERT INTO CO_ADM_MST
+				(ADM_SEQ
+				, ID
+		  		, PWD
+		  		, AUTH_CD
+		  		, ROLE_CD
+		  		, NAME
+		  		, TEL
+		  		, EMAIL
+		  		, ALLW_IP
+		  		, USE_YN
+		  		, REG_ID
+				, REG_IP
+				, REG_DTM
+				, MOD_ID
+				, MOD_IP
+				, MOD_DTM
+		  		)
+			VALUES        
+				(#{admSeq}
+				, #{id}
+				, #{pwd}
+				, #{authCd}
+		  		, #{roleCd, jdbcType=VARCHAR}
+		  		, #{name}
+		  		, #{tel, jdbcType=VARCHAR}
+		  		, #{email}
+		  		, #{allwIp, jdbcType=VARCHAR}
+		  		, #{useYn}
+		  		, #{regId, jdbcType=VARCHAR}
+		  		, #{regIp, jdbcType=VARCHAR}
+		  		, SYSDATE
+		  		, #{modId, jdbcType=VARCHAR}
+		  		, #{modIp, jdbcType=VARCHAR}
+		  		, SYSDATE
+				)
+ 	</insert>
+ 	-->
+
+	<insert id="COCAdmMngDAO.insertAdm" parameterType="emfMap">
+ 		MERGE INTO /* COCAdmMngDAO.insertAdm */ CO_ADM_MST
+ 		USING DUAL ON (
+ 			ID = #{id}
+ 		)
+ 		WHEN MATCHED THEN
+ 			UPDATE SET
+ 				PWD = #{pwd}
+		  		, AUTH_CD = #{authCd}
+		  		, ROLE_CD = #{roleCd, jdbcType=VARCHAR}
+		  		, NAME = #{name}
+		  		, TEL = #{tel, jdbcType=VARCHAR}
+		  		, EMAIL = #{email}
+		  		, ALLW_IP = #{allwIp, jdbcType=VARCHAR}
+		  		, USE_YN = #{useYn}
+		  		, REG_ID = #{regId, jdbcType=VARCHAR}
+				, REG_IP = #{regIp, jdbcType=VARCHAR}
+				, REG_DTM = SYSDATE
+				, MOD_ID = #{modId, jdbcType=VARCHAR}
+				, MOD_IP = #{modIp, jdbcType=VARCHAR}
+				, MOD_DTM = SYSDATE
+		WHEN NOT MATCHED THEN
+			INSERT
+				(ADM_SEQ
+				, ID
+		  		, PWD
+		  		, AUTH_CD
+		  		, ROLE_CD
+		  		, NAME
+		  		, TEL
+		  		, EMAIL
+		  		, ALLW_IP
+		  		, USE_YN
+		  		, LAST_PWD_MOD_DTM
+		  		, REG_ID
+				, REG_IP
+				, REG_DTM
+				, MOD_ID
+				, MOD_IP
+				, MOD_DTM
+		  		)
+			VALUES
+				(#{admSeq}
+				, #{id}
+				, #{pwd}
+				, #{authCd}
+		  		, #{roleCd, jdbcType=VARCHAR}
+		  		, #{name}
+		  		, #{tel, jdbcType=VARCHAR}
+		  		, #{email}
+		  		, #{allwIp, jdbcType=VARCHAR}
+		  		, #{useYn}
+		  		, SYSDATE
+		  		, #{regId, jdbcType=VARCHAR}
+		  		, #{regIp, jdbcType=VARCHAR}
+		  		, SYSDATE
+		  		, #{modId, jdbcType=VARCHAR}
+		  		, #{modIp, jdbcType=VARCHAR}
+		  		, SYSDATE
+				)
+ 	</insert>
+
+ 	<!--
+         쿼리명 : COCAdmMngDAO.updateAdm
+         설  명 : 관리자를 수정한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+    -->
+ 	<update id="COCAdmMngDAO.updateAdm" parameterType="emfMap">
+ 		UPDATE /* COCAdmMngDAO.updateAdm */ CO_ADM_MST 
+ 		   SET TEL = #{tel, jdbcType=VARCHAR}
+ 		   	   , EMAIL = #{email}
+ 		   	   , MOD_ID = #{modId, jdbcType=VARCHAR}
+ 		       , MOD_IP = #{modIp, jdbcType=VARCHAR}
+ 		   	   , MOD_DTM = SYSDATE
+			<if test="pwd != null and pwd != ''">
+				, PWD = #{pwd}
+				, LAST_PWD_MOD_DTM = SYSDATE
+			</if>
+			<if test="isAdmMng == 'Y'.toString()">
+				, AUTH_CD = #{authCd}
+				, ROLE_CD = #{roleCd, jdbcType=VARCHAR}
+				, ALLW_IP = #{allwIp, jdbcType=VARCHAR}
+				, USE_YN = #{useYn}
+			</if>
+		  WHERE ADM_SEQ = #{admSeq}
+ 	</update>
+ 	
+ 	<!--
+         쿼리명 : COCAdmMngDAO.deleteAdm
+         설  명 : 관리자를 삭제한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.02  박주석     최초 생성
+    -->
+ 	<delete id="COCAdmMngDAO.deleteAdm" parameterType="emfMap">
+		DELETE /* COCAdmMngDAO.deleteAdm */ 
+		  FROM CO_ADM_MST
+		 WHERE ADM_SEQ = #{admSeq}
+ 	</delete>
+ 	
+ 	<!--
+         쿼리명 : COCAdmMngDAO.selectAdmUserTypeList
+         설  명 : 관리자 등급을 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.18  안진용     최초 생성
+    -->
+	<select id="COCAdmMngDAO.selectAdmUserTypeList" parameterType="emfMap" resultType="emfMap">
+		SELECT /*COCAdmMngDAO.selectAdmUserTypeList*/ 
+	      	   CD_ID
+	      	   , CD
+	      	   , CD_NM
+	      FROM CO_CD_DTL
+	     WHERE CD_ID = 'USER_TYPE'
+	       AND USE_YN = 'Y'
+	     ORDER BY CD_ORD 
+	</select> 
+	
+	<!--
+         쿼리명 : COCAdmMngDAO.getIdCnt
+         설  명 : 아이디 중복체크를 위해 ID 갯수를 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+    -->
+	<select id="COCAdmMngDAO.getIdCnt" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /* COCAdmMngDAO.getIdCnt */
+			   COUNT(*) 
+		  FROM CO_ADM_MST
+		 WHERE ID = #{id, jdbcType=VARCHAR}
+	</select>
+	
+	<!--
+         쿼리명 : COCAdmMngDAO.getEmailCnt
+         설  명 : 이메일 중복체크를 위해 Email 갯수를 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+    -->
+	<select id="COCAdmMngDAO.getEmailCnt" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /* COCAdmMngDAO.getEmailCnt */
+			   COUNT(*) 
+		  FROM CO_ADM_MST
+		 WHERE EMAIL = #{email, jdbcType=VARCHAR} 
+	</select>
+ 	
+ 	<!-- 관리자 메뉴 목록 가져오기 -->
+	<select id="COCAdmMngDAO.getMenuList" parameterType="emfMap" resultType="emfMap">
+		SELECT T1.*
+		       , (SELECT COUNT(*) FROM CO_MENU_MST WHERE PARNT_SEQ = T1.MENU_SEQ) AS CHILDCNT
+		       , NVL(T2.MENU_SEQ, 0) as CHECKTYPE
+		       , NVL(T2.ROLE_CD, 0) as CHECKDEPT
+		FROM (
+		    SELECT MENU_SEQ
+		           , PARNT_SEQ
+		           , PSTN
+		           , LFT_VAL
+		           , RHT_VAL
+		           , DPTH
+		           , MENU_GB
+		           , MENU_NM
+		           , USER_USE_YN
+		           , ADM_LINK
+		      FROM CO_MENU_MST
+		     WHERE (LFT_VAL <![CDATA[>=]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 2) AND RHT_VAL <![CDATA[<=]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 2))
+    		
+    		UNION ALL
+		    
+		    SELECT MENU_SEQ
+		           , PARNT_SEQ
+		           , PSTN
+		           , LFT_VAL
+		           , RHT_VAL
+		           , DPTH
+		           , MENU_GB
+		           , MENU_NM		   
+		           , USER_USE_YN
+		           , ADM_LINK
+		      FROM CO_MENU_MST
+		     WHERE (LFT_VAL <![CDATA[>=]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 3) AND RHT_VAL <![CDATA[<=]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = 3))
+			 AND MENU_GB IN ('drive', 'board', 'etc')
+			 <!-- AND MENU_GB IN ('drive', 'board', 'etc', 'folder') AND INSTR(MENU_NM,'@@') != 1 -->
+    	) T1  LEFT JOIN CO_ADM_MENU_INF T2 ON T1.MENU_SEQ = T2.MENU_SEQ AND (T2.ADM_SEQ = #{admSeq, jdbcType=VARCHAR} OR T2.ROLE_CD = #{roleCd, jdbcType=VARCHAR})
+    	WHERE T1.LFT_VAL <![CDATA[>]]> (SELECT LFT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = #{menuSeq, jdbcType=VARCHAR}) AND RHT_VAL <![CDATA[<]]> (SELECT RHT_VAL FROM CO_MENU_MST WHERE MENU_SEQ = #{menuSeq, jdbcType=NUMERIC})
+		  AND T1.DPTH = #{dpth, jdbcType=VARCHAR} + 1
+    	ORDER BY T1.LFT_VAL
+	</select>
+	
+ 	<!--
+         쿼리명 : COCAdmMngDAO.insertAdmMenu
+         설  명 : 관리자 권한을 등록한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+    -->
+ 	<insert id="COCAdmMngDAO.insertAdmMenu" parameterType="emfMap">
+		INSERT /* COCAdmMngDAO.insertAdmMenu */ INTO CO_ADM_MENU_INF
+			(MENU_SEQ
+			, ADM_SEQ
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+  			)
+		VALUES        
+			(#{menuSeq, jdbcType=NUMERIC}
+			, #{admSeq, jdbcType=NUMERIC}
+			, #{regId, jdbcType=VARCHAR}
+			, #{regIp, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{modId, jdbcType=VARCHAR}
+			, #{modIp, jdbcType=VARCHAR}
+			, SYSDATE
+			)
+ 	</insert>
+ 	
+	<!--
+         쿼리명 : COCAdmMngDAO.deleteAdmMenu
+         설  명 : 관리자 메뉴를 삭제한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영    최초 생성
+    -->
+ 	<delete id="COCAdmMngDAO.deleteAdmMenu" parameterType="emfMap">
+ 		DELETE /* COCAdmMngDAO.deleteAdmMenu */
+ 		  FROM CO_ADM_MENU_INF
+		 WHERE ADM_SEQ = #{admSeq}	
+ 	</delete>
+	
+		<!--
+         쿼리명 : COCAdmMngDAO.getRoleAdmList
+         설  명 : 부서별 관리자 목록을 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2016.05.09  김필기     최초 생성
+    -->
+	<select id="COCAdmMngDAO.getRoleAdmList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COCAdmMngDAO.getRoleAdmList */
+			   *
+		  FROM CO_ADM_MST
+		 WHERE ROLE_CD = #{roleCd} 
+	</select>
+	
+</mapper>

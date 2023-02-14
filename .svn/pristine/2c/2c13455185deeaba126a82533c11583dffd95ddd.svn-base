@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="COBLgnOutDAO">
+
+	<!--
+         쿼리명 : COBLgnOutDAO.actionLogin
+         설  명 : 로그인정보를 조회한다(대명인트라넷).
+          수정일     수정자       수정내용 
+        ==========   ======    ============== 
+        2016.04.18   김필기       최초생성
+    -->
+	<select id="COBLgnOutDAO.actionLogin" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COBLgnOutDAO.actionLogin */
+			   GRP_EMPLE_NO
+			   , EMPLE_NO
+			   , EMPLE_NM
+		  FROM EMPLOYEE
+		 WHERE GRP_EMPLE_NO = #{id}
+		   AND NEW_INTRA_PASSWD = #{password}
+		   AND DEL_FG = 'N'
+	</select>
+
+	<!--
+         쿼리명 : COBLgnOutDAO.updatePassword
+         설  명 : 비밀번호를 변경한다.
+          수정일     수정자       수정내용 
+        ==========   ======    ============== 
+        2016.04.26   김필기       최초생성
+    -->
+	<update id="COBLgnOutDAO.updatePassword" parameterType="emfMap">
+		UPDATE /* COBLgnOutDAO.updatePassword */ EMPLOYEE
+		   SET NEW_INTRA_PASSWD = #{pwd}
+		 WHERE GRP_EMPLE_NO = #{id}
+		   AND DEL_FG = 'N'
+	</update>
+	
+	<!--
+         쿼리명 : COBLgnOutDAO.updatePassword
+         설  명 : 비밀번호를 변경한다.
+          수정일     수정자       수정내용 
+        ==========   ======    ============== 
+        2016.04.26   김필기       최초생성
+    -->
+	<insert id="COBLgnOutDAO.logInsertIntraLog" parameterType="emfMap">
+		<selectKey keyProperty="lgnHstrId" resultType="string" order="BEFORE">
+		    SELECT 'WEB' || TO_CHAR(SYSDATE, 'yyyyMMdd') || LPAD(COUNT(LGN_HSTR_ID) + 1, 7, '0')
+		      FROM PS_WILLVI.TB_LGN_HSTR 
+		     WHERE LGN_DTTM <![CDATA[>=]]> TO_DATE(TO_CHAR(SYSDATE, 'yyyyMMdd'), 'yyyyMMdd')
+		       AND LGN_DTTM <![CDATA[<]]> TO_DATE(TO_CHAR(SYSDATE, 'yyyyMMdd'), 'yyyyMMdd') + 1
+		</selectKey>
+		INSERT INTO /* COBLgnOutDAO.logInsertIntraLog */ PS_WILLVI.TB_LGN_HSTR
+			(CNTR_CD
+			, LGN_HSTR_ID
+			, USER_ID
+			, LGN_TYP_CD
+			, LGN_DTTM
+			, IP_ADDR
+			, RGSR_ID
+			, RGSN_DTTM
+			, AMND_ID
+			, AMNT_DTTM
+			)
+		VALUES
+			(#{cntrCd}
+			, #{lgnHstrId}
+			, #{reqnId}
+			, #{lgnTypCd}
+			, SYSTIMESTAMP
+			, #{reqnIp}
+			, #{reqnId}
+			, TO_CHAR(SYSDATE, 'yyyyMMddhh24miss')
+			, #{reqnId}
+			, TO_CHAR(SYSDATE, 'yyyyMMddhh24miss')
+			)
+	</insert>	
+</mapper>

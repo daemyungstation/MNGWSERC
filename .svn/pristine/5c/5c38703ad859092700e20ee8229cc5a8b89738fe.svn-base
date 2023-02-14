@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OMERecordMngDAO">
+
+	<!--
+         쿼리명 : OMERecordMngDAO.selectRecordMngList
+         설  명 : 외주업체 실적관리 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.16   김필기     최초 생성
+    -->
+    <select id="OMERecordMngDAO.selectRecordMngList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* OMERecordMngDAO.selectRecordMngList */
+			   TBL.*
+			   , FN_PROD_NM(TBL.PROD_CD) AS PROD_NM   
+			   , TRUNC(TO_DATE(TBL.JOIN_DT, 'yyyyMMdd') - SYSDATE) + 1 AS MONTH_COUNT
+			   , (SELECT COUNT(*) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = TBL.ACCNT_NO) AS TRUE_COUNT
+			   , (SELECT MAX(PAY_DAY) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = TBL.ACCNT_NO) AS PAY_DAY
+			   , DECODE(FN_ACCNT_STAT(TBL.ACCNT_NO), 'Y', '정상', 'R', '해약', 'E', '행사', '청약철회') AS ACC_STAT
+			   , DECODE(FN_ACCNT_STAT(TBL.ACCNT_NO), 'Y', FN_YEN_CHE(TBL.ACCNT_NO), '-') AS PAY_STATE
+			   , FN_EVENT_DAY(TBL.ACCNT_NO) AS EVENT_DAY
+			   , FN_COM_NM('0125', TBL.SALE_TYPE) AS SALE_TYPE
+			   , NVL(FN_COM_NM('81', TBL.STAT), '') AS HPCALL_STAT
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.* 
+			FROM (
+				SELECT B.ACCNT_NO
+					   , A.MEM_NM
+					   , FN_EMPLE_NM(B.EMPLE_NO) AS EMPLE_NM
+					   , B.JOIN_DT
+					   , TO_CHAR(B.REG_DM, 'yyyy-MM-dd') AS REG_DM
+					   , B.PROD_CD
+					   , CASE WHEN B.PAY_MTHD = '01' THEN '손수' 
+							  WHEN B.PAY_MTHD = '04' THEN 'CMS' 
+							  ELSE '카드' 
+							   END PAY_MTHD
+					   , E.SALE_TYPE
+					   , E.COM_NM AS B2B_COMP_NM   
+					   , B.B2B_EMPLE_NO
+					   , D.STAT
+					   , B.KB_NO
+					   , B.ORDER_NUM	
+					   , FN_EMPLE_NM(B.REG_MAN) AS REG_MAN	
+					   , B.ID_NO			     
+				  FROM MEMBER A, MEM_PROD_ACCNT B, PRODUCT C, HP_CALL D, B2BCOMCD E
+			  	 WHERE A.MEM_NO = B.MEM_NO
+				   AND B.PROD_CD = C.PROD_CD
+				   AND B.ACCNT_NO = D.ACCNT_NO(+)
+				   AND B.B2B_COMP_CD = E.COM_CD(+)
+				   AND A.DEL_FG = 'N'
+				   AND B.DEL_FG = 'N'
+				<if test="id != null and id != ''">
+					<if test="id == 'nsadmin'">
+						AND B.EMPLE_NO = '2013060006'
+					</if>
+					<if test="id == 'csvuser'">
+						AND E.SALE_TYPE NOT IN ('0001', '0002', '0004', '0006') 
+						AND B.PROD_CD IN (
+							'J5','J8','J6','J7','J9','K0','K1','K2','K3','K4','K5','K7','K8','K9','K6','L1','L2','L3','L4','L5','L6','L7','L8','L9','G1','G2','G3','G4','G5','G6','G7','G8','G9',
+							'H0','H1','H2','F0','F1','F2','F5','F7','F9','F8','M0','M1','N1','N2','N3','N4','N7','N8','N9','88','89','91','92','93','94','95','96','97','98','99',
+							'A0','A1','A2','A4','A5','P0','P1','P4','P5','P6','P8','Q0','Q1','Q2','Q3','Q4','Q5','Q6'
+						) 
+					</if>
+					<if test="id == 'akuser'">
+						AND E.SALE_TYPE = '0018'
+					</if>
+					<if test="id == 'homeplus002'">
+						AND E.SALE_TYPE = '0039'
+					</if>
+					<if test="id == 'lgbtb'">
+						AND E.SALE_TYPE = '0037'
+					</if>				
+					<if test="id == 'gsadmin'">
+						AND B.PROD_CD IN ('R1', 'R2', 'R5')
+					</if>
+					<if test="id == 'kbadmin'">
+						AND B.KB_NO IS NOT NULL
+					</if>
+					<if test="id == 'sktelecom'">
+						AND B.PROD_CD IN ('AA', 'AB') 
+						AND B.B2B_COMP_CD = '5194'
+					</if>
+					<if test="id == 'skbroadband'">
+						AND B.PROD_CD IN ('AA') 
+						AND B.B2B_COMP_CD = '5196'
+					</if>																									
+				</if>
+				<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+					AND B.JOIN_DT BETWEEN REPLACE(#{strtDt}, '-', '') AND REPLACE(#{endDt}, '-', '')
+				</if>
+				<if test="q != null and q != ''">	
+					<if test="f == 1">	
+						AND A.MEM_NM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 2">	
+						AND B.ACCNT_NO LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 3">
+						AND B.KB_NO LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 4">
+						AND B.B2B_EMPLE_NO LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 5">
+						AND B.ID_NO LIKE '%' || #{q} || '%'
+					</if>
+				</if>
+				 ORDER BY B.JOIN_DT DESC
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}	   	 	     
+	</select>
+
+    <select id="OMERecordMngDAO.selectRecordMngListCnt" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMERecordMngDAO.selectRecordMngListCnt */
+			   COUNT(*) AS CNT			
+		  FROM MEMBER A, MEM_PROD_ACCNT B, PRODUCT C, HP_CALL D, B2BCOMCD E
+		 WHERE A.MEM_NO = B.MEM_NO
+		   AND B.PROD_CD = C.PROD_CD
+		   AND B.ACCNT_NO = D.ACCNT_NO(+)
+		   AND B.B2B_COMP_CD = E.COM_CD(+)
+		   AND A.DEL_FG = 'N'
+		   AND B.DEL_FG = 'N'
+		<if test="id != null and id != ''">
+			<if test="id == 'nsadmin'">
+				AND B.EMPLE_NO = '2013060006'
+			</if>
+			<if test="id == 'csvuser'">
+				AND E.SALE_TYPE NOT IN ('0001', '0002', '0004', '0006') 
+				AND B.PROD_CD IN (
+					'J5','J8','J6','J7','J9','K0','K1','K2','K3','K4','K5','K7','K8','K9','K6','L1','L2','L3','L4','L5','L6','L7','L8','L9','G1','G2','G3','G4','G5','G6','G7','G8','G9',
+					'H0','H1','H2','F0','F1','F2','F5','F7','F9','F8','M0','M1','N1','N2','N3','N4','N7','N8','N9','88','89','91','92','93','94','95','96','97','98','99',
+					'A0','A1','A2','A4','A5','P0','P1','P4','P5','P6','P8','Q0','Q1','Q2','Q3','Q4','Q5','Q6'
+				) 
+			</if>
+			<if test="id == 'akuser'">
+				AND E.SALE_TYPE = '0018'
+			</if>
+			<if test="id == 'homeplus002'">
+				AND E.SALE_TYPE = '0039'
+			</if>
+			<if test="id == 'lgbtb'">
+				AND E.SALE_TYPE = '0037'
+			</if>				
+			<if test="id == 'gsadmin'">
+				AND B.PROD_CD IN ('R1', 'R2', 'R5')
+			</if>
+			<if test="id == 'kbadmin'">
+				AND B.KB_NO IS NOT NULL
+			</if>			
+			<if test="id == 'sktelecom'">
+				AND B.PROD_CD IN ('AA','AB') 
+				AND B.B2B_COMP_CD = '5194'
+			</if>
+			<if test="id == 'skbroadband'">
+				AND B.PROD_CD IN ('AA') 
+				AND B.B2B_COMP_CD = '5196'
+			</if>
+		</if>
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+			AND B.JOIN_DT BETWEEN REPLACE(#{strtDt}, '-', '') AND REPLACE(#{endDt}, '-', '')
+		</if>
+		<if test="q != null and q != ''">	
+			<if test="f == 1">	
+				AND A.MEM_NM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 2">	
+				AND B.ACCNT_NO LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 3">
+				AND B.KB_NO LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 4">
+				AND B.B2B_EMPLE_NO LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 5">
+				AND B.ID_NO LIKE '%' || #{q} || '%'
+			</if>
+		</if>
+	</select>
+
+	<!--
+         쿼리명 : OMERecordMngDAO.selectRecordMngExcelList
+         설  명 : 외주업체 실적관리 목록을 엑셀 다운로드한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.18   김필기     최초 생성
+    -->
+    <select id="OMERecordMngDAO.selectRecordMngExcelList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMERecordMngDAO.selectRecordMngExcelList */ 
+			   ROWNUM AS RNUM
+			   , B.ACCNT_NO
+			   ,  A.MEM_NM
+			   , FN_EMPLE_NM(B.EMPLE_NO) AS EMPLE_NM
+			   , B.JOIN_DT
+			   , TO_CHAR(B.REG_DM, 'yyyy-MM-dd') AS REG_DM
+			   , FN_PROD_NM(B.PROD_CD) AS PROD_NM
+			   , TRUNC(TO_DATE(B.JOIN_DT, 'yyyyMMdd') - SYSDATE) + 1 AS MONTH_COUNT
+			   , (SELECT COUNT(*) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = B.ACCNT_NO) AS TRUE_COUNT
+			   , (SELECT MAX(PAY_DAY) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = B.ACCNT_NO) AS PAY_DAY
+			   , CASE WHEN B.PAY_MTHD = '01' THEN '손수' 
+					  WHEN B.PAY_MTHD = '04' THEN 'CMS' 
+					  ELSE '카드' 
+					   END PAY_MTHD
+			   , DECODE(FN_ACCNT_STAT(B.ACCNT_NO), 'Y', '정상', 'R', '해약', 'E', '행사', '청약철회') AS ACC_STAT
+			   , DECODE(FN_ACCNT_STAT(B.ACCNT_NO), 'Y', FN_YEN_CHE(B.ACCNT_NO), '-') AS PAY_STATE
+			   , FN_EVENT_DAY(B.ACCNT_NO) AS EVENT_DAY
+			   , FN_COM_NM('0125', E.SALE_TYPE) AS SALE_TYPE
+			   , E.COM_NM AS B2B_COMP_NM 
+			   , B.B2B_EMPLE_NO
+			   , NVL(FN_COM_NM('81', D.STAT), '') AS HPCALL_STAT
+			   , B.KB_NO
+			   , B.ORDER_NUM	
+			   , FN_EMPLE_NM(B.REG_MAN) AS REG_MAN	
+			   , B.ID_NO   
+	      FROM MEMBER A, MEM_PROD_ACCNT B, PRODUCT C, HP_CALL D, B2BCOMCD E
+		 WHERE A.MEM_NO = B.MEM_NO
+		   AND B.PROD_CD = C.PROD_CD
+		   AND B.ACCNT_NO = D.ACCNT_NO(+)
+		   AND B.B2B_COMP_CD = E.COM_CD(+)
+		   AND A.DEL_FG = 'N'
+		   AND B.DEL_FG = 'N'
+		<if test="id != null and id != ''">
+			<if test="id == 'nsadmin'">
+				AND B.EMPLE_NO = '2013060006'
+			</if>
+			<if test="id == 'csvuser'">
+				AND E.SALE_TYPE NOT IN ('0001', '0002', '0004', '0006') 
+				AND B.PROD_CD IN (
+					'J5','J8','J6','J7','J9','K0','K1','K2','K3','K4','K5','K7','K8','K9','K6','L1','L2','L3','L4','L5','L6','L7','L8','L9','G1','G2','G3','G4','G5','G6','G7','G8','G9',
+					'H0','H1','H2','F0','F1','F2','F5','F7','F9','F8','M0','M1','N1','N2','N3','N4','N7','N8','N9','88','89','91','92','93','94','95','96','97','98','99',
+					'A0','A1','A2','A4','A5','P0','P1','P4','P5','P6','P8','Q0','Q1','Q2','Q3','Q4','Q5','Q6'
+				)  
+			</if>
+			<if test="id == 'akuser'">
+				AND E.SALE_TYPE = '0018'
+			</if>
+			<if test="id == 'homeplus002'">
+				AND E.SALE_TYPE = '0039'
+			</if>
+			<if test="id == 'lgbtb'">
+				AND E.SALE_TYPE = '0037'
+			</if>				
+			<if test="id == 'gsadmin'">
+				AND B.PROD_CD IN ('R1', 'R2', 'R5')
+			</if>
+			<if test="id == 'kbadmin'">
+				AND B.KB_NO IS NOT NULL
+			</if>
+			<if test="id == 'sktelecom'">
+				AND B.PROD_CD IN ('AA','AB') 
+				AND B.B2B_COMP_CD = '5194'
+			</if>
+			<if test="id == 'skbroadband'">
+				AND B.PROD_CD IN ('AA') 
+				AND B.B2B_COMP_CD = '5196'
+			</if>				
+		</if>
+      	<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+			AND B.JOIN_DT BETWEEN REPLACE(#{strtDt}, '-', '') AND REPLACE(#{endDt}, '-', '')
+		</if>
+		<if test="q != null and q != ''">	
+			<if test="f == 1">	
+				AND A.MEM_NM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 2">	
+				AND B.ACCNT_NO LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 3">
+				AND B.KB_NO LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 4">
+				AND B.B2B_EMPLE_NO LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 5">
+				AND B.ID_NO LIKE '%' || #{q} || '%'
+			</if>
+		</if>
+		 ORDER BY B.JOIN_DT DESC
+	</select>
+
+	<!--
+         쿼리명 : OMERecordMngDAO.selectPopGridList
+         설  명 : 외주업체 실적관리 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.18   김필기     최초 생성
+    -->
+    <select id="OMERecordMngDAO.selectPopGridList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMERecordMngDAO.selectPopGridList */
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, A.*
+			FROM (
+				SELECT ACCNT_NO
+					   , NO
+					   , MAX(PAY_DAY) AS PAY_DAY
+					   , SUM(PAY_AMT) AS PAY_AMT
+					   , SUM(APAY_AMT) AS APAY_AMT
+					   , SUM(BPAY_AMT) AS BPAY_AMT
+				  FROM TOTAL_PAY_VIEW
+				 WHERE ACCNT_NO = #{accntno}
+				 GROUP BY ACCNT_NO, NO, PAY_DAY 
+				 ORDER BY PAY_DAY DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}	   	 	     
+	</select>
+
+    <select id="OMERecordMngDAO.selectPopGridListCnt" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* OMERecordMngDAO.selectPopGridListCnt */ 
+			   COUNT(*) AS CNT
+		FROM (
+			SELECT ACCNT_NO
+				   , NO
+				   , PAY_DAY 
+		      FROM TOTAL_PAY_VIEW
+			 WHERE ACCNT_NO = #{accntno}			 
+			 GROUP BY ACCNT_NO, NO, PAY_DAY
+		) A 
+	</select>
+</mapper>

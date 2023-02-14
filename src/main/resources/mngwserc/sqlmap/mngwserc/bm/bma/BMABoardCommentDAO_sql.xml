@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="BMABoardCommentDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+		<result property="CONTENTS" column="CONTENTS" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+
+	<!--
+         쿼리명 : BMABoardCommentDAO.selectBoardCommentList
+         설  명 : 게시물에 대한 댓글을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.12   허진영    	 최초생성
+    -->
+	<select id="BMABoardCommentDAO.selectBoardCommentList" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* BMABoardCommentDAO.selectBoardCommentList */
+			   TBL.*
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = TBL.REGID) AS NAME
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.*
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , A.* 
+				  FROM TN_BOARD_COMMENT A
+				 WHERE TABLE_NM = #{tablenm}
+				   AND IDX = #{idx}
+				   AND USE_YN = 'Y'
+				   AND DEL_YN = 'N'
+				 ORDER BY GROUP_ID DESC, RE_DEPTH, REGDATE DESC
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage} 
+	</select>
+	
+	<!--
+         쿼리명 : BMABoardCommentDAO.insertBoardComment
+         설  명 : 게시글에 대한 댓글을 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.12   허진영    	 최초생성
+    -->
+ 	<insert id="BMABoardCommentDAO.insertBoardComment" parameterType="emfMap">
+ 		INSERT /* BMABoardCommentDAO.insertBoardComment */ INTO TN_BOARD_COMMENT
+			(CIDX
+			, IDX
+			, TABLE_NM
+			, GROUP_ID
+			, RE_DEPTH
+			, CONTENTS
+			, USE_YN
+			, DEL_YN
+			, REGID
+			, REGNAME
+			, REGIP
+			, REGDATE
+			, MODID
+			, MODNAME
+			, MODIP
+			, MODDATE
+			)
+		VALUES        
+			(#{cidx}
+			, #{idx}
+			, #{tablenm}
+			, #{groupId, jdbcType=VARCHAR}
+			, #{reDepth, jdbcType=VARCHAR}
+			, #{contents, jdbcType=VARCHAR}
+			, 'Y'
+            , 'N'
+			, #{regId}
+			, #{regNm}
+			, #{regIp}
+            , SYSDATE
+            , #{modId}
+            , #{modNm}
+            , #{modIp}
+            , SYSDATE
+			)
+ 	</insert>
+ 	
+ 	<!--
+         쿼리명 : BMABoardCommentDAO.updateBoardComment
+         설  명 : 게시글에 대한 댓글을 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.12   허진영    	 최초생성
+    -->
+ 	<update id="BMABoardCommentDAO.updateBoardComment" parameterType="emfMap">
+		UPDATE /* BMABoardCommentDAO.updateBoardComment */ TN_BOARD_COMMENT
+		   SET CONTENTS = #{contents}
+		       , MODID = #{modId}
+		       , MODNAME = #{modNm}
+		       , MODIP = #{modIp}
+			   , MODDATE = SYSDATE
+		 WHERE TABLE_NM = #{tablenm}
+		   AND IDX = #{idx}
+		   AND CIDX = #{cidx}
+ 	</update>
+ 	
+	<!--
+         쿼리명 : BMABoardCommentDAO.deleteBoardComment
+         설  명 : 게시글에 대한 댓글을 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.12   허진영    	 최초생성
+    -->
+	<update id="BMABoardCommentDAO.deleteBoardComment" parameterType="emfMap">
+ 		UPDATE /* BMABoardCommentDAO.deleteBoardComment */ TN_BOARD_COMMENT 
+		   SET USE_YN = 'N'
+			   , DEL_YN = 'Y'
+		 WHERE TABLE_NM = #{tablenm}
+		   AND IDX = #{idx}
+		   AND CIDX = #{cidx}
+ 	</update>
+ 	
+	<!--
+         쿼리명 : BMABoardCommentDAO.updateBoardStatus
+         설  명 : 댓글 보이기 숨기기(상태값 변경)
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2016.04.12  허진영    	 최초 생성
+    -->
+	<update id="BMABoardCommentDAO.updateBoardStatus" parameterType="emfMap">
+ 		UPDATE /* BMABoardCommentDAO.updateBoardStatus */ TN_BOARD_COMMENT 
+		   SET USE_YN = #{useYn}
+			   , MODID = #{modId}
+			   , MODNAME = #{modNm}
+			   , MODIP = #{modIp}
+			   , MODDATE = SYSDATE
+		 WHERE TABLE_NM = #{tablenm}
+		   AND IDX = #{idx}
+		   AND CIDX = #{cidx}
+ 	</update>
+	
+	<!--
+         쿼리명 : BMABoardCommentDAO.excelBoardCommentList
+         설  명 : 게시물에 대한 댓글을 조회한다. (엑셀 다운로드)
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.12   허진영    	 최초생성
+    -->
+	<select id="BMABoardCommentDAO.excelBoardCommentList" parameterType="emfMap" resultMap="emfMap">		
+		SELECT /* BMABoardCommentDAO.excelBoardCommentList */
+			   TBL.*
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = TBL.REGID) AS NAME
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.*
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , A.* 
+				  FROM TN_BOARD_COMMENT A
+				 WHERE TABLE_NM = #{tablenm}
+				   AND IDX = #{idx}
+				   AND USE_YN = 'Y'
+				   AND DEL_YN = 'N'
+				 ORDER BY GROUP_ID DESC, RE_DEPTH
+			) T1
+		) TBL
+	</select>
+</mapper>

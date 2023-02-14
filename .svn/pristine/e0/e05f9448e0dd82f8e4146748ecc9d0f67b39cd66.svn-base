@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FairUserDAO">
+
+	<!--
+         쿼리명 : FairUserDAO.selectList
+         설  명 : 목록 조회
+    -->	
+	<select id="selectList" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			   TBL.* 
+		FROM (
+			SELECT 
+				ROWNUM AS RNUM
+				,T1.TOT_CNT
+	            ,T1.FUP_SEQ
+-- 	            ,T1.FUP_VALUE
+				, regexp_replace( T1.FUP_VALUE,
+				'(\{"INPUT":\[\{"TITLE":"이름","KEY":"TEXT","VALUE":")([a-zA-Zㄱ-힝0-9-]{1})(.+)([a-zA-Zㄱ-힝0-9-]{1})("\},\{"TITLE":"연락처","KEY":"HPHONE","VALUE":")([0-9-]{4})([0-9-]+)([0-9-]{5})("\}.+)',
+				'\1\2*\4\5\6****\8\9') AS FUP_VALUE
+				,T1.FUP_REGDATE
+	            ,T1.FAIR_PRODUCT_FP_SEQ
+	            ,T1.FAIR_STATUS
+	            ,T1.FUP_FROMURL
+	            ,CNT
+	            ,T1.FP_SEQ
+	            ,T1.FP_MAIN_TITLE
+	            ,T1.FP_MAIN_SUBTITLE
+	            ,T1.FP_MAIN_DESC
+	            ,T1.FC_SEQ
+	            ,T1.FC_TITLE
+	            ,T1.FC_SUBTITLE
+	            ,T1.FC_CATEGORY_TITLE
+	            ,(select FUPC_STATUS from FAIR_USER_PRODUCT_CONSULT where FUPC_SEQ=T1.FUPC_SEQ) FUPC_STATUS
+	            ,(select FUPC_STATUS_NUMBER from FAIR_USER_PRODUCT_CONSULT where FUPC_SEQ=T1.FUPC_SEQ) FUPC_STATUS_NUMBER
+			  FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		                ,FUP_SEQ
+						,cast(FUP_VALUE as varchar2(4000)) FUP_VALUE
+						,FUP_REGDATE
+						,FAIR_PRODUCT_FP_SEQ
+						,FAIR_STATUS
+						,FUP_FROMURL
+						,(select count(*) from FAIR_USER_PRODUCT_CONSULT where FAIR_USER_PRODUCT_FUP_SEQ=A.FUP_SEQ) CNT
+						,FP_SEQ
+		                ,FP_MAIN_TITLE
+		                ,FP_MAIN_SUBTITLE
+		                ,FP_MAIN_DESC
+		                ,FC_SEQ
+		                ,FC_TITLE
+		                ,FC_SUBTITLE
+		                ,FC_CATEGORY_TITLE
+		                ,(select MAX(FUPC_SEQ) from FAIR_USER_PRODUCT_CONSULT where FAIR_USER_PRODUCT_FUP_SEQ=A.FUP_SEQ) FUPC_SEQ
+		         FROM FAIR_USER_PRODUCT A
+		         LEFT JOIN FAIR_PRODUCT B ON A.FAIR_PRODUCT_FP_SEQ = B.FP_SEQ
+         		 LEFT JOIN FAIR_CATEGORY C ON B.FAIR_CATEGORY_FC_SEQ = C.FC_SEQ
+         		 WHERE 1=1
+         		 <if test="fcseq != null and fcseq != ''">
+         		 AND FAIR_CATEGORY_FC_SEQ = #{fcseq}
+         		 </if>
+         		 <if test="name != null and name != ''">
+         		 AND FUP_VALUE LIKE '%'||#{name, jdbcType=VARCHAR}||'%'
+         		 </if>
+         		 <if test="phone != null and phone != ''">
+         		 AND FUP_VALUE LIKE '%'||#{phone, jdbcType=VARCHAR}||'%'
+         		 </if>
+         		 <if test="sregdate != null and sregdate != ''">
+         		 AND TO_CHAR(FUP_REGDATE, 'YYYY-MM-DD') <![CDATA[>=]]> #{sregdate, jdbcType=VARCHAR}
+         		 </if>
+         		 <if test="eregdate != null and eregdate != ''">
+         		 AND TO_CHAR(FUP_REGDATE, 'YYYY-MM-DD') <![CDATA[<=]]> #{eregdate, jdbcType=VARCHAR}
+         		 </if>
+				 ORDER BY FUP_REGDATE DESC   
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}           
+		<if test="status != null and status != '' and status != 'CONSULT_WAITE'">
+        AND FUPC_STATUS = #{status, jdbcType=VARCHAR}
+        </if>
+	</select>	
+	
+	<!--
+         쿼리명 : FairUserDAO.selectList
+         설  명 : 목록 조회
+    -->	
+	<select id="selectListExcel" parameterType="emfMap" resultType="emfMap">
+		SELECT * FROM (
+		SELECT
+			T1.FUP_SEQ
+-- 	       ,T1.FUP_VALUE
+		, regexp_replace( T1.FUP_VALUE,
+		'(\{"INPUT":\[\{"TITLE":"이름","KEY":"TEXT","VALUE":")([a-zA-Zㄱ-힝0-9-]{1})(.+)([a-zA-Zㄱ-힝0-9-]{1})("\},\{"TITLE":"연락처","KEY":"HPHONE","VALUE":")([0-9-]{4})([0-9-]+)([0-9-]{5})("\}.+)',
+		'\1\2*\4\5\6****\8\9') AS FUP_VALUE
+			,T1.FUP_REGDATE
+			,T1.FAIR_PRODUCT_FP_SEQ
+			,T1.FAIR_STATUS
+			,T1.FUP_FROMURL
+			,T1.CNT
+			,T1.FP_SEQ
+	        ,T1.FP_MAIN_TITLE
+	        ,T1.FP_MAIN_SUBTITLE
+	        ,T1.FP_MAIN_DESC
+	        ,T1.FC_SEQ
+	        ,T1.FC_TITLE
+	        ,T1.FC_SUBTITLE
+	        ,T1.FC_CATEGORY_TITLE
+	        ,(select FUPC_STATUS from FAIR_USER_PRODUCT_CONSULT where FUPC_SEQ=T1.FUPC_SEQ) FUPC_STATUS
+            ,(select FUPC_STATUS_NUMBER from FAIR_USER_PRODUCT_CONSULT where FUPC_SEQ=T1.FUPC_SEQ) FUPC_STATUS_NUMBER
+		FROM (
+			SELECT 
+	            FUP_SEQ
+				,cast(FUP_VALUE as varchar2(4000)) FUP_VALUE
+				,FUP_REGDATE
+				,FAIR_PRODUCT_FP_SEQ
+				,FAIR_STATUS
+				,FUP_FROMURL
+				,(select count(*) from FAIR_USER_PRODUCT_CONSULT where FAIR_USER_PRODUCT_FUP_SEQ=A.FUP_SEQ) CNT
+				,FP_SEQ
+	            ,FP_MAIN_TITLE
+	            ,FP_MAIN_SUBTITLE
+	            ,FP_MAIN_DESC
+	            ,FC_SEQ
+	            ,FC_TITLE
+	            ,FC_SUBTITLE
+	            ,FC_CATEGORY_TITLE
+	            ,(select MAX(FUPC_SEQ) from FAIR_USER_PRODUCT_CONSULT where FAIR_USER_PRODUCT_FUP_SEQ=A.FUP_SEQ) FUPC_SEQ
+	         FROM FAIR_USER_PRODUCT A
+	         LEFT JOIN FAIR_PRODUCT B ON A.FAIR_PRODUCT_FP_SEQ = B.FP_SEQ
+	       		 LEFT JOIN FAIR_CATEGORY C ON B.FAIR_CATEGORY_FC_SEQ = C.FC_SEQ
+	       		 WHERE 1=1
+	       		 <if test="fcseq != null and fcseq != ''">
+	       		 AND FAIR_CATEGORY_FC_SEQ = #{fcseq}
+	       		 </if>
+	       		 <if test="name != null and name != ''">
+	       		 AND FUP_VALUE LIKE '%'||#{name, jdbcType=VARCHAR}||'%'
+	       		 </if>
+	       		 <if test="phone != null and phone != ''">
+	       		 AND FUP_VALUE LIKE '%'||#{phone, jdbcType=VARCHAR}||'%'
+	       		 </if>
+	       		 <if test="status != null and status == 'CONSULT_WAITE'">
+	       		 AND (FAIR_STATUS IS NULL OR FAIR_STATUS = '')
+	       		 </if>
+	       		 <if test="sregdate != null and sregdate != ''">
+	       		 AND TO_CHAR(FUP_REGDATE, 'YYYY-MM-DD') <![CDATA[>=]]> #{sregdate, jdbcType=VARCHAR}
+	       		 </if>
+	       		 <if test="eregdate != null and eregdate != ''">
+	       		 AND TO_CHAR(FUP_REGDATE, 'YYYY-MM-DD') <![CDATA[<=]]> #{eregdate, jdbcType=VARCHAR}
+	       		 </if>
+			 ORDER BY FUP_REGDATE DESC
+		) T1
+		)
+		<if test="status != null and status != '' and status != 'CONSULT_WAITE'">
+        WHERE FUPC_STATUS = #{status, jdbcType=VARCHAR}
+        </if>   
+	</select>
+	
+	<!--
+         쿼리명 : FairUserDAO.selectCateList
+         설  명 : 카테고리 조회
+    -->	
+	<select id="selectCateList" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+            FC_SEQ
+			,FC_TITLE
+			,FC_SUBTITLE
+			,FC_CATEGORY_TITLE
+         FROM FAIR_CATEGORY   
+		 ORDER BY FC_ORDER ASC, REG_DTM DESC      
+	</select>
+	
+	<!--
+         쿼리명 : FairUserDAO.select
+         설  명 : 상세 조회
+    -->	
+	<select id="select" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			 T1.FUP_SEQ
+			,T1.FUP_VALUE
+			,T1.FUP_REGDATE
+			,T1.FAIR_PRODUCT_FP_SEQ
+			,T1.FAIR_STATUS
+			,T1.FUP_FROMURL
+			,T1.CNT
+			,T1.FP_SEQ
+			,T1.FP_MAIN_TITLE
+			,T1.FP_MAIN_SUBTITLE
+			,T1.FP_MAIN_DESC
+			,T1.FC_SEQ
+			,T1.FC_TITLE
+			,T1.FC_SUBTITLE
+			,T1.FC_CATEGORY_TITLE
+			,(select FUPC_STATUS from FAIR_USER_PRODUCT_CONSULT where FUPC_SEQ=T1.FUPC_SEQ) FUPC_STATUS
+			,(select FUPC_STATUS_NUMBER from FAIR_USER_PRODUCT_CONSULT where FUPC_SEQ=T1.FUPC_SEQ) FUPC_STATUS_NUMBER
+		FROM (
+			SELECT 
+	             FUP_SEQ
+				,cast(FUP_VALUE as varchar2(4000)) FUP_VALUE
+				,FUP_REGDATE
+				,FAIR_PRODUCT_FP_SEQ
+				,FAIR_STATUS
+				,FUP_FROMURL
+				,(select count(*) from FAIR_USER_PRODUCT_CONSULT where FAIR_USER_PRODUCT_FUP_SEQ=A.FUP_SEQ) CNT
+				,FP_SEQ
+	            ,FP_MAIN_TITLE
+	            ,FP_MAIN_SUBTITLE
+	            ,FP_MAIN_DESC
+	            ,FC_SEQ
+	            ,FC_TITLE
+	            ,FC_SUBTITLE
+	            ,FC_CATEGORY_TITLE
+	            ,(select MAX(FUPC_SEQ) from FAIR_USER_PRODUCT_CONSULT where FAIR_USER_PRODUCT_FUP_SEQ=A.FUP_SEQ) FUPC_SEQ
+	         FROM FAIR_USER_PRODUCT A
+		         LEFT JOIN FAIR_PRODUCT B ON A.FAIR_PRODUCT_FP_SEQ = B.FP_SEQ
+		         LEFT JOIN FAIR_CATEGORY C ON B.FAIR_CATEGORY_FC_SEQ = C.FC_SEQ
+	       	 WHERE FUP_SEQ = #{fupSeq}
+       	 ) T1
+	</select>
+	
+	<!--
+         쿼리명 : FairUserDAO.selectMemo
+         설  명 : 메모 조회
+    -->	
+	<select id="selectMemo" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+            FUPC_SEQ
+			,cast(FUPC_MEMO as varchar2(4000)) FUPC_MEMO
+			,FUPC_NAME
+			,FUPC_STATUS
+			,FUPC_STATUS_NUMBER
+			,REG_DTM
+			,FAIR_USER_PRODUCT_FUP_SEQ
+         FROM FAIR_USER_PRODUCT_CONSULT   
+		 WHERE FAIR_USER_PRODUCT_FUP_SEQ = #{fupSeq}
+		 ORDER BY REG_DTM DESC      
+	</select>
+	
+	<!--
+         쿼리명 : FairUserDAO.insertMemo
+         설  명 : 메모 등록
+    -->	
+	<insert id="insertMemo" parameterType="emfMap">
+		INSERT INTO FAIR_USER_PRODUCT_CONSULT
+			(
+			FUPC_SEQ
+			,FUPC_MEMO
+			,FUPC_NAME
+			,FUPC_STATUS
+			,FUPC_STATUS_NUMBER
+			,FAIR_USER_PRODUCT_FUP_SEQ
+			<if test="regId != null">
+			,REG_ID
+			</if>
+			<if test="regIp != null">
+			,REG_IP
+			</if>
+			,REG_DTM
+			)
+		VALUES
+			(
+			#{fupcSeq}
+			,#{fupcMemo, jdbcType=VARCHAR}
+			,#{fupcName, jdbcType=VARCHAR}
+			,#{fupcStatus, jdbcType=VARCHAR}
+			,#{fupcStatusNumber, jdbcType=VARCHAR}
+			,#{fairUserProductFupSeq, jdbcType=VARCHAR}
+			<if test="regId != null">
+			,#{regId, jdbcType=VARCHAR}
+			</if>
+			<if test="regIp != null">
+			,#{regIp, jdbcType=VARCHAR}
+			</if>
+			,SYSDATE
+			)					
+	</insert>
+	
+	<!--
+         쿼리명 : FairUserDAO.delete
+         설  명 : 메모 삭제
+    -->		
+	<delete id="deleteMemo" parameterType="emfMap">
+		 DELETE FAIR_USER_PRODUCT_CONSULT
+	     WHERE FUPC_SEQ = #{fupcSeq}
+	</delete>
+	
+	<!--
+         쿼리명 : FairUserDAO.update
+         설  명 : 메모 수정
+    -->	
+	<update id="update" parameterType="emfMap">
+		UPDATE FAIR_USER_PRODUCT_CONSULT SET
+			FUPC_MEMO =#{fupcMemo, jdbcType=VARCHAR}
+			<if test="modId != null">
+			,MOD_ID = #{modId}
+			</if>
+			<if test="modIp != null">
+			,MOD_IP = #{modIp}
+			</if>
+			,MOD_DTM = SYSDATE
+         WHERE FUPC_SEQ = #{fupcSeq}
+	</update>
+	
+	<!--
+         쿼리명 : FairUserDAO.delete
+         설  명 : 메모 및 상품신청 삭제
+    -->		
+	<delete id="deleteFK" parameterType="emfMap">
+		 DELETE FAIR_USER_PRODUCT_CONSULT
+	     WHERE FAIR_USER_PRODUCT_FUP_SEQ = #{fupSeq}
+	</delete>
+	<delete id="delete" parameterType="emfMap">
+		 DELETE FAIR_USER_PRODUCT
+	     WHERE FUP_SEQ = #{fupSeq}
+	</delete>
+
+	<!--
+         쿼리명 : FairUserDAO.statusChange
+         설  명 : 상태 수정
+    -->	
+	<update id="statusChange" parameterType="emfMap">
+		UPDATE FAIR_USER_PRODUCT SET
+			FAIR_STATUS =#{fairStatus, jdbcType=VARCHAR}
+         WHERE FUP_SEQ = #{fupSeq}
+	</update>
+
+	<!--
+         쿼리명 : FairUserDAO.selectListCall
+         설  명 : 콜센터 목록 조회
+    -->	
+	<select id="selectListCall" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			   TBL.* 
+		FROM (
+			SELECT 
+				ROWNUM AS RNUM
+				,T1.TOT_CNT
+	            ,T1.FUP_SEQ
+	            ,T1.FUP_VALUE
+	            ,T1.FUP_REGDATE
+	            ,T1.FAIR_PRODUCT_FP_SEQ
+	            ,T1.FAIR_STATUS
+	            ,T1.FUP_FROMURL
+	            ,CNT
+	            ,T1.FP_SEQ
+	            ,T1.FP_MAIN_TITLE
+	            ,T1.FP_MAIN_SUBTITLE
+	            ,T1.FP_MAIN_DESC
+	            ,T1.FC_SEQ
+	            ,T1.FC_TITLE
+	            ,T1.FC_SUBTITLE
+	            ,T1.FC_CATEGORY_TITLE
+	            ,(select FUPC_STATUS from FAIR_USER_PRODUCT_CONSULT where FUPC_SEQ=T1.FUPC_SEQ) FUPC_STATUS
+	            ,(select FUPC_STATUS_NUMBER from FAIR_USER_PRODUCT_CONSULT where FUPC_SEQ=T1.FUPC_SEQ) FUPC_STATUS_NUMBER
+			  FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		                ,FUP_SEQ
+						,cast(FUP_VALUE as varchar2(4000)) FUP_VALUE
+						,FUP_REGDATE
+						,FAIR_PRODUCT_FP_SEQ
+						,FAIR_STATUS
+						,FUP_FROMURL
+						,(select count(*) from FAIR_USER_PRODUCT_CONSULT where FAIR_USER_PRODUCT_FUP_SEQ=A.FUP_SEQ) CNT
+						,FP_SEQ
+		                ,FP_MAIN_TITLE
+		                ,FP_MAIN_SUBTITLE
+		                ,FP_MAIN_DESC
+		                ,FC_SEQ
+		                ,FC_TITLE
+		                ,FC_SUBTITLE
+		                ,FC_CATEGORY_TITLE
+		                ,(select MAX(FUPC_SEQ) from FAIR_USER_PRODUCT_CONSULT where FAIR_USER_PRODUCT_FUP_SEQ=A.FUP_SEQ) FUPC_SEQ
+		         FROM FAIR_USER_PRODUCT A
+		         LEFT JOIN FAIR_PRODUCT B ON A.FAIR_PRODUCT_FP_SEQ = B.FP_SEQ
+         		 LEFT JOIN FAIR_CATEGORY C ON B.FAIR_CATEGORY_FC_SEQ = C.FC_SEQ
+         		 WHERE FUP_SEQ in (select FAIR_USER_PRODUCT_FUP_SEQ from FAIR_USER_PRODUCT_CONSULT where FUPC_STATUS ='가입녹취요청')
+         		 <if test="fcseq != null and fcseq != ''">
+         		 AND FAIR_CATEGORY_FC_SEQ = #{fcseq}
+         		 </if>
+         		 <if test="name != null and name != ''">
+         		 AND FUP_VALUE LIKE '%'||#{name, jdbcType=VARCHAR}||'%'
+         		 </if>
+         		 <if test="phone != null and phone != ''">
+         		 AND FUP_VALUE LIKE '%'||#{phone, jdbcType=VARCHAR}||'%'
+         		 </if>
+         		 <if test="sregdate != null and sregdate != ''">
+         		 AND TO_CHAR(FUP_REGDATE, 'YYYY-MM-DD') <![CDATA[>=]]> #{sregdate, jdbcType=VARCHAR}
+         		 </if>
+         		 <if test="eregdate != null and eregdate != ''">
+         		 AND TO_CHAR(FUP_REGDATE, 'YYYY-MM-DD') <![CDATA[<=]]> #{eregdate, jdbcType=VARCHAR}
+         		 </if>
+				 ORDER BY (select MAX(REG_DTM) from FAIR_USER_PRODUCT_CONSULT where FUPC_STATUS ='가입녹취요청' and FAIR_USER_PRODUCT_FUP_SEQ=A.FUP_SEQ) DESC   
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}           
+		<if test="status != null and status != '' and status != 'CONSULT_WAITE'">
+        AND FUPC_STATUS = #{status, jdbcType=VARCHAR}
+        </if>           
+	</select>
+	
+	<!--
+         쿼리명 : FairUserDAO.selectList
+         설  명 : 목록 조회
+    -->	
+	<select id="selectListExcelCall" parameterType="emfMap" resultType="emfMap">
+		SELECT * FROM (
+		SELECT
+			T1.FUP_SEQ
+			,T1.FUP_VALUE
+			,T1.FUP_REGDATE
+			,T1.FAIR_PRODUCT_FP_SEQ
+			,T1.FAIR_STATUS
+			,T1.FUP_FROMURL
+			,T1.CNT
+			,T1.FP_SEQ
+	        ,T1.FP_MAIN_TITLE
+	        ,T1.FP_MAIN_SUBTITLE
+	        ,T1.FP_MAIN_DESC
+	        ,T1.FC_SEQ
+	        ,T1.FC_TITLE
+	        ,T1.FC_SUBTITLE
+	        ,T1.FC_CATEGORY_TITLE
+	        ,(select FUPC_STATUS from FAIR_USER_PRODUCT_CONSULT where FUPC_SEQ=T1.FUPC_SEQ) FUPC_STATUS
+            ,(select FUPC_STATUS_NUMBER from FAIR_USER_PRODUCT_CONSULT where FUPC_SEQ=T1.FUPC_SEQ) FUPC_STATUS_NUMBER
+		FROM (
+			SELECT 
+	            FUP_SEQ
+				,cast(FUP_VALUE as varchar2(4000)) FUP_VALUE
+				,FUP_REGDATE
+				,FAIR_PRODUCT_FP_SEQ
+				,FAIR_STATUS
+				,FUP_FROMURL
+				,(select count(*) from FAIR_USER_PRODUCT_CONSULT where FAIR_USER_PRODUCT_FUP_SEQ=A.FUP_SEQ) CNT
+				,FP_SEQ
+	            ,FP_MAIN_TITLE
+	            ,FP_MAIN_SUBTITLE
+	            ,FP_MAIN_DESC
+	            ,FC_SEQ
+	            ,FC_TITLE
+	            ,FC_SUBTITLE
+	            ,FC_CATEGORY_TITLE
+	            ,(select MAX(FUPC_SEQ) from FAIR_USER_PRODUCT_CONSULT where FAIR_USER_PRODUCT_FUP_SEQ=A.FUP_SEQ) FUPC_SEQ
+	         FROM FAIR_USER_PRODUCT A
+	         LEFT JOIN FAIR_PRODUCT B ON A.FAIR_PRODUCT_FP_SEQ = B.FP_SEQ
+	         LEFT JOIN FAIR_CATEGORY C ON B.FAIR_CATEGORY_FC_SEQ = C.FC_SEQ
+	       	 WHERE FUP_SEQ in (select FAIR_USER_PRODUCT_FUP_SEQ from FAIR_USER_PRODUCT_CONSULT where FUPC_STATUS ='가입녹취요청')
+       		 <if test="fcseq != null and fcseq != ''">
+       		 AND FAIR_CATEGORY_FC_SEQ = #{fcseq}
+       		 </if>
+       		 <if test="name != null and name != ''">
+       		 AND FUP_VALUE LIKE '%'||#{name, jdbcType=VARCHAR}||'%'
+       		 </if>
+       		 <if test="phone != null and phone != ''">
+       		 AND FUP_VALUE LIKE '%'||#{phone, jdbcType=VARCHAR}||'%'
+       		 </if>
+       		 <if test="status != null and status == 'CONSULT_WAITE'">
+       		 AND (FAIR_STATUS IS NULL OR FAIR_STATUS = '')
+       		 </if>
+       		 <if test="sregdate != null and sregdate != ''">
+       		 AND TO_CHAR(FUP_REGDATE, 'YYYY-MM-DD') <![CDATA[>=]]> #{sregdate, jdbcType=VARCHAR}
+       		 </if>
+       		 <if test="eregdate != null and eregdate != ''">
+       		 AND TO_CHAR(FUP_REGDATE, 'YYYY-MM-DD') <![CDATA[<=]]> #{eregdate, jdbcType=VARCHAR}
+       		 </if>
+			 ORDER BY FUP_REGDATE DESC
+		) T1
+		)
+		<if test="status != null and status != '' and status != 'CONSULT_WAITE'">
+        WHERE FUPC_STATUS = #{status, jdbcType=VARCHAR}
+        </if>   
+	</select>
+</mapper>

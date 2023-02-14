@@ -1,0 +1,37 @@
+@charset "utf-8";
+/* NHN Web Standardization Team (http://html.nhndesign.com/) HHJ 090226 */
+
+@font-face {
+ font-family: "easyOpensans";
+ src: url('/common/css/font/OpenSans-Regular.eot');
+ src: local('?'), url('/common/css/font/OpenSans-Regular.woff') format('woff'), url('/common/css/font/OpenSans-Regular.ttf') format('truetype'), url('OpenSans-Regular.otf') format('opentype');
+ font-weight: normal;
+ font-style: normal;
+}
+
+@font-face {
+ font-family: "easyOpensansBold";
+ src: url('/common/css/font/OpenSans-Bold.eot');
+ src: local('?'), url('/common/css/font/OpenSans-Bold.woff') format('woff'), url('/common/css/font/OpenSans-Bold.ttf') format('truetype'), url('OpenSans-Bold.otf') format('opentype');
+ font-weight: normal;
+ font-style: normal;
+}
+
+
+body,.se2_inputarea,.se2_inputarea th,.se2_inputarea td{margin:0;padding:0;font-family:'나눔고딕','easyOpensans',Dotum,Helvetica,Sans-serif;font-size:10pt;line-height:1.8;color:#666}
+.se2_inputarea p,.se2_inputarea br{margin:0;padding:0}
+/* size */
+.se2_inputarea{margin:0px;word-wrap:break-word}
+.se2_inputarea_890{width:743px;margin:20px 64px 10px;background:url(../img/editor_guideline_890.gif) 55px 11px no-repeat;}
+.se2_inputarea_698{width:550px;margin:20px 65px 10px 64px;background:url(../img/editor_guideline_698.gif) 55px 11px no-repeat;}
+/* 인용구 */
+.se2_quote1{margin:0 0 30px 20px;padding:0 8px;border-left:2px solid #ccc;color:#888}
+.se2_quote2{margin:0 0 30px 13px;padding:0 8px 0 16px;background:url(../img/bg_quote2.gif) 0 3px no-repeat;color:#888}
+.se2_quote3{margin:0 0 30px;padding:12px 10px 11px;border:1px dashed #ccc;color:#888}
+.se2_quote4{margin:0 0 30px;padding:12px 10px 11px;border:1px dashed #66b246;color:#888}
+.se2_quote5{margin:0 0 30px;padding:12px 10px 11px;border:1px dashed #ccc;background:#fafafa;color:#888}
+.se2_quote6{margin:0 0 30px;padding:12px 10px 11px;border:1px solid #e5e5e5;color:#888}
+.se2_quote7{margin:0 0 30px;padding:12px 10px 11px;border:1px solid #66b246;color:#888}
+.se2_quote8{margin:0 0 30px;padding:12px 10px 11px;border:1px solid #e5e5e5;background:#fafafa;color:#888}
+.se2_quote9{margin:0 0 30px;padding:12px 10px 11px;border:2px solid #e5e5e5;color:#888}
+.se2_quote10{margin:0 0 30px;padding:12px 10px 11px;border:2px solid #e5e5e5;background:#fafafa;color:#888}

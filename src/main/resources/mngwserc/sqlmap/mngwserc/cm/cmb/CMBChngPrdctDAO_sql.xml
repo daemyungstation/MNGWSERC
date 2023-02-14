@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CMBChngPrdctDAO">
+
+	<resultMap id="emfMap" type="emfMap" >
+		<result property="PRDCT_CNTN" column="PRDCT_CNTN" javaType="java.lang.String" jdbcType="CLOB" />
+		<result property="OPRT_GUIDE" column="OPRT_GUIDE" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+	
+    <!--
+         쿼리명 : CMBChngPrdctDAO.selectChngPrdctList
+         설  명 : 전환서비스 상품 목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+    <select id="CMBChngPrdctDAO.selectChngPrdctList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CMBChngPrdctDAO.selectChngPrdctList */
+			   TBL.* 
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRDCT_GB' AND CD = TBL.PRDCT_CD) AS PRDCT_GB
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 	
+			FROM (		
+				SELECT COUNT(*) OVER() AS TOT_CNT
+			           , PRDCT_SEQ
+			           , PRDCT_CD
+			           , PRDCT_NM
+			           , REG_ID
+			           , REG_DTM
+		       	  FROM CM_PRDCT_MST 
+				 WHERE 1=1
+				<if test="prdctCd != null and prdctCd != ''">
+					AND PRDCT_CD = #{prdctCd}
+			 	</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND REG_ID LIKE '%' || #{q} || '%' ]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND PRDCT_NM LIKE '%' || #{q} || '%' ]]>
+					</if>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+    </select>
+    
+    <!--
+         쿼리명 : CMBChngPrdctDAO.selectChngPrdct
+         설  명 : 전환서비스 상품 상세를 조회한다. 
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+    <select id="CMBChngPrdctDAO.selectChngPrdct" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* CMBChngPrdctDAO.selectChngPrdct */
+		       PRDCT_SEQ
+		       , PRDCT_CD
+		       , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRDCT_GB' AND CD = A.PRDCT_CD) AS PRDCT_GB
+		       , PRDCT_NM
+		       , PRDCT_CNTN
+		       , OPRT_GUIDE
+	      FROM CM_PRDCT_MST A
+	     WHERE PRDCT_SEQ = #{prdctSeq}
+    </select>
+    
+    <!--
+         쿼리명 : CMBChngPrdctDAO.insertChngPrdct
+         설  명 : 전환서비스 상품을 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+  	<insert id="CMBChngPrdctDAO.insertChngPrdct" parameterType="emfMap">
+  		INSERT /* CMBChngPrdctDAO.insertChngPrdct */ INTO CM_PRDCT_MST
+  			(PRDCT_SEQ
+			, PRDCT_CD
+			, PRDCT_NM
+			, PRDCT_CNTN
+			, OPRT_GUIDE
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+  			)
+  		VALUES
+  			(#{prdctSeq}
+			, #{prdctCd}
+			, #{prdctNm}
+			, #{prdctCntn}
+			, #{oprtGuide}
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+  			)
+  	</insert>
+  	
+    <!--
+         쿼리명 : CMBChngPrdctDAO.updateChngPrdct
+         설  명 : 전환서비스 상품을 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+  	<update id="CMBChngPrdctDAO.updateChngPrdct" parameterType="emfMap">
+  		UPDATE /* CMBChngPrdctDAO.updateChngPrdct */ CM_PRDCT_MST
+	 	   SET PRDCT_CD = #{prdctCd}
+		   	   , PRDCT_NM = #{prdctNm}
+			   , PRDCT_CNTN = #{prdctCntn}
+			   , OPRT_GUIDE = #{oprtGuide}
+			   , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = SYSDATE
+		 WHERE PRDCT_SEQ = #{prdctSeq}
+  	</update>
+  	
+	<!--
+         쿼리명 : CMBChngPrdctDAO.deleteChngPrdct
+         설  명 : 전환서비스 상품을 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+	<delete id="CMBChngPrdctDAO.deleteChngPrdct" parameterType="emfMap">
+		DELETE /* CMBChngPrdctDAO.deleteChngPrdct */ 
+		  FROM CM_PRDCT_MST
+		 WHERE PRDCT_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+	<!--
+         쿼리명 : CMBChngPrdctDAO.insertChngPrdctCopy
+         설  명 : 전환서비스 상품을 복사한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+	<insert id="CMBChngPrdctDAO.insertChngPrdctCopy" parameterType="emfMap">
+		INSERT /* CMBChngPrdctDAO.insertChngPrdctCopy */ INTO CM_PRDCT_MST
+			(PRDCT_SEQ
+			, PRDCT_CD
+			, PRDCT_NM
+			, PRDCT_CNTN
+			, OPRT_GUIDE
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+	        )
+		SELECT #{prdctSeq}
+			   , PRDCT_CD
+			   , PRDCT_NM
+			   , PRDCT_CNTN
+			   , OPRT_GUIDE
+			   , #{regId}
+			   , #{regIp}
+			   , SYSDATE
+	           , #{modId}
+	           , #{modIp}
+	           , SYSDATE
+		  FROM CM_PRDCT_MST 
+		 WHERE PRDCT_SEQ = #{delSeq}
+	</insert>
+</mapper>

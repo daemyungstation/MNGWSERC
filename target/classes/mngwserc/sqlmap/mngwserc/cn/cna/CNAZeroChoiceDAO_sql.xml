@@ -1,0 +1,772 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CNAZeroChoiceDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+	    <result property="prdSpec" column="PRD_SPEC" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.selectZeroChoiList
+         설  명 : 제로초이스 상품관리 목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.03.28   박주윤      최초생성
+    -->
+	<select id="CNAZeroChoiceDAO.selectZeroChoiPrdMgrList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CNAZeroChoiceDAO.selectZeroChoiPrdMgrList */
+			   TBL.*
+		FROM (
+			SELECT ROWNUM AS RNUM, A.*
+			FROM ( 
+				SELECT COUNT(*) OVER() AS TOT_CNT
+			   		   , P.PRDCT_SEQ
+			   		   , P.CATE_SEQ
+	               	   , C.CATE_NM 
+	               	   , P.PRDCT_NM
+	               	   , P.MODEL_NM
+	               	   , P.PRICE_BENEFIT
+	                   , P.USE_YN
+	                   , P.REG_DTM
+			      FROM CN_ZERO_CHOI_PRD_MST P 
+			      LEFT OUTER JOIN CN_ZERO_CHOI_CATE_MST C ON (P.CATE_SEQ = C.CATE_SEQ)
+			     <trim prefix="WHERE" prefixOverrides="AND">
+					<if test="q != null and q != ''">
+						<if test="f1 == 1">
+							<![CDATA[	C.CATE_NM LIKE '%' || #{q} || '%' ]]> OR
+							<![CDATA[	P.PRDCT_NM LIKE '%' || #{q} || '%' ]]> OR
+							<![CDATA[	P.MODEL_NM LIKE '%' || #{q} || '%' ]]>
+						</if>
+						<if test="f1 == 2">
+							<![CDATA[	C.CATE_NM LIKE '%' || #{q} || '%' ]]>
+						</if>
+						<if test="f1 == 3">
+							<![CDATA[	P.PRDCT_NM LIKE '%' || #{q} || '%' ]]>
+						</if>
+						<if test="f1 == 4">
+							<![CDATA[	P.MODEL_NM LIKE '%' || #{q} || '%' ]]>
+						</if>
+	              	</if>
+	              	<if test="f2 == 2">
+						AND P.USE_YN = 'Y'
+					</if>
+					<if test="f2 == 3">
+						AND P.USE_YN = 'N'
+					</if>
+              	</trim>
+			 	ORDER BY P.REG_DTM DESC
+				 
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.selectZeroChoiList
+         설  명 : 제로초이스 이미지관리 목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.03.28   박주윤      최초생성
+    -->
+	<select id="CNAZeroChoiceDAO.selectZeroChoiImgMgrList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CNAZeroChoiceDAO.selectZeroChoiImgMgrList */
+			   TBL.*
+		FROM (
+			SELECT ROWNUM AS RNUM, A.*
+			FROM ( 
+				SELECT COUNT(*) OVER() AS TOT_CNT
+						, (select count(*) from cn_zero_choi_img_mgr_mst where use_yn = 'Y') as use_yn_chk
+					   	, IM.IMGR_SEQ
+			   		   	, IM.TITLE
+			   		   	, A.NAME
+	               	   	, IM.REG_DTM
+	               	   	, IM.USE_YN
+			      FROM CN_ZERO_CHOI_IMG_MGR_MST IM 
+			      LEFT OUTER JOIN CO_ADM_MST A ON (IM.REG_ID = A.ID)
+			     <trim prefix="WHERE" prefixOverrides="AND">
+					<if test="q != null and q != ''">
+						<if test="f1 == 1">
+							<![CDATA[	IM.TITLE LIKE '%' || #{q} || '%' ]]> OR
+							<![CDATA[	A.NAME LIKE '%' || #{q} || '%' ]]> 
+						</if>
+						<if test="f1 == 2">
+							<![CDATA[	IM.TITLE LIKE '%' || #{q} || '%' ]]>
+						</if>
+						<if test="f1 == 3">
+							<![CDATA[	A.NAME LIKE '%' || #{q} || '%' ]]>
+						</if>
+	              	</if>
+	              	<if test="f2 == 2">
+						AND IM.USE_YN = 'Y'
+					</if>
+					<if test="f2 == 3">
+						AND IM.USE_YN = 'N'
+					</if>
+              	</trim>
+			 	ORDER BY IM.REG_DTM DESC
+				 
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.selectZeroChoisePrdMgr
+         설  명 : 제로초이스 상품관리 상세를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<select id="CNAZeroChoiceDAO.selectZeroChoisePrdMgr" parameterType="emfMap" resultMap="emfMap">	
+		SELECT /* CNAZeroChoiceDAO.selectZeroChoisePrdMgr */ 
+               PRDCT_SEQ
+               , CATE_SEQ
+               , PRDCT_NM
+               , MODEL_NM
+               , PRICE_BENEFIT
+               , REG_DTM
+               , USE_YN
+               , CNTN
+               , PRICE
+               , REG_ID
+               , MOD_ID
+               , INSTALMENT
+               , PRD_SPEC
+               , PRICE_YN
+               , PRICE_BENEFIT_UNIT_YN
+               , PRICE_TEXT
+		  FROM CN_ZERO_CHOI_PRD_MST
+		 WHERE PRDCT_SEQ = #{seq}
+	</select>
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.selectZeroChoiImgMgr
+         설  명 : 제로초이스 이미지관리 상세를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<select id="CNAZeroChoiceDAO.selectZeroChoiImgMgr" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CNAZeroChoiceDAO.selectZeroChoiImgMgr */ 
+               IMGR_SEQ
+               , TITLE
+               , REG_ID
+               , REG_DTM
+               , USE_YN            
+		  FROM CN_ZERO_CHOI_IMG_MGR_MST
+		 WHERE IMGR_SEQ = #{seq}
+	</select>
+
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.selectFileInfoByFileSeq
+         설  명 : 다이렉트 이미지 미리보기 정보를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<select id="CNAZeroChoiceDAO.selectFileInfoByFileSeq" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			FILE_SEQ
+			,FILE_NM
+			,FILE_PATH
+			,FILE_TYPE
+			,LOCAL_FILE_NM
+		FROM
+			CN_ZERO_CHOI_FILE
+		WHERE
+			FILE_SEQ = #{fileSeq}
+	</select>
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.insertZeroChoisePrdMgr
+         설  명 : 상품관리를 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<insert id="CNAZeroChoiceDAO.insertZeroChoisePrdMgr" parameterType="emfMap">
+		INSERT /* CNAZeroChoiceDAO.insertZeroChoisePrdMgr */ INTO CN_ZERO_CHOI_PRD_MST 
+			(PRDCT_SEQ
+ 			, CATE_SEQ
+ 			, PRDCT_NM
+ 			, MODEL_NM
+ 			, PRICE_BENEFIT
+ 			, REG_DTM
+ 			, USE_YN
+ 			, CNTN
+ 			, PRICE
+ 			, REG_ID
+ 			, MOD_ID
+ 			, INSTALMENT
+ 			, PRD_SPEC
+ 			, PRICE_YN
+ 			, PRICE_BENEFIT_UNIT_YN
+ 			, PRICE_TEXT
+ 			)
+		VALUES        
+			(#{zeroChoiPrdMgrSeq}
+			, #{category}
+			, #{prdctNm}
+			, #{modelNm}
+			, #{priceBenefit}
+			, SYSDATE
+			, #{visibleYn}
+			, #{cntn}
+			, #{price}
+<!-- 			, #{price} -->
+			, #{regId}
+			, #{modId}
+			, #{instalment}
+			, #{prdSpec}
+			, #{priceYn}
+			, #{priceBenefitUnitYn}
+			, #{priceText}
+		  	)
+	</insert>	
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.insertZeroChoiseImgMgr
+         설  명 : 상품관리를 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<insert id="CNAZeroChoiceDAO.insertZeroChoiseImgMgr" parameterType="emfMap">
+		INSERT /* CNAZeroChoiceDAO.insertZeroChoiseImgMgr */ INTO CN_ZERO_CHOI_IMG_MGR_MST 
+			(IMGR_SEQ
+ 			, TITLE
+ 			, REG_ID
+ 			, REG_DTM
+ 			, USE_YN
+ 			)
+		VALUES        
+			(#{zeroChoiImgMgrSeq}
+			, #{impTitle}
+			, #{regId}
+			, SYSDATE
+			, #{useYn}
+		  	)
+	</insert>	
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.insertZeroChoiseFile
+         설  명 : 이미지 파일을 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<insert id="CNAZeroChoiceDAO.insertZeroChoiseFile" parameterType="emfMap">
+		INSERT ALL /* CNAZeroChoiceDAO.insertZeroChoiseFile */ 
+		<foreach collection="imgFile" item="img" index="index">
+			INTO CN_ZERO_CHOI_FILE 
+				(FILE_SEQ
+	 			, PRD_OR_IMG_SEQ
+	 			, CLASSIFICATION
+	 			, FILE_NM
+	 			, FILE_SIZE
+	 			, FILE_TYPE
+	 			, REG_DTM
+	 			, REG_ID
+	 			, REG_ORDER
+	 			, CHF_GB
+	 			, USING
+	 			, FILE_PATH
+	 			, LOCAL_FILE_NM
+	 			)
+			VALUES
+				(#{img.zeroChoiFileSeq}
+				<if test="zeroChoiPrdMgrSeq != null">, #{zeroChoiPrdMgrSeq}</if>
+				<if test="zeroChoiImgMgrSeq != null">, #{zeroChoiImgMgrSeq}</if>
+				, #{img.classification}
+				, #{img.fileNm}
+				, #{img.fileSize}
+				, #{img.fileType}
+				, SYSDATE
+				, #{regId}
+				, #{img.regOrder}
+				, #{zeroChoiGb}
+				, #{img.using}
+				, #{img.path}
+				, #{img.localFileName})
+		</foreach>
+		 SELECT * FROM DUAL
+	</insert>
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.insertZeroChoiseFile2
+         설  명 : 이미지 파일을 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<insert id="CNAZeroChoiceDAO.insertZeroChoiseFile2" parameterType="emfMap">
+		INSERT ALL /* CNAZeroChoiceDAO.insertZeroChoiseFile2 */ 
+		<foreach collection="imgFile" item="img" index="index">
+			INTO CN_ZERO_CHOI_FILE 
+				(FILE_SEQ
+	 			, PRD_OR_IMG_SEQ
+	 			, CLASSIFICATION
+	 			, FILE_NM
+	 			, FILE_SIZE
+	 			, FILE_TYPE
+	 			, REG_DTM
+	 			, REG_ID
+	 			, REG_ORDER
+	 			, CHF_GB
+	 			, USING
+	 			, FILE_PATH
+	 			, LOCAL_FILE_NM
+	 			)
+			VALUES
+				(#{img.zeroChoiFileSeq}
+				, #{seq}
+				, #{img.classification}
+				, #{img.fileNm}
+				, #{img.fileSize}
+				, #{img.fileType}
+				, SYSDATE
+				, #{modId}
+				, #{img.regOrder}
+				, #{zeroChoiGb}
+				, #{img.using}
+				, #{img.path}
+				, #{img.localFileName})
+		</foreach>
+		 SELECT * FROM DUAL
+	</insert>		
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.updateZeroChoiseFile1
+         설  명 : 이미지 파일을 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<insert id="CNAZeroChoiceDAO.updateZeroChoiseFile1" parameterType="emfMap">
+		MERGE INTO /* CNAZeroChoiceDAO.updateZeroChoiseFile1 */ CN_ZERO_CHOI_FILE
+		USING DUAL
+		ON (
+				PRD_OR_IMG_SEQ = #{seq}
+			AND
+				CLASSIFICATION = #{fileInfo.classification}
+			AND
+				USING = #{fileInfo.using}
+			AND
+				REG_ORDER = #{fileInfo.regOrder}	
+			AND 
+				CHF_GB = #{zeroChoiGb}
+		)
+		WHEN MATCHED THEN
+			UPDATE
+			SET	 FILE_NM = #{fileInfo.fileNm}
+	 			, FILE_SIZE = #{fileInfo.fileSize}
+	 			, FILE_TYPE = #{fileInfo.fileType}
+	 			, MOD_DTM = SYSDATE
+	 			, MOD_ID = #{modId}
+	 			, FILE_PATH = #{fileInfo.path}
+	 			, LOCAL_FILE_NM = #{fileInfo.localFileName}
+	 		WHERE
+				PRD_OR_IMG_SEQ = #{seq}
+			AND
+				CLASSIFICATION = #{fileInfo.classification}
+			AND
+				USING = #{fileInfo.using}
+			AND
+				REG_ORDER = #{fileInfo.regOrder}	
+			AND 
+				CHF_GB = #{zeroChoiGb}
+		WHEN NOT MATCHED THEN
+			INSERT (
+				FILE_SEQ
+				, PRD_OR_IMG_SEQ
+				, CLASSIFICATION
+				, FILE_NM
+				, FILE_SIZE
+				, FILE_TYPE
+				, REG_DTM
+				, REG_ID
+				, REG_ORDER
+				, CHF_GB
+				, USING
+				, FILE_PATH
+				, LOCAL_FILE_NM
+			) VALUES (
+				#{fileInfo.zeroChoiFileSeq}
+				, #{seq}
+				, #{fileInfo.classification}
+				, #{fileInfo.fileNm}
+				, #{fileInfo.fileSize}
+				, #{fileInfo.fileType}
+				, SYSDATE
+				, #{modId}
+				, #{fileInfo.regOrder}
+				, #{zeroChoiGb}
+				, #{fileInfo.using}
+				, #{fileInfo.path}
+				, #{fileInfo.localFileName}
+			)
+
+	 					
+	</insert>	
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.updateZeroChoiseFile2
+         설  명 : 상품관리 영역삭제된 파일을 수정(삭제)한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<delete id="CNAZeroChoiceDAO.updateZeroChoiseFile2" parameterType="emfMap">
+		DELETE /* CNAZeroChoiceDAO.updateZeroChoiseFile2 */ 
+		FROM CN_ZERO_CHOI_FILE
+		WHERE
+		 	CHF_GB = #{zeroChoiGb}
+	 		AND
+				PRD_OR_IMG_SEQ = #{seq}
+			AND
+				USING = #{using}
+			AND
+				REG_ORDER IN
+		<foreach collection="spaceDelOrdersList" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>		
+	</delete>	
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.updateZeroChoiseFile3
+         설  명 : 이미지관리 영역삭제된 파일을 수정(삭제)한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<delete id="CNAZeroChoiceDAO.updateZeroChoiseFile3" parameterType="emfMap">
+		DELETE /* CNAZeroChoiceDAO.updateZeroChoiseFile3 */ 
+		FROM CN_ZERO_CHOI_FILE
+		WHERE
+		 	CHF_GB = #{zeroChoiGb}
+	 	AND
+			PRD_OR_IMG_SEQ = #{seq}
+		AND
+		<foreach collection="spaceDelOrdersList" item="item" index="index" open="(" close=")" separator="OR" >
+         	((USING = #{item.gubun} OR USING = '${item.gubun}' || '_pop')
+		AND
+			REG_ORDER = #{item.regOrder})
+        </foreach>	
+	</delete>	
+
+	<!--
+         쿼리명 : CNBOprtMngDAO.deleteZeroChoiseList
+         설  명 : 상품관리를 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<delete id="CNAZeroChoiceDAO.deleteZeroChoisePrdmgrList" parameterType="emfMap">
+		DELETE /* CNAZeroChoiceDAO.deleteZeroChoisePrdmgrList */ 
+		  FROM CN_ZERO_CHOI_PRD_MST
+		 WHERE PRDCT_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+	<!--
+         쿼리명 : CNBOprtMngDAO.deleteZeroChoiseList
+         설  명 : 이미지관리를 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<delete id="CNAZeroChoiceDAO.deleteZeroChoiseImgmgrList" parameterType="emfMap">
+		DELETE /* CNAZeroChoiceDAO.deleteZeroChoiseImgmgrList */ 
+		  FROM CN_ZERO_CHOI_IMG_MGR_MST
+		 WHERE IMGR_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+	<!--
+         쿼리명 : CNBOprtMngDAO.deleteZeroChoiseImgList
+         설  명 : 이미지파일을 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<delete id="CNAZeroChoiceDAO.deleteZeroChoiseImgList" parameterType="emfMap">
+		DELETE /* CNBOprtMngDAO.deleteZeroChoiseImgList */ 
+		  FROM CN_ZERO_CHOI_FILE
+		 WHERE PRD_OR_IMG_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.updateZeroChoisePrdMgr
+         설  명 : 이용안내를 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+ 	<update id="CNAZeroChoiceDAO.updateZeroChoisePrdMgr" parameterType="emfMap">
+		UPDATE /* CNAZeroChoiceDAO.updateZeroChoisePrdMgr */ CN_ZERO_CHOI_PRD_MST
+ 		   SET   CATE_SEQ = #{category}
+		  		, PRDCT_NM = #{prdctNm}
+		  		, MODEL_NM = #{modelNm}
+		  		, PRICE_BENEFIT = #{priceBenefit}
+		  		, PRICE = #{price}
+		  		, INSTALMENT = #{instalment}
+		  		, MOD_ID = #{modId}
+		  		, MOD_DTM = SYSDATE
+	  		   	, USE_YN = #{visibleYn}
+	  		   	, CNTN = #{cntn}
+	  		   	, PRD_SPEC = #{prdSpec}
+	  		   	, PRICE_YN = #{priceYn}
+	 			, PRICE_BENEFIT_UNIT_YN = #{priceBenefitUnitYn}
+	 			, PRICE_TEXT = #{priceText}
+		 WHERE PRDCT_SEQ = #{seq}
+	</update>
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.updateZeroChoiseImgMgr
+         설  명 : 이용안내를 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+ 	<update id="CNAZeroChoiceDAO.updateZeroChoiseImgMgr" parameterType="emfMap">
+		UPDATE /* CNAZeroChoiceDAO.updateZeroChoiseImgMgr */ CN_ZERO_CHOI_IMG_MGR_MST
+ 		   SET   TITLE = #{impTitle}
+	  		   , MOD_ID = #{modId}
+	  		   , MOD_DTM = SYSDATE
+	  		   , USE_YN = #{useYn}
+		 WHERE IMGR_SEQ = #{imgSeq}
+	</update>
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.updateZeroChoiseImgMgrN
+         설  명 : 이용안내를 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+ 	<update id="CNAZeroChoiceDAO.updateZeroChoiseImgMgrN" parameterType="emfMap">
+		UPDATE /* CNAZeroChoiceDAO.updateZeroChoiseImgMgrN */ CN_ZERO_CHOI_IMG_MGR_MST
+ 		   SET   USE_YN = 'N'
+		 WHERE 1=1
+	</update>
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.getZeroChoiCateList
+         설  명 : 제로초이스 카테고리 관리 메뉴를 불러온다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.12   박주석      최초생성
+    -->
+	<select id="CNAZeroChoiceDAO.getZeroChoiCateList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CNAZeroChoiceDAO.getZeroChoiCateList */
+		       CATE_SEQ
+		     , PSTN
+		     , CATE_NM
+		  FROM CN_ZERO_CHOI_CATE_MST
+		 ORDER BY PSTN ASC
+	</select>
+
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.insertCateMenu
+         설  명 : 제로초이스 카테고리 관리 메뉴를 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2015.11.12   박주석      최초생성
+    -->
+	<insert id="CNAZeroChoiceDAO.insertCateMenu" parameterType="emfMap">
+		<selectKey resultType="int" keyProperty="cateSeq" order="BEFORE">
+			SELECT CNA_CATE_SEQ.nextval FROM DUAL
+		</selectKey>
+		
+		INSERT INTO CN_ZERO_CHOI_CATE_MST (
+			   CATE_SEQ
+			 , PSTN
+			 , CATE_NM
+			 , USE_YN
+			 , REG_ID
+			 , REG_IP
+			 , REG_DTM
+			 , MOD_ID
+			 , MOD_IP
+			 , MOD_DTM
+		) VALUES (
+			   #{cateSeq}
+			 , #{pstn}
+			 , #{cateNm}
+			 , #{useYn}
+			 , #{regId}
+			 , #{regIp}
+			 , SYSDATE
+			 , #{modId}
+			 , #{modIp}
+			 , SYSDATE
+		)
+	</insert>
+
+	<update id="CNAZeroChoiceDAO.updateCateMenuNm" parameterType="emfMap">
+		UPDATE CN_ZERO_CHOI_CATE_MST
+		   SET CATE_NM = #{cateNm}
+		     , MOD_ID = #{modId} 
+			 , MOD_IP = #{modIp}
+			 , MOD_DTM = SYSDATE
+		 WHERE CATE_SEQ = #{cateSeq}
+	</update>
+	
+	<delete id="CNAZeroChoiceDAO.deleteCateMenu" parameterType="emfMap">
+		DELETE FROM CN_ZERO_CHOI_CATE_MST
+		 WHERE CATE_SEQ = #{cateSeq}
+	</delete>
+	
+	<select id="CNAZeroChoiceDAO.selectZeroChoiPrdMgrListByCateSeq" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			*
+		FROM
+			CN_ZERO_CHOI_PRD_MST
+		WHERE
+			CATE_SEQ = #{cateSeq}
+	</select>
+
+	<update id="CNAZeroChoiceDAO.updateCateMenuPstn" parameterType="emfMap">
+		UPDATE CN_ZERO_CHOI_CATE_MST
+		   SET PSTN = #{pstn}
+		     , MOD_ID = #{modId} 
+			 , MOD_IP = #{modIp}
+			 , MOD_DTM = SYSDATE
+		 WHERE CATE_SEQ = #{cateSeq}
+	</update>
+	
+	<select id="CNAZeroChoiceDAO.getPstnByCateSeq" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			PSTN
+			, CATE_NM
+		FROM
+			CN_ZERO_CHOI_CATE_MST
+		WHERE
+			CATE_SEQ = #{cateSeq}
+	</select>
+	
+	<update id="CNAZeroChoiceDAO.updateCateMove1" parameterType="emfMap">
+		UPDATE	CN_ZERO_CHOI_CATE_MST
+		SET	
+			PSTN = PSTN - 1
+		WHERE
+			<![CDATA[ PSTN > #{sPstn} AND PSTN <= #{ePstn} ]]>
+	</update>
+	
+	<update id="CNAZeroChoiceDAO.updateCateMove2" parameterType="emfMap">
+		UPDATE	CN_ZERO_CHOI_CATE_MST
+		SET	
+			PSTN = PSTN + 1
+		WHERE
+			<![CDATA[ PSTN < #{sPstn} AND PSTN >= #{ePstn} ]]> 
+	</update>
+	
+	<update id="CNAZeroChoiceDAO.updateCateMenuPstnBefore" parameterType="emfMap">
+		UPDATE CN_ZERO_CHOI_CATE_MST
+		   SET PSTN = (SELECT PSTN FROM CN_ZERO_CHOI_CATE_MST WHERE CATE_SEQ = #{cateSeq})
+		     , MOD_ID = #{modId} 
+		     , MOD_IP = #{modIp}
+		     , MOD_DTM = SYSDATE
+		 WHERE PSTN = #{pstn}
+	</update>
+	
+	<update id="CNAZeroChoiceDAO.updateCatePstnAfterDelete" parameterType="emfMap">
+		 UPDATE CN_ZERO_CHOI_CATE_MST
+		 SET PSTN = PSTN-1
+		 WHERE
+		    PSTN <![CDATA[	> ]]> #{pstn}
+	</update>
+	
+	<insert id="CNAZeroChoiceDAO.cateWrite" parameterType="emfMap">
+		 INSERT INTO CN_ZERO_CHOI_CATE_MST (
+			   CATE_SEQ
+			 , PSTN
+			 , CATE_NM
+			 , REG_ID
+			 , REG_IP
+			 , REG_DTM
+		) VALUES (
+			   CNA_CATE_SEQ.nextval
+			 , #{pstn}
+			 , #{cateNm}
+			 , #{regId}
+			 , #{regIp}
+			 , SYSDATE
+		)
+	</insert>
+	
+	<delete id="CNAZeroChoiceDAO.cateAllDel">
+		DELETE FROM CN_ZERO_CHOI_CATE_MST
+		WHERE 1=1
+	</delete>
+	
+	<select id="CNAZeroChoiceDAO.selectZeroChoiseFileInfo" parameterType="emfMap" resultType="emfMap">
+		SELECT
+		    FILE_SEQ,
+		    PRD_OR_IMG_SEQ,
+		    CLASSIFICATION,
+		    FILE_NM,
+		    FILE_TYPE,
+		    REG_DTM,
+		    REG_ID,
+		    REG_ORDER,
+		    CHF_GB,
+		    USING,
+		    FILE_SIZE
+		FROM
+		    CN_ZERO_CHOI_FILE
+		WHERE
+		    PRD_OR_IMG_SEQ = #{seq}
+		<if test="using != null">
+		AND
+		    USING = #{using}
+		</if>
+		AND
+		    CHF_GB = #{gubun}
+		ORDER BY
+			FILE_SEQ ASC
+	</select>
+	
+	<select id="CNAZeroChoiceDAO.selectZeroChoiseImgContainerCnt" parameterType="emfMap" resultType="emfMap">
+		SELECT
+    		COUNT(*) as cnt
+		FROM
+		    (
+		        SELECT DISTINCT
+		            ( REG_ORDER )
+		        FROM
+		        	CN_ZERO_CHOI_FILE
+		        WHERE
+		            USING = #{using}
+		        AND 
+		            PRD_OR_IMG_SEQ = #{seq}
+		        AND
+		            CHF_GB = #{gubun}
+		    )
+	</select>
+	
+	<!-- 
+		팝업 노출 이미지 추가시 조회결과가 없으면 insert, 있으면 update 할지 결정 
+	 -->
+	<select id="CNAZeroChoiceDAO.selectZeroChoiseFile" parameterType="emfMap" resultType="emfMap">
+		SELECT
+		    *
+		FROM
+		    CN_ZERO_CHOI_FILE
+		WHERE
+		    CHF_GB = #{zeroChoiGb}
+		AND
+			PRD_OR_IMG_SEQ = #{seq}
+		AND
+		    USING = #{fileInfo.using}
+		AND
+		    REG_ORDER = #{fileInfo.regOrder}
+	</select>
+</mapper>

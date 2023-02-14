@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CMBChngSysOutPrdctDAO">
+
+	<!--
+         쿼리명 : CMBChngSysOutPrdctDAO.selectChngSysOutPrdctList
+         설  명 : 전환서비스 쳬계 외부상품(엔컴) 목록을 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2016.02.19  허진영     최초생성
+    -->
+	<select id="CMBChngSysOutPrdctDAO.selectChngSysOutPrdctList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CMBChngSysOutPrdctDAO.selectChngSysOutPrdctList */
+	      	   TBL.*
+	    FROM (
+			SELECT ROWNUM AS RNUM, A.*
+	      	FROM (
+	        	SELECT COUNT(*) OVER() AS TOT_CNT
+	        		   , PROD_CD
+	        		   , PROD_NM
+			  	  FROM PRODUCT
+			  	 WHERE DEL_FG = 'N'
+			  	<if test="prdctArr != null">
+			  		AND PROD_CD NOT IN
+				  	<foreach collection="prdctArr" item="item" index="index" separator=", " open="(" close=")">
+			            #{item}
+			        </foreach>
+			  	</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						AND PROD_CD LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 2">
+						AND PROD_NM LIKE '%' || #{q} || '%'
+					</if>
+			  	</if>
+				 ORDER BY PROD_CD
+			) A
+		) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+
+</mapper>

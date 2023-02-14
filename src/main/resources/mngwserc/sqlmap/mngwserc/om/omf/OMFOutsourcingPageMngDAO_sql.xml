@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OMFOutsourcingPageMngDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+		<result property="TERMS" column="TERMS" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+	
+	<!--
+         쿼리명 : OMFOutsourcingPageMngDAO.selectOutsourcingPageMngList
+         설  명 : 외주업체 코드별 관리 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.16   김필기     최초 생성
+    -->
+    <select id="OMFOutsourcingPageMngDAO.selectOutsourcingPageMngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMFOutsourcingPageMngDAO.selectOutsourcingPageMngList */
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , TITLE
+			           , OSC_INPUT_MST_SEQ
+			           , OSC_CD
+			           , B2B_STTS
+			           , B2B_CD
+			      FROM OM_OSC_INPUT_MST
+				 ORDER BY OSC_INPUT_MST_SEQ DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+    </select>
+    
+	<!--
+         쿼리명 : OMFOutsourcingPageMngDAO.selectOutsourcingPageMngInfo
+         설  명 : 외주업체 코드별 관리 정보를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.16   김필기     최초 생성
+    -->
+    <select id="OMFOutsourcingPageMngDAO.selectOutsourcingPageMngInfo" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* OMFOutsourcingPageMngDAO.selectOutsourcingPageMngInfo */
+	    	   *
+		  FROM OM_OSC_INPUT_MST
+		 WHERE 
+		<choose>
+			<when test="overrapChk == 'Y'.toString()">
+				OSC_CD = #{oscCd}
+			</when>
+			<otherwise>
+				OSC_INPUT_MST_SEQ = #{seq}
+			</otherwise>
+		</choose>
+    </select>
+    
+	<!--
+         쿼리명 : OMFOutsourcingPageMngDAO.insertOutsourcingPageMngInf 
+         설  명 : 외주업체 페이지 관리 정보를 저장한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.18   김필기     최초 생성
+    -->
+    <insert id="OMFOutsourcingPageMngDAO.insertOutsourcingPageMngInf" parameterType="emfMap">
+		INSERT /* OMFOutsourcingPageMngDAO.insertOutsourcingPageMngInf */ INTO OM_OSC_INPUT_MST
+			(OSC_INPUT_MST_SEQ
+			, TITLE
+			, OSC_CD
+			, B2B_STTS
+			, B2B_CD
+			, B2B_NM
+			, PREPAID_CARD_NUM_YN
+			, AGENT_EMP_NM_YN
+			, ID_NO_YN
+			, AGENT_NM_YN
+			, AGENT_EMP_TEL_YN
+			, COMPANY_NM_YN
+			, B2B_EMP_CD_YN
+			, AGENT_CD_YN
+			, CODE_1_YN
+			, CODE_2_YN
+			, CODE_3_YN
+			, INFO_YN
+			, INFO
+			, PRDCT_NM_YN
+			, PRDCT_NM2_YN
+			, PRDCT_NM3_YN
+			, FUSION_PRDCT_YN
+			, NAME_YN
+			, TEL_YN
+			, HP_YN
+			, TELECOM_YN
+			, CALLTIME_YN
+			, MEMO_YN
+			, MEMO
+			, TERMS_YN
+			, TERMS
+			, AGENT_INFO_YN
+			, CUSTOMER_INFO_YN
+			, EMAIL_YN
+			, ADDRESS_YN
+			, SKB_JOIN_YN
+			, STORE_NM_YN
+			, CINFO
+			, CINFO_YN
+			, LOT_CARD_NUM_YN
+			, AGENT_CODE_KR_YN
+			, ORDER_NUM_YN
+			, AGENT_EMP_NUM_YN
+			, AGENT_NUM_YN
+			, AGENT_CODE_EN_YN
+			, AGENT_ETC_YN
+			, AGENT_UNQ_NUM_YN
+			, SLLR_NUM_YN
+			, SLLR_PART_YN
+			, SLLR_CTEL_YN
+			, CSTMR_CODE_KR_YN
+			, CSTMR_UNQ_NUM_YN
+			, CARD_NUM_YN
+			, CSTMR_NUM_YN
+			, CSTMR_CODE_EN_YN
+			, CSTMR_ETC_YN
+			, HANSS_MBSP_NUM_YN
+			, MBSP_NUM_YN
+			, FUNNEL_YN
+			, TRAVEL_YN
+			, JAU_NUM_YN
+			, DM_TOUR_NUM_YN
+			, LOTTE_CARD_YN
+			, SLLR_AGENT_NM_YN
+			, LOTTE_CARD_PAY_YN
+			, TOUR_BOOK_NO_YN
+			, JOIN_PROD_YN
+			, BIRTH_DAY_YN
+			, HOME_PRD_NUM_YN
+			, U_DLR_CD_YN
+			, U_INDC_EMPNO_YN
+			, U_INTG_USER_ID_YN
+			, DISCOUNT_CTN_YN
+			, DISCOUNT_PIN_YN
+			, CONTRACT_NO_YN
+			, ESTIMATE_PRICE_YN
+			, WEDDING_DATE_YN
+			, MAIN_CONT_TYPE_YN
+			, SALES_TYPE_YN
+			, INVITE_CODE_YN
+			, U_PROD_NM_YN
+			, U_CMMN_CD_YN
+			, U_CMMN_CD_NM_YN
+			, U_DLR_NM_YN
+			, U_PROD_NO_YN
+			, WH_POS_CD_YN
+			, WH_STORE_NM_YN
+			, CONTRACTOR_NAME_YN
+			, CONTRACTOR_BIRTH_YN
+			, CONTRACTOR_PHONE_YN
+			, CARD_COMPANY_YN
+			, CREDIT_CARD_NUM_YN
+			, VALID_THRU_YN
+			, PLATE_NUM_YN
+			, ORDER_QTY_YN
+			, MAIN_CONT_SERVICE_1_YN
+			, MAIN_CONT_SERVICE_2_YN
+			)
+		VALUES
+			(#{seq}
+			, #{title, jdbcType=VARCHAR}
+			, #{oscCd, jdbcType=VARCHAR}
+			, #{b2bStts, jdbcType=VARCHAR}
+			, #{b2bCd, jdbcType=VARCHAR}
+			, #{b2bNm, jdbcType=VARCHAR}
+			, #{prepaidCardNumYn, jdbcType=VARCHAR}
+			, #{agentEmpNmYn, jdbcType=VARCHAR}
+			, #{idNoYn, jdbcType=VARCHAR}
+			, #{agentNmYn, jdbcType=VARCHAR}
+			, #{agentEmpTelYn, jdbcType=VARCHAR}
+			, #{companyNmYn, jdbcType=VARCHAR}
+			, #{b2bEmpCdYn, jdbcType=VARCHAR}
+			, #{agentCdYn, jdbcType=VARCHAR}
+			, #{code1Yn, jdbcType=VARCHAR}
+			, #{code2Yn, jdbcType=VARCHAR}
+			, #{code3Yn, jdbcType=VARCHAR}
+			, #{infoYn, jdbcType=VARCHAR}
+			, #{info, jdbcType=VARCHAR}
+			, #{prdctNmYn, jdbcType=VARCHAR}
+			, #{prdctNm2Yn, jdbcType=VARCHAR}
+			, #{prdctNm3Yn, jdbcType=VARCHAR}
+			, #{fusionPrdctYn, jdbcType=VARCHAR}
+			, #{nameYn, jdbcType=VARCHAR}
+			, #{telYn, jdbcType=VARCHAR}
+			, #{hpYn, jdbcType=VARCHAR}
+			, #{telecomYn, jdbcType=VARCHAR}
+			, #{calltimeYn, jdbcType=VARCHAR}
+			, #{memoYn, jdbcType=VARCHAR}
+			, #{memo, jdbcType=VARCHAR}
+			, #{termsYn, jdbcType=VARCHAR}
+			, #{terms, jdbcType=VARCHAR}
+			, #{agentInfoYn, jdbcType=VARCHAR}
+			, #{customerInfoYn, jdbcType=VARCHAR}
+			, #{emailYn, jdbcType=VARCHAR}
+			, #{addressYn, jdbcType=VARCHAR}
+			, #{skbJoinYn, jdbcType=VARCHAR}
+			, #{storeNmYn, jdbcType=VARCHAR}
+			, #{cinfo, jdbcType=VARCHAR}
+			, #{cinfoYn, jdbcType=VARCHAR}
+			, #{lotCardNumYn, jdbcType=VARCHAR}
+			, #{agentCodeKrYn, jdbcType=VARCHAR}
+			, #{orderNumYn, jdbcType=VARCHAR}
+			, #{agentEmpNumYn, jdbcType=VARCHAR}
+			, #{agentNumYn, jdbcType=VARCHAR}
+			, #{agentCodeEnYn, jdbcType=VARCHAR}
+			, #{agentEtcYn, jdbcType=VARCHAR}
+			, #{agentUnqNumYn, jdbcType=VARCHAR}
+			, #{sllrNumYn, jdbcType=VARCHAR}
+			, #{sllrPartYn, jdbcType=VARCHAR}
+			, #{sllrCtelYn, jdbcType=VARCHAR}
+			, #{cstmrCodeKrYn, jdbcType=VARCHAR}
+			, #{cstmrUnqNumYn, jdbcType=VARCHAR}
+			, #{cardNumYn, jdbcType=VARCHAR}
+			, #{cstmrNumYn, jdbcType=VARCHAR}
+			, #{cstmrCodeEnYn, jdbcType=VARCHAR}
+			, #{cstmrEtcYn, jdbcType=VARCHAR}
+			, #{hanssMbspNumYn, jdbcType=VARCHAR}
+			, #{mbspNumYn, jdbcType=VARCHAR}
+			, #{funnelYn, jdbcType=VARCHAR}
+			, #{travelYn, jdbcType=VARCHAR}
+			, #{jauNumYn, jdbcType=VARCHAR}
+			, #{dmTourNumYn, jdbcType=VARCHAR}
+			, #{lotteCardYn, jdbcType=VARCHAR}
+			, #{sllrAgentNmYn, jdbcType=VARCHAR}
+			, #{lotteCardPayYn, jdbcType=VARCHAR}
+			, #{tourBookNoYn, jdbcType=VARCHAR}
+			, #{joinProdYn, jdbcType=VARCHAR}
+			, #{birthDayYn, jdbcType=VARCHAR}
+			, #{homePrdNumYn, jdbcType=VARCHAR}
+			, #{uDlrCdYn, jdbcType=VARCHAR}
+			, #{uIndcEmpnoYn, jdbcType=VARCHAR}
+			, #{uIntgUserIdYn, jdbcType=VARCHAR}
+			, #{discountCtnYn, jdbcType=VARCHAR}
+			, #{discountPinYn, jdbcType=VARCHAR}
+			, #{contractNoYn, jdbcType=VARCHAR}
+			, #{estimatePriceYn, jdbcType=VARCHAR}
+			, #{weddingDateYn, jdbcType=VARCHAR}
+			, #{mainContTypeYn, jdbcType=VARCHAR}
+			, #{salesTypeYn, jdbcType=VARCHAR}
+			, #{inviteCodeYn, jdbcType=VARCHAR}
+			, #{uProdNmYn, jdbcType=VARCHAR}
+			, #{uCmmnCdYn, jdbcType=VARCHAR}
+			, #{uCmmnCdNmYn, jdbcType=VARCHAR}
+			, #{uDlrNmYn, jdbcType=VARCHAR}
+			, #{uProdNoYn, jdbcType=VARCHAR}
+			, #{whPosCd, jdbcType=VARCHAR}
+			, #{whStoreNm, jdbcType=VARCHAR}
+			, #{contractorNameYn, jdbcType=VARCHAR}
+			, #{contractorBirthYn, jdbcType=VARCHAR}
+			, #{contractorPhoneYn, jdbcType=VARCHAR}
+			, #{cardCompanyYn, jdbcType=VARCHAR}
+			, #{creditCardNumYn, jdbcType=VARCHAR}
+			, #{validThruYn, jdbcType=VARCHAR}
+			, #{plateNumYn, jdbcType=VARCHAR}
+			, #{orderQtyYn, jdbcType=VARCHAR}
+			, #{mainContService1Yn, jdbcType=VARCHAR}
+			, #{mainContService2Yn, jdbcType=VARCHAR}
+			)
+    </insert>
+    
+	<!--
+         쿼리명 : OMFOutsourcingPageMngDAO.updateOutsourcingPageMngInf 
+         설  명 : 외주업체 페이지 관리 정보를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.18   김필기     최초 생성
+    -->
+    <update id="OMFOutsourcingPageMngDAO.updateOutsourcingPageMngInf" parameterType="emfMap">
+		UPDATE /* OMFOutsourcingPageMngDAO.updateOutsourcingPageMngInf */ OM_OSC_INPUT_MST
+		   SET TITLE = #{title, jdbcType=VARCHAR}
+			   , OSC_CD = #{oscCd, jdbcType=VARCHAR}
+			   , B2B_STTS = #{b2bStts, jdbcType=VARCHAR}
+			   , B2B_CD = #{b2bCd, jdbcType=VARCHAR}
+			   , B2B_NM = #{b2bNm, jdbcType=VARCHAR}
+			   , PREPAID_CARD_NUM_YN = #{prepaidCardNumYn, jdbcType=VARCHAR}
+			   , AGENT_EMP_NM_YN = #{agentEmpNmYn, jdbcType=VARCHAR}
+			   , ID_NO_YN = #{idNoYn, jdbcType=VARCHAR}
+			   , AGENT_NM_YN = #{agentNmYn, jdbcType=VARCHAR}
+			   , AGENT_EMP_TEL_YN = #{agentEmpTelYn, jdbcType=VARCHAR}
+			   , COMPANY_NM_YN = #{companyNmYn, jdbcType=VARCHAR}
+			   , B2B_EMP_CD_YN = #{b2bEmpCdYn, jdbcType=VARCHAR}
+			   , AGENT_CD_YN =  #{agentCdYn, jdbcType=VARCHAR}
+			   , CODE_1_YN = #{code1Yn, jdbcType=VARCHAR}
+			   , CODE_2_YN = #{code2Yn, jdbcType=VARCHAR}
+			   , CODE_3_YN = #{code3Yn, jdbcType=VARCHAR}
+			   , INFO_YN = #{infoYn, jdbcType=VARCHAR}
+			   , INFO = #{info, jdbcType=VARCHAR}
+			   , PRDCT_NM_YN = #{prdctNmYn, jdbcType=VARCHAR}
+			   , PRDCT_NM2_YN = #{prdctNm2Yn, jdbcType=VARCHAR}
+			   , PRDCT_NM3_YN = #{prdctNm3Yn, jdbcType=VARCHAR}
+			   , FUSION_PRDCT_YN = #{fusionPrdctYn, jdbcType=VARCHAR}
+			   , NAME_YN = #{nameYn, jdbcType=VARCHAR}
+			   , TEL_YN = #{telYn, jdbcType=VARCHAR}
+			   , HP_YN = #{hpYn, jdbcType=VARCHAR}
+			   , TELECOM_YN = #{telecomYn, jdbcType=VARCHAR}
+			   , CALLTIME_YN = #{calltimeYn, jdbcType=VARCHAR}
+			   , MEMO_YN = #{memoYn, jdbcType=VARCHAR}
+			   , MEMO = #{memo, jdbcType=VARCHAR}
+			   , TERMS_YN = #{termsYn, jdbcType=VARCHAR}
+			   , TERMS = #{terms, jdbcType=VARCHAR}
+			   , AGENT_INFO_YN = #{agentInfoYn, jdbcType=VARCHAR}
+			   , CUSTOMER_INFO_YN = #{customerInfoYn, jdbcType=VARCHAR}
+			   , EMAIL_YN = #{emailYn, jdbcType=VARCHAR}
+			   , ADDRESS_YN = #{addressYn, jdbcType=VARCHAR}
+			   , SKB_JOIN_YN = #{skbJoinYn, jdbcType=VARCHAR}
+			   , STORE_NM_YN = #{storeNmYn, jdbcType=VARCHAR}
+			   , CINFO = #{cinfo, jdbcType=VARCHAR}
+			   , CINFO_YN = #{cinfoYn, jdbcType=VARCHAR}
+			   , LOT_CARD_NUM_YN = #{lotCardNumYn, jdbcType=VARCHAR}
+			   , AGENT_CODE_KR_YN = #{agentCodeKrYn, jdbcType=VARCHAR}
+			   , ORDER_NUM_YN = #{orderNumYn, jdbcType=VARCHAR}
+			   , AGENT_EMP_NUM_YN = #{agentEmpNumYn, jdbcType=VARCHAR}
+			   , AGENT_NUM_YN = #{agentNumYn, jdbcType=VARCHAR}
+			   , AGENT_CODE_EN_YN = #{agentCodeEnYn, jdbcType=VARCHAR}
+			   , AGENT_ETC_YN = #{agentEtcYn, jdbcType=VARCHAR}
+			   , AGENT_UNQ_NUM_YN = #{agentUnqNumYn, jdbcType=VARCHAR}
+			   , SLLR_NUM_YN = #{sllrNumYn, jdbcType=VARCHAR}
+			   , SLLR_PART_YN = #{sllrPartYn, jdbcType=VARCHAR}
+			   , SLLR_CTEL_YN = #{sllrCtelYn, jdbcType=VARCHAR}
+			   , CSTMR_CODE_KR_YN = #{cstmrCodeKrYn, jdbcType=VARCHAR}
+			   , CSTMR_UNQ_NUM_YN = #{cstmrUnqNumYn, jdbcType=VARCHAR}
+			   , CARD_NUM_YN = #{cardNumYn, jdbcType=VARCHAR}
+			   , CSTMR_NUM_YN = #{cstmrNumYn, jdbcType=VARCHAR}
+			   , CSTMR_CODE_EN_YN = #{cstmrCodeEnYn, jdbcType=VARCHAR}
+			   , CSTMR_ETC_YN = #{cstmrEtcYn, jdbcType=VARCHAR}
+			   , HANSS_MBSP_NUM_YN = #{hanssMbspNumYn, jdbcType=VARCHAR}
+			   , MBSP_NUM_YN = #{mbspNumYn, jdbcType=VARCHAR}
+			   , FUNNEL_YN = #{funnelYn, jdbcType=VARCHAR}
+			   , TRAVEL_YN = #{travelYn, jdbcType=VARCHAR}
+			   , JAU_NUM_YN = #{jauNumYn, jdbcType=VARCHAR}
+			   , DM_TOUR_NUM_YN = #{dmTourNumYn, jdbcType=VARCHAR}
+			   , LOTTE_CARD_YN = #{lotteCardYn, jdbcType=VARCHAR}
+			   , SLLR_AGENT_NM_YN = #{sllrAgentNmYn, jdbcType=VARCHAR}
+			   , LOTTE_CARD_PAY_YN = #{lotteCardPayYn, jdbcType=VARCHAR}
+			   , TOUR_BOOK_NO_YN = #{tourBookNoYn, jdbcType=VARCHAR}
+			   , JOIN_PROD_YN = #{joinProdYn, jdbcType=VARCHAR}
+			   , BIRTH_DAY_YN = #{birthDayYn, jdbcType=VARCHAR}
+			   , HOME_PRD_NUM_YN = #{homePrdNumYn, jdbcType=VARCHAR}
+			   , U_DLR_CD_YN = #{uDlrCdYn, jdbcType=VARCHAR}
+			   , U_INDC_EMPNO_YN = #{uIndcEmpnoYn, jdbcType=VARCHAR}
+			   , U_INTG_USER_ID_YN = #{uIntgUserIdYn, jdbcType=VARCHAR}
+			   , CARD_PAY_YN = #{cardPayYn, jdbcType=VARCHAR}
+			   , FUSION_PRDCT2_YN = #{fusionPrdct2Yn, jdbcType=VARCHAR}
+			   , DISCOUNT_CTN_YN = #{discountCtnYn, jdbcType=VARCHAR}
+			   , DISCOUNT_PIN_YN = #{discountPinYn, jdbcType=VARCHAR}
+			   , CONTRACT_NO_YN = #{contractNoYn, jdbcType=VARCHAR}
+			   , ESTIMATE_PRICE_YN = #{estimatePriceYn, jdbcType=VARCHAR}
+			   , WEDDING_DATE_YN = #{weddingDateYn, jdbcType=VARCHAR}
+			   , MAIN_CONT_TYPE_YN = #{mainContTypeYn, jdbcType=VARCHAR}
+			   , SALES_TYPE_YN = #{salesTypeYn, jdbcType=VARCHAR}
+			   , INVITE_CODE_YN = #{inviteCodeYn, jdbcType=VARCHAR}
+			   , U_PROD_NM_YN = #{uProdNmYn, jdbcType=VARCHAR}
+			   , U_CMMN_CD_YN = #{uCmmnCdYn, jdbcType=VARCHAR}
+			   , U_CMMN_CD_NM_YN = #{uCmmnCdNmYn, jdbcType=VARCHAR}
+			   , U_DLR_NM_YN = #{uDlrNmYn, jdbcType=VARCHAR}
+			   , U_PROD_NO_YN = #{uProdNoYn, jdbcType=VARCHAR}
+			   , WH_POS_CD_YN = #{whPosCdYn, jdbcType=VARCHAR}
+			   , WH_STORE_NM_YN = #{whStoreNmYn, jdbcType=VARCHAR}
+				, CONTRACTOR_NAME_YN = #{contractorNameYn, jdbcType=VARCHAR}
+				, CONTRACTOR_BIRTH_YN = #{contractorBirthYn, jdbcType=VARCHAR}
+				, CONTRACTOR_PHONE_YN = #{contractorPhoneYn, jdbcType=VARCHAR}
+				, CARD_COMPANY_YN = #{cardCompanyYn, jdbcType=VARCHAR}
+				, CREDIT_CARD_NUM_YN = #{creditCardNumYn, jdbcType=VARCHAR}
+				, VALID_THRU_YN = #{validThruYn, jdbcType=VARCHAR}
+				, PLATE_NUM_YN = #{plateNumYn, jdbcType=VARCHAR}
+				, ORDER_QTY_YN = #{orderQtyYn, jdbcType=VARCHAR}
+				, MAIN_CONT_SERVICE_1_YN = #{mainContService1Yn, jdbcType=VARCHAR}
+				, MAIN_CONT_SERVICE_2_YN = #{mainContService2Yn, jdbcType=VARCHAR}
+		 WHERE OSC_INPUT_MST_SEQ = #{seq}
+    </update>
+	
+</mapper>

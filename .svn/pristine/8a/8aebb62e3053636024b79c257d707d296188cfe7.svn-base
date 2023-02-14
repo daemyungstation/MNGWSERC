@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FairBannerTopDAO">
+
+	<!--
+         쿼리명 : FairBannerTopDAO.selectList
+         설  명 : 탑배너 목록 조회
+    -->	
+	<select id="selectList" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.* 
+			  FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		                ,FBT_SEQ
+						,FBT_IMAGE_BG_PATH
+						,FBT_IMAGE_BG_SAVE_NM
+						,FBT_IMAGE_BG_REAL_NM
+						,FBT_IMAGE_W_PATH
+						,FBT_IMAGE_W_SAVE_NM
+						,FBT_IMAGE_W_REAL_NM
+						,FBT_IMAGE_M_PATH
+						,FBT_IMAGE_M_SAVE_NM
+						,FBT_IMAGE_M_REAL_NM
+						,FBT_LINK
+						,FBT_LINK_TYPE
+						,FBT_ORDER
+						,FBT_STIME
+						,FBT_ETIME
+						,TO_CHAR(FBT_STIME, 'YYYY-MM-DD') AS FBT_STIME_DAY
+						,TO_CHAR(FBT_STIME, 'HH24') AS FBT_STIME_HH
+						,TO_CHAR(FBT_STIME, 'MI') AS FBT_STIME_MI
+						,TO_CHAR(FBT_STIME, 'SS') AS FBT_STIME_SS
+						,TO_CHAR(FBT_ETIME, 'YYYY-MM-DD') AS FBT_ETIME_DAY
+						,TO_CHAR(FBT_ETIME, 'HH24') AS FBT_ETIME_HH
+						,TO_CHAR(FBT_ETIME, 'MI') AS FBT_ETIME_MI
+						,TO_CHAR(FBT_ETIME, 'SS') AS FBT_ETIME_SS
+						,FBT_STATUS
+		          FROM FAIR_BANNER_TOP   
+				 ORDER BY FBT_ORDER ASC, REG_DTM DESC   
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}           
+	</select>	
+	
+	<!--
+         쿼리명 : FairBannerTopDAO.select
+         설  명 : 탑배너 상세 조회
+    -->	
+	<select id="select" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+            FBT_SEQ
+			,FBT_IMAGE_BG_PATH
+			,FBT_IMAGE_BG_SAVE_NM
+			,FBT_IMAGE_BG_REAL_NM
+			,FBT_IMAGE_W_PATH
+			,FBT_IMAGE_W_SAVE_NM
+			,FBT_IMAGE_W_REAL_NM
+			,FBT_IMAGE_M_PATH
+			,FBT_IMAGE_M_SAVE_NM
+			,FBT_IMAGE_M_REAL_NM
+			,FBT_LINK
+			,FBT_LINK_TYPE
+			,FBT_ORDER
+			,FBT_STIME
+			,FBT_ETIME
+			,TO_CHAR(FBT_STIME, 'YYYY-MM-DD') AS FBT_STIME_DAY
+			,TO_CHAR(FBT_STIME, 'HH24') AS FBT_STIME_HH
+			,TO_CHAR(FBT_STIME, 'MI') AS FBT_STIME_MI
+			,TO_CHAR(FBT_STIME, 'SS') AS FBT_STIME_SS
+			,TO_CHAR(FBT_ETIME, 'YYYY-MM-DD') AS FBT_ETIME_DAY
+			,TO_CHAR(FBT_ETIME, 'HH24') AS FBT_ETIME_HH
+			,TO_CHAR(FBT_ETIME, 'MI') AS FBT_ETIME_MI
+			,TO_CHAR(FBT_ETIME, 'SS') AS FBT_ETIME_SS
+			,FBT_STATUS
+         FROM FAIR_BANNER_TOP   
+		 WHERE FBT_SEQ = #{seq}   
+	</select>
+	
+	
+	<!--
+         쿼리명 : FairBannerTopDAO.selectMaxOrder
+         설  명 : 탑배너 MAX ORDER 조회
+    -->	
+	<select id="selectMaxOrder" resultType="emfMap">
+		SELECT 
+        	NVL(max(FBT_ORDER), 0) + 1 as FBT_ORDER
+        FROM FAIR_BANNER_TOP   
+	</select>
+	
+	<!--
+         쿼리명 : FairBannerTopDAO.insert
+         설  명 : 탑배너 등록
+    -->	
+	<insert id="insert" parameterType="emfMap">
+		INSERT INTO FAIR_BANNER_TOP
+			(
+			FBT_SEQ
+			<if test="fbtImageBgPath != null">
+			,FBT_IMAGE_BG_PATH
+			,FBT_IMAGE_BG_SAVE_NM
+			,FBT_IMAGE_BG_REAL_NM
+			</if>
+			<if test="fbtImageWPath != null">
+			,FBT_IMAGE_W_PATH
+			,FBT_IMAGE_W_SAVE_NM
+			,FBT_IMAGE_W_REAL_NM
+			</if>
+			<if test="fbtImageMPath != null">
+			,FBT_IMAGE_M_PATH
+			,FBT_IMAGE_M_SAVE_NM
+			,FBT_IMAGE_M_REAL_NM
+			</if>
+			,FBT_LINK
+			,FBT_LINK_TYPE
+			,FBT_ORDER
+			<if test="fbtStime != null">
+			,FBT_STIME
+			</if>
+			<if test="fbtEtime != null">
+			,FBT_ETIME
+			</if>
+			,FBT_STATUS
+			<if test="regId != null">
+			,REG_ID
+			</if>
+			<if test="regIp != null">
+			,REG_IP
+			</if>
+			,REG_DTM
+			)
+		VALUES
+			(
+			#{fbtSeq}
+			<if test="fbtImageBgPath != null">
+			,#{fbtImageBgPath, jdbcType=VARCHAR}
+			,#{fbtImageBgSaveNm, jdbcType=VARCHAR}
+			,#{fbtImageBgRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fbtImageWPath != null">
+			,#{fbtImageWPath, jdbcType=VARCHAR}
+			,#{fbtImageWSaveNm, jdbcType=VARCHAR}
+			,#{fbtImageWRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fbtImageMPath != null">
+			,#{fbtImageMPath, jdbcType=VARCHAR}
+			,#{fbtImageMSaveNm, jdbcType=VARCHAR}
+			,#{fbtImageMRealNm, jdbcType=VARCHAR}
+			</if>
+			,#{fbtLink, jdbcType=VARCHAR}
+			,#{fbtLinkType, jdbcType=VARCHAR}
+			,#{fbtOrder}
+			<if test="fbtStime != null">
+			,TO_DATE(#{fbtStime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="fbtEtime != null">
+			,TO_DATE(#{fbtEtime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			,#{fbtStatus}
+			<if test="regId != null">
+			,#{regId, jdbcType=VARCHAR}
+			</if>
+			<if test="regIp != null">
+			,#{regIp, jdbcType=VARCHAR}
+			</if>
+			,SYSDATE
+			)					
+	</insert>
+	
+	<!--
+         쿼리명 : FairBannerTopDAO.update
+         설  명 : 탑배너 수정
+    -->	
+	<update id="update" parameterType="emfMap">
+		UPDATE FAIR_BANNER_TOP SET
+			FBT_STATUS = #{fbtStatus}
+			,FBT_LINK = #{fbtLink, jdbcType=VARCHAR}
+			,FBT_LINK_TYPE = #{fbtLinkType, jdbcType=VARCHAR}
+			<if test="fbtImageBgPath != null">
+			,FBT_IMAGE_BG_PATH = #{fbtImageBgPath, jdbcType=VARCHAR}
+			,FBT_IMAGE_BG_SAVE_NM = #{fbtImageBgSaveNm, jdbcType=VARCHAR}
+			,FBT_IMAGE_BG_REAL_NM = #{fbtImageBgRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fbtImageWPath != null">
+			,FBT_IMAGE_W_PATH = #{fbtImageWPath, jdbcType=VARCHAR}
+			,FBT_IMAGE_W_SAVE_NM = #{fbtImageWSaveNm, jdbcType=VARCHAR}
+			,FBT_IMAGE_W_REAL_NM = #{fbtImageWRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fbtImageMPath != null">
+			,FBT_IMAGE_M_PATH = #{fbtImageMPath, jdbcType=VARCHAR}
+			,FBT_IMAGE_M_SAVE_NM = #{fbtImageMSaveNm, jdbcType=VARCHAR}
+			,FBT_IMAGE_M_REAL_NM = #{fbtImageMRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fbtStime != null">
+			,FBT_STIME = TO_DATE(#{fbtStime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="fbtEtime != null">
+			,FBT_ETIME = TO_DATE(#{fbtEtime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="modId != null">
+			,MOD_ID = #{modId}
+			</if>
+			<if test="modIp != null">
+			,MOD_IP = #{modIp}
+			</if>
+			,MOD_DTM = SYSDATE
+         WHERE FBT_SEQ = #{fbtSeq}
+	</update>
+	
+	<!--
+         쿼리명 : FairBannerTopDAO.order
+         설  명 : 탑배너 순서변경
+    -->		
+	<update id="order" parameterType="emfMap">
+		UPDATE FAIR_BANNER_TOP SET
+			FBT_ORDER = #{fbtOrder}
+        WHERE FBT_SEQ = #{fbtSeq}
+	</update>
+
+	<!--
+         쿼리명 : FairBannerTopDAO.delete
+         설  명 : 탑배너 삭제
+    -->		
+	<delete id="delete" parameterType="emfMap">
+		 DELETE FAIR_BANNER_TOP
+	     WHERE FBT_SEQ = #{fbtSeq}
+	</delete>
+
+</mapper>

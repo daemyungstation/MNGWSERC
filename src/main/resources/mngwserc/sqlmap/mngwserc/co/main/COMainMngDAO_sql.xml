@@ -1,0 +1,619 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="COMainMngDAO">
+	
+	<update id="liveMainNull" parameterType="emfMap">
+		UPDATE CO_MAIN_VISUAL 
+		SET LIVE_GRP_ID = NULL
+	</update>
+	
+	<update id="liveMain" parameterType="emfMap">
+		UPDATE CO_MAIN_VISUAL 
+		SET LIVE_GRP_ID = GRP_ID
+		WHERE GRP_ID = #{grpId}
+	</update>
+	
+	<select id="selectVisualMainList" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			VISUAL_SEQ,
+			GRP_ID,
+			LIVE_GRP_ID,
+			WEB_BG_COLOR,
+			WEB_BG_PATH,
+			WEB_BG_SAVE_FILE_NM,
+			WEB_BG_REAL_FILE_NM,
+			WEB_TITLE_PATH,
+			WEB_TITLE_SAVE_FILE_NM,
+			WEB_TITLE_REAL_FILE_NM,
+			WEB_TITLE_DSC,
+			WEB_TITLE_TXT,
+			WEB_BTN_PATH,
+			WEB_BTN_SAVE_FILE_NM,
+			WEB_BTN_REAL_FILE_NM,
+			LINK,
+			LINK_TYPE,
+			BG_XY,
+			TITLE_IMG_XY,
+			TITLE_TXT_XY,
+			BTN_XY,
+			ORDERBY
+		FROM CO_MAIN_VISUAL
+		WHERE GRP_ID = #{grpId}
+		ORDER BY ORDERBY ASC
+	</select>
+	
+	<select id="selectContentMainList" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			A.CNTNS_MST_SEQ,
+			A.GRP_ID,
+			A.TITLE_TXT,
+			A.TITLE_COLOR,
+			A.ORDERBY AS CORDERBY,
+			
+			B.CNTNS_DTL_SEQ,
+			B.IMG_PATH,
+			B.IMG_SAVE_FILE_NM,
+			B.IMG_REAL_FILE_NM,
+			B.TITLE,
+			B.DSC,
+			B.LINK,
+			B.ORDERBY AS DORDERBY
+		FROM CO_MAIN_CNTNS_MST A 
+		LEFT JOIN CO_MAIN_CNTNS_DTL B ON A.CNTNS_MST_SEQ=B.CNTNS_MST_SEQ 
+		WHERE A.GRP_ID = #{grpId}
+		ORDER BY A.ORDERBY, B.ORDERBY
+	</select>
+	
+	
+	<update id="mainVisualXY" parameterType="emfMap">
+		UPDATE CO_MAIN_VISUAL
+		<if test="column == 'BG_XY'">
+		SET BG_XY = #{value}
+		</if> 
+		<if test="column == 'TITLE_IMG_XY'">
+		SET TITLE_IMG_XY = #{value}
+		</if>
+		<if test="column == 'TITLE_TXT_XY'">
+		SET TITLE_TXT_XY = #{value}
+		</if>
+		<if test="column == 'BTN_XY'">
+		SET BTN_XY = #{value}
+		</if>
+		WHERE VISUAL_SEQ = #{visualSeq}
+	</update>
+	
+	<select id="selectVisualGroup" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			GRP_ID, max(LIVE_GRP_ID) as LIVE_GRP_ID
+		FROM CO_MAIN_VISUAL
+		GROUP BY GRP_ID
+		ORDER BY LIVE_GRP_ID ASC, GRP_ID DESC
+	</select>
+	
+	<select id="selectVisualList" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			COUNT(*) OVER() AS TOT_CNT,
+			VISUAL_SEQ,
+			GRP_ID,
+			LIVE_GRP_ID,
+			WEB_BG_COLOR,
+			WEB_BG_PATH,
+			WEB_BG_SAVE_FILE_NM,
+			WEB_BG_REAL_FILE_NM,
+			WEB_TITLE_PATH,
+			WEB_TITLE_SAVE_FILE_NM,
+			WEB_TITLE_REAL_FILE_NM,
+			WEB_TITLE_DSC,
+			WEB_TITLE_TXT,
+			WEB_BTN_PATH,
+			WEB_BTN_SAVE_FILE_NM,
+			WEB_BTN_REAL_FILE_NM,
+			LINK,
+			LINK_TYPE,
+			USE_YN,
+			TO_CHAR(USE_STRT_DTM, 'YYYY-MM-DD') AS USE_STRT_DTM,
+			TO_CHAR(USE_END_DTM, 'YYYY-MM-DD') AS USE_END_DTM,
+			BG_XY,
+			TITLE_IMG_XY,
+			TITLE_TXT_XY,
+			BTN_XY,
+			ORDERBY,
+			REG_ID,
+			REG_IP,
+			REG_DTM,
+			MOD_ID,
+			MOD_IP,
+			MOD_DTM
+		FROM 
+			CO_MAIN_VISUAL
+		WHERE 
+			GRP_ID=#{grpId}
+		ORDER BY 
+			ORDERBY ASC
+	</select>
+	
+	<select id="selectVisual" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			VISUAL_SEQ,
+			GRP_ID,
+			LIVE_GRP_ID,
+			WEB_BG_COLOR,
+			WEB_BG_PATH,
+			WEB_BG_SAVE_FILE_NM,
+			WEB_BG_REAL_FILE_NM,
+			WEB_TITLE_PATH,
+			WEB_TITLE_SAVE_FILE_NM,
+			WEB_TITLE_REAL_FILE_NM,
+			WEB_TITLE_DSC,
+			WEB_TITLE_TXT,
+			WEB_BTN_PATH,
+			WEB_BTN_SAVE_FILE_NM,
+			WEB_BTN_REAL_FILE_NM,
+			LINK,
+			LINK_TYPE,
+			USE_YN,
+			TO_CHAR(USE_STRT_DTM, 'YYYY-MM-DD') AS USE_STRT_DTM,
+			TO_CHAR(USE_END_DTM, 'YYYY-MM-DD') AS USE_END_DTM,
+			BG_XY,
+			TITLE_IMG_XY,
+			TITLE_TXT_XY,
+			BTN_XY,
+			ORDERBY,
+			REG_ID,
+			REG_IP,
+			REG_DTM,
+			MOD_ID,
+			MOD_IP,
+			MOD_DTM
+		FROM CO_MAIN_VISUAL
+		WHERE VISUAL_SEQ = #{visualSeq}
+	</select>
+	
+	<select id="selectVisualKeyNull" parameterType="emfMap" resultType="emfMap">
+		SELECT getGrpId, (SELECT NVL(max(orderBy), 0) + 1 FROM CO_MAIN_VISUAL where GRP_ID=tmp.getGrpId) as orderBy
+		FROM
+		(SELECT NVL(max(grp_id), 0) + 1 as getGrpId FROM CO_MAIN_VISUAL) tmp
+	</select>
+	
+	<select id="selectVisualKey" parameterType="emfMap" resultType="emfMap">
+		SELECT GRP_ID as getGrpId, NVL(max(orderBy), 0) + 1  as orderBy
+		FROM CO_MAIN_VISUAL
+		where GRP_ID = #{grpId}
+		group by GRP_ID
+	</select>
+	
+	<insert id="insertVisual" parameterType="emfMap">
+		INSERT INTO CO_MAIN_VISUAL
+			(
+			VISUAL_SEQ,
+			GRP_ID,
+			WEB_BG_COLOR,
+			WEB_BG_PATH,
+			WEB_BG_SAVE_FILE_NM,
+			WEB_BG_REAL_FILE_NM,
+			WEB_TITLE_PATH,
+			WEB_TITLE_SAVE_FILE_NM,
+			WEB_TITLE_REAL_FILE_NM,
+			WEB_TITLE_DSC,
+			WEB_TITLE_TXT,
+			WEB_BTN_PATH,
+			WEB_BTN_SAVE_FILE_NM,
+			WEB_BTN_REAL_FILE_NM,
+			LINK,
+			LINK_TYPE,
+			USE_YN,
+			USE_STRT_DTM,
+			USE_END_DTM,
+			ORDERBY,
+			REG_ID,
+			REG_IP,
+			REG_DTM
+			)
+		VALUES 
+			(
+			#{visualSeq},
+			#{grpId},
+			#{webBgColor},
+			#{webBgPath},
+			#{webBgSaveFileNm},
+			#{webBgRealFileNm},
+			#{webTitlePath},
+			#{webTitleSaveFileNm},
+			#{webTitleRealFileNm},
+			#{webTitleDsc},
+			#{webTitleTxt},
+			#{webBtnPath},
+			#{webBtnSaveFileNm},
+			#{webBtnRealFileNm},
+			#{link},
+			#{linkType},
+			#{useYn},
+			TO_DATE(#{useStrtDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			TO_DATE(#{useEndDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			#{orderBy},
+			#{regId},
+			#{regIp},
+			SYSDATE
+			)	
+	</insert>
+	
+	<update id="updateVisual" parameterType="emfMap">
+		UPDATE CO_MAIN_VISUAL 
+		SET GRP_ID = #{grpId},
+			WEB_BG_COLOR = #{webBgColor},
+			<if test="webBgPath != null">
+			WEB_BG_PATH = #{webBgPath},
+			WEB_BG_SAVE_FILE_NM = #{webBgSaveFileNm},
+			WEB_BG_REAL_FILE_NM = #{webBgRealFileNm},
+			</if>
+			<if test="webTitlePath != null">
+			WEB_TITLE_PATH = #{webTitlePath},
+			WEB_TITLE_SAVE_FILE_NM = #{webTitleSaveFileNm},
+			WEB_TITLE_REAL_FILE_NM = #{webTitleRealFileNm},
+			</if>
+			WEB_TITLE_DSC = #{webTitleDsc},
+			WEB_TITLE_TXT = #{webTitleTxt},
+			<if test="webBtnSaveFileNm != null">
+			WEB_BTN_PATH = #{webBtnPath},
+			WEB_BTN_SAVE_FILE_NM = #{webBtnSaveFileNm},
+			WEB_BTN_REAL_FILE_NM = #{webBtnRealFileNm},
+			</if>
+			LINK = #{link},
+			LINK_TYPE = #{linkType},
+			USE_YN = #{useYn},
+			USE_STRT_DTM = TO_DATE(#{useStrtDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			USE_END_DTM = TO_DATE(#{useEndDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			<if test="orderBy != null">
+			ORDERBY = #{orderBy},
+			</if>
+			MOD_ID = #{modId},
+			MOD_IP = #{modIp},
+			MOD_DTM = SYSDATE
+		 WHERE VISUAL_SEQ = #{visualSeq}
+	</update>
+	
+	<select id="selectVisualGrp" parameterType="emfMap" resultType="emfMap">
+		SELECT COUNT(*) CNT, GRP_ID
+		FROM CO_MAIN_VISUAL
+		WHERE GRP_ID = (SELECT GRP_ID FROM CO_MAIN_VISUAL WHERE VISUAL_SEQ = #{visualSeq})
+		GROUP BY GRP_ID 
+	</select>
+	
+	<delete id="deleteVisualMst" parameterType="emfMap">
+		DELETE 
+			CO_MAIN_CNTNS_MST
+		WHERE GRP_ID = #{grpId}
+	</delete>
+	
+	<delete id="deleteVisual" parameterType="emfMap">
+		DELETE 
+			CO_MAIN_VISUAL
+		WHERE VISUAL_SEQ = #{visualSeq}
+	</delete>
+	
+	<update id="orderVisual" parameterType="emfMap">
+		UPDATE CO_MAIN_VISUAL
+		SET ORDERBY = #{orderBy}
+		WHERE VISUAL_SEQ = #{visualSeq}
+	</update>
+	
+	<select id="reOrderVisualGrp" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			GRP_ID
+		FROM
+			CO_MAIN_VISUAL
+		GROUP BY
+			GRP_ID
+		ORDER BY
+			GRP_ID ASC
+	</select>
+	
+	<select id="reOrderVisualGrpList" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			VISUAL_SEQ
+		FROM
+			CO_MAIN_VISUAL
+		WHERE
+			GRP_ID = #{grpId}
+		ORDER BY
+			ORDERBY ASC, VISUAL_SEQ ASC
+	</select>
+	
+	
+	<select id="selectContentList" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			COUNT(*) OVER() AS TOT_CNT,
+			(SELECT COUNT(*) FROM CO_MAIN_CNTNS_DTL WHERE CNTNS_MST_SEQ = A.CNTNS_MST_SEQ) AS SUB_CNT,
+			CNTNS_MST_SEQ,
+			GRP_ID,
+			TITLE_TXT,
+			USE_YN,
+			TO_CHAR(USE_STRT_DTM, 'YYYY-MM-DD') AS USE_STRT_DTM,
+			TO_CHAR(USE_END_DTM, 'YYYY-MM-DD') AS USE_END_DTM,
+			ORDERBY,
+			REG_ID,
+			REG_IP,
+			RET_DTM,
+			MOD_ID,
+			MOD_IP,
+			MOD_DTM
+		FROM 
+			CO_MAIN_CNTNS_MST A
+		WHERE 
+			GRP_ID=#{grpId}
+		ORDER BY 
+			ORDERBY ASC
+	</select>
+	
+	<select id="selectContentGroup" parameterType="emfMap" resultType="emfMap">
+		SELECT NVL(max(orderBy), 0) + 1 as orderBy
+		FROM CO_MAIN_CNTNS_MST
+		WHERE GRP_ID = #{grpId}
+	</select>
+	
+	<insert id="insertContent" parameterType="emfMap">
+		INSERT INTO CO_MAIN_CNTNS_MST
+			(
+			CNTNS_MST_SEQ,
+			GRP_ID,
+			TITLE_TXT,
+			TITLE_COLOR,
+			USE_YN,
+			USE_STRT_DTM,
+			USE_END_DTM,
+			ORDERBY,
+			REG_ID,
+			REG_IP,
+			RET_DTM
+			)
+		VALUES 
+			(
+			#{cntnsMstSeq},
+			#{grpId},
+			#{titleTxt},
+			#{titleColor},
+			#{useYn},
+			TO_DATE(#{useStrtDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			TO_DATE(#{useEndDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			#{orderBy},
+			#{regId},
+			#{regIp},
+			SYSDATE
+			)	
+	</insert>
+	
+	<select id="selectContent" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			COUNT(*) OVER() AS TOT_CNT,
+			(SELECT COUNT(*) FROM CO_MAIN_CNTNS_DTL WHERE CNTNS_MST_SEQ = A.CNTNS_MST_SEQ) AS SUB_CNT,
+			CNTNS_MST_SEQ,
+			GRP_ID,
+			TITLE_TXT,
+			TITLE_COLOR,
+			USE_YN,
+			TO_CHAR(USE_STRT_DTM, 'YYYY-MM-DD') AS USE_STRT_DTM,
+			TO_CHAR(USE_END_DTM, 'YYYY-MM-DD') AS USE_END_DTM,
+			ORDERBY,
+			REG_ID,
+			REG_IP,
+			RET_DTM,
+			MOD_ID,
+			MOD_IP,
+			MOD_DTM
+		FROM 
+			CO_MAIN_CNTNS_MST A
+		WHERE 
+			CNTNS_MST_SEQ=#{cntnsMstSeq}
+	</select>
+	
+	<update id="updateContent" parameterType="emfMap">
+		UPDATE CO_MAIN_CNTNS_MST 
+		SET 
+			GRP_ID = #{grpId},
+			TITLE_TXT = #{titleTxt},
+			TITLE_COLOR = #{titleColor},
+			USE_YN = #{useYn},
+			USE_STRT_DTM = TO_DATE(#{useStrtDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			USE_END_DTM = TO_DATE(#{useEndDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			<if test="orderBy != null">
+			ORDERBY = #{orderBy},
+			</if>
+			MOD_ID = #{modId},
+			MOD_IP = #{modIp},
+			MOD_DTM = SYSDATE
+		 WHERE CNTNS_MST_SEQ = #{cntnsMstSeq}
+	</update>
+	
+	<delete id="deleteContent" parameterType="emfMap">
+		DELETE 
+			CO_MAIN_CNTNS_MST
+		WHERE CNTNS_MST_SEQ = #{cntnsMstSeq}
+	</delete>
+	
+	<update id="orderContent" parameterType="emfMap">
+		UPDATE CO_MAIN_CNTNS_MST
+		SET ORDERBY = #{orderBy}
+		WHERE CNTNS_MST_SEQ = #{contentSeq}
+	</update>
+	
+	<select id="reOrderContentGrp" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			GRP_ID
+		FROM
+			CO_MAIN_CNTNS_MST
+		GROUP BY
+			GRP_ID
+		ORDER BY
+			GRP_ID ASC
+	</select>
+	
+	<select id="reOrderContentGrpList" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			CNTNS_MST_SEQ
+		FROM
+			CO_MAIN_CNTNS_MST
+		WHERE
+			GRP_ID = #{grpId}
+		ORDER BY
+			ORDERBY ASC, CNTNS_MST_SEQ ASC
+	</select>
+	
+	<select id="selectContentDtlList" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			COUNT(*) OVER() AS TOT_CNT,
+			CNTNS_DTL_SEQ,
+			CNTNS_MST_SEQ,
+			IMG_PATH,
+			IMG_SAVE_FILE_NM,
+			IMG_REAL_FILE_NM,
+			TITLE,
+			DSC,
+			LINK,
+			LINK_TYPE,
+			USE_YN,
+			TO_CHAR(USE_STRT_DTM, 'YYYY-MM-DD') AS USE_STRT_DTM,
+			TO_CHAR(USE_END_DTM, 'YYYY-MM-DD') AS USE_END_DTM,
+			ORDERBY,
+			REG_ID,
+			REG_IP,
+			REG_DTM,
+			MOD_ID,
+			MOD_IP,
+			MOD_DTM
+		FROM 
+			CO_MAIN_CNTNS_DTL
+		WHERE 
+			CNTNS_MST_SEQ=#{cntnsMstSeq}
+		ORDER BY 
+			ORDERBY ASC
+	</select>
+	
+	<select id="selectContentDtlGroup" parameterType="emfMap" resultType="emfMap">
+		SELECT NVL(max(orderBy), 0) + 1 as orderBy
+		FROM CO_MAIN_CNTNS_DTL
+		WHERE CNTNS_MST_SEQ = #{cntnsMstSeq}
+	</select>
+	
+	<insert id="insertContentDtl" parameterType="emfMap">
+		INSERT INTO CO_MAIN_CNTNS_DTL
+			(
+			CNTNS_DTL_SEQ,
+			CNTNS_MST_SEQ,
+			IMG_PATH,
+			IMG_SAVE_FILE_NM,
+			IMG_REAL_FILE_NM,
+			TITLE,
+			DSC,
+			LINK,
+			LINK_TYPE,
+			USE_YN,
+			USE_STRT_DTM,
+			USE_END_DTM,
+			ORDERBY,
+			REG_ID,
+			REG_IP,
+			REG_DTM
+			)
+		VALUES 
+			(
+			#{cntnsDtlSeq},
+			#{cntnsMstSeq},
+			#{imgPath},
+			#{imgSaveFileNm},
+			#{imgRealFileNm},
+			#{title},
+			#{dsc},
+			#{link},
+			#{linkType},
+			#{useYn},
+			TO_DATE(#{useStrtDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			TO_DATE(#{useEndDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			#{orderBy},
+			#{regId},
+			#{regIp},
+			SYSDATE
+			)	
+	</insert>
+	
+	<select id="selectContentDtl" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			CNTNS_DTL_SEQ,
+			CNTNS_MST_SEQ,
+			IMG_PATH,
+			IMG_SAVE_FILE_NM,
+			IMG_REAL_FILE_NM,
+			TITLE,
+			DSC,
+			LINK,
+			LINK_TYPE,
+			USE_YN,
+			TO_CHAR(USE_STRT_DTM, 'YYYY-MM-DD') AS USE_STRT_DTM,
+			TO_CHAR(USE_END_DTM, 'YYYY-MM-DD') AS USE_END_DTM,
+			ORDERBY,
+			REG_ID,
+			REG_IP,
+			REG_DTM,
+			MOD_ID,
+			MOD_IP,
+			MOD_DTM
+		FROM 
+			CO_MAIN_CNTNS_DTL
+		WHERE 
+			CNTNS_DTL_SEQ = #{cntnsDtlSeq}
+	</select>
+	
+	<update id="updateContentDtl" parameterType="emfMap">
+		UPDATE CO_MAIN_CNTNS_DTL 
+		SET 
+			<if test="imgPath != null">
+			IMG_PATH = #{imgPath},
+			IMG_SAVE_FILE_NM = #{imgSaveFileNm},
+			IMG_REAL_FILE_NM = #{imgRealFileNm},
+			</if>
+			TITLE = #{title},
+			DSC = #{dsc},
+			LINK = #{link},
+			LINK_TYPE = #{linkType},
+			USE_YN = #{useYn},
+			USE_STRT_DTM = TO_DATE(#{useStrtDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			USE_END_DTM = TO_DATE(#{useEndDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			MOD_ID = #{modId},
+			MOD_IP = #{modIp},
+			MOD_DTM = SYSDATE
+		 WHERE CNTNS_DTL_SEQ = #{cntnsDtlSeq}
+	</update>
+	
+	<delete id="deleteContentDtl" parameterType="emfMap">
+		DELETE 
+			CO_MAIN_CNTNS_DTL
+		WHERE CNTNS_DTL_SEQ = #{cntnsDtlSeq}
+	</delete>
+	
+	<update id="orderContentDtl" parameterType="emfMap">
+		UPDATE CO_MAIN_CNTNS_DTL
+		SET ORDERBY = #{orderBy}
+		WHERE CNTNS_DTL_SEQ = #{contentDtlSeq}
+	</update>
+	
+	<select id="reOrderContentDtlGrp" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			CNTNS_MST_SEQ
+		FROM
+			CO_MAIN_CNTNS_DTL
+		GROUP BY
+			CNTNS_MST_SEQ
+		ORDER BY
+			CNTNS_MST_SEQ ASC
+	</select>
+	
+	<select id="reOrderContentDtlGrpList" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			CNTNS_DTL_SEQ
+		FROM
+			CO_MAIN_CNTNS_DTL
+		WHERE
+			CNTNS_MST_SEQ = #{cntnsMstSeq}
+		ORDER BY
+			ORDERBY ASC, CNTNS_DTL_SEQ ASC
+	</select>
+</mapper>

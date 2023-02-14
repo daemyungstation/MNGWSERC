@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="PRALifeMgznDAO">
+	
+	<!--
+         쿼리명 : PRALifeMgznDAO.selectLifeMgznList
+         설  명 : 라이프웨이 매거진 목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.16   허진영      최초생성
+    -->
+	<select id="PRALifeMgznDAO.selectLifeMgznList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* PRALifeMgznDAO.selectLifeMgznList */
+			   TBL.*
+		FROM (
+			SELECT ROWNUM AS RNUM, A.*
+			FROM ( 
+				SELECT COUNT(*) OVER() AS TOT_CNT
+	        		   , MGZN_SEQ
+					   , MGZN_PBTN_YR
+					   , SPR_TITL
+					   , SMMR_TITL
+					   , ATMN_TITL
+					   , WNTR_TITL
+					   , REG_ID
+					   , REG_DTM
+				  FROM PR_MGZN_MST
+			     WHERE 1=1
+				 ORDER BY MGZN_PBTN_YR DESC
+			) A
+		) TBL
+	   	WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+	
+	<!--
+         쿼리명 : PRALifeMgznDAO.selectLifeMgzn
+         설  명 : 라이프웨이 매거진 상세를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.16   허진영      최초생성
+    -->
+	<select id="PRALifeMgznDAO.selectLifeMgzn" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* PRALifeMgznDAO.selectMgznMng */ 
+               MGZN_SEQ
+			   , MGZN_PBTN_YR
+			   , SPR_TITL
+			   , SPR_SUB_TITL
+			   , SPR_CVR_FILE_ID
+			   , SPR_PDF_FILE_ID
+			   , SPR_EBK_URL
+			   , SMMR_TITL
+			   , SMMR_SUB_TITL
+			   , SMMR_CVR_FILE_ID
+			   , SMMR_PDF_FILE_ID
+			   , SMMR_EBK_URL
+			   , ATMN_TITL
+			   , ATMN_SUB_TITL
+			   , ATMN_CVR_FILE_ID
+			   , ATMN_PDF_FILE_ID
+			   , ATMN_EBK_URL
+			   , WNTR_TITL
+			   , WNTR_SUB_TITL
+			   , WNTR_CVR_FILE_ID
+			   , WNTR_PDF_FILE_ID
+			   , WNTR_EBK_URL
+		  FROM PR_MGZN_MST
+		 WHERE MGZN_SEQ = #{mgznSeq}
+	</select>
+	
+	<!--
+         쿼리명 : PRALifeMgznDAO.insertLifeMgzn
+         설  명 : 라이프웨이 매거진을 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.16   허진영      최초생성
+    -->
+	<insert id="PRALifeMgznDAO.insertLifeMgzn" parameterType="emfMap">
+		INSERT /* PRALifeMgznDAO.insertMgzn */ INTO PR_MGZN_MST 
+			(MGZN_SEQ
+			, MGZN_PBTN_YR
+			, SPR_TITL
+			, SPR_SUB_TITL
+			, SPR_CVR_FILE_ID
+			, SPR_PDF_FILE_ID
+			, SPR_EBK_URL
+			, SMMR_TITL
+			, SMMR_SUB_TITL
+			, SMMR_CVR_FILE_ID
+			, SMMR_PDF_FILE_ID
+			, SMMR_EBK_URL
+			, ATMN_TITL
+			, ATMN_SUB_TITL
+			, ATMN_CVR_FILE_ID
+			, ATMN_PDF_FILE_ID
+			, ATMN_EBK_URL
+			, WNTR_TITL
+			, WNTR_SUB_TITL
+			, WNTR_CVR_FILE_ID
+			, WNTR_PDF_FILE_ID
+			, WNTR_EBK_URL
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		VALUES        
+			(
+		 	#{mgznSeq}
+		 	, #{mgznPbtnYr}
+			, #{sprTitl, jdbcType=VARCHAR}
+			, #{sprSubTitl, jdbcType=VARCHAR}
+			, #{sprCvrFileId, jdbcType=VARCHAR}
+			, #{sprPdfFileId, jdbcType=VARCHAR}
+			, #{sprEbkUrl, jdbcType=VARCHAR}
+			, #{smmrTitl, jdbcType=VARCHAR}
+			, #{smmrSubTitl, jdbcType=VARCHAR}
+			, #{smmrCvrFileId, jdbcType=VARCHAR}
+			, #{smmrPdfFileId, jdbcType=VARCHAR}
+			, #{smmrEbkUrl, jdbcType=VARCHAR}
+			, #{atmnTitl, jdbcType=VARCHAR}
+			, #{atmnSubTitl, jdbcType=VARCHAR}
+			, #{atmnCvrFileId, jdbcType=VARCHAR}
+			, #{atmnPdfFileId, jdbcType=VARCHAR}
+			, #{atmnEbkUrl, jdbcType=VARCHAR}
+			, #{wntrTitl, jdbcType=VARCHAR}
+			, #{wntrSubTitl, jdbcType=VARCHAR}
+			, #{wntrCvrFileId, jdbcType=VARCHAR}
+			, #{wntrPdfFileId, jdbcType=VARCHAR}
+			, #{wntrEbkUrl, jdbcType=VARCHAR}
+			, #{regId}
+			, #{regIp}
+ 			, SYSDATE
+ 			, #{modId}
+			, #{modIp}
+ 			, SYSDATE
+			)
+	</insert>
+	
+	<!--
+         쿼리명 : PRALifeMgznDAO.updateLifeMgzn
+         설  명 : 라이프웨이 매거진을 수정한다.
+          수정일      수정자     수정내용 
+        ==========   ======   ============== 
+        2016.02.16   허진영      최초생성
+    -->
+ 	<update id="PRALifeMgznDAO.updateLifeMgzn" parameterType="emfMap">
+ 		UPDATE /*PRALifeMgznDAO.updateLifeMgzn */ PR_MGZN_MST
+ 		   SET SPR_TITL = #{sprTitl, jdbcType=VARCHAR}
+			   , SPR_SUB_TITL = #{sprSubTitl, jdbcType=VARCHAR}
+			   , SPR_CVR_FILE_ID = #{sprCvrFileId, jdbcType=VARCHAR}
+			   , SPR_PDF_FILE_ID = #{sprPdfFileId, jdbcType=VARCHAR}
+			   , SPR_EBK_URL = #{sprEbkUrl, jdbcType=VARCHAR}
+			   , SMMR_TITL = #{smmrTitl, jdbcType=VARCHAR}
+			   , SMMR_SUB_TITL = #{smmrSubTitl, jdbcType=VARCHAR}
+			   , SMMR_CVR_FILE_ID = #{smmrCvrFileId, jdbcType=VARCHAR}
+			   , SMMR_PDF_FILE_ID = #{smmrPdfFileId, jdbcType=VARCHAR}
+			   , SMMR_EBK_URL = #{smmrEbkUrl, jdbcType=VARCHAR}
+			   , ATMN_TITL = #{atmnTitl, jdbcType=VARCHAR}
+			   , ATMN_SUB_TITL = #{atmnSubTitl, jdbcType=VARCHAR}
+			   , ATMN_CVR_FILE_ID = #{atmnCvrFileId, jdbcType=VARCHAR}
+			   , ATMN_PDF_FILE_ID = #{atmnPdfFileId, jdbcType=VARCHAR}
+			   , ATMN_EBK_URL = #{atmnEbkUrl, jdbcType=VARCHAR}
+			   , WNTR_TITL = #{wntrTitl, jdbcType=VARCHAR}
+			   , WNTR_SUB_TITL = #{wntrSubTitl, jdbcType=VARCHAR}
+			   , WNTR_CVR_FILE_ID = #{wntrCvrFileId, jdbcType=VARCHAR}
+			   , WNTR_PDF_FILE_ID = #{wntrPdfFileId, jdbcType=VARCHAR}
+			   , WNTR_EBK_URL = #{wntrEbkUrl, jdbcType=VARCHAR}
+  			   , MOD_ID = #{modId}
+  			   , MOD_IP = #{modIp}
+	  		   , MOD_DTM = SYSDATE
+		 WHERE MGZN_SEQ = #{mgznSeq}
+	</update>
+	
+	<!--
+         쿼리명 : PRALifeMgznDAO.deleteLifeMgzn
+         설  명 : 라이프웨이 매거진을 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.16   허진영      최초생성
+    -->
+	<delete id="PRALifeMgznDAO.deleteLifeMgzn" parameterType="emfMap">
+		DELETE /* PRALifeMgznDAO.deleteLifeMgzn */ 
+		  FROM PR_MGZN_MST
+		 WHERE MGZN_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+        	#{item}
+        </foreach>
+	</delete>
+	
+	<!--
+         쿼리명 : PRALifeMgznDAO.getMgznPbtnYrChk
+         설  명 : 라이프웨이 매거진 등록된 년도수를 가져온다.
+          수정일     수정자     수정내용 
+        ==========   ======  ============== 
+        2016.02.16   허진영     최초생성
+    -->
+	<select id="PRALifeMgznDAO.getMgznPbtnYrChk" parameterType="emfMap" resultType="java.lang.Integer">	
+        SELECT /* PRALifeMgznDAO.getMgznPbtnYrChk */ 
+          	   COUNT(*)     
+		  FROM PR_MGZN_MST
+		 WHERE MGZN_PBTN_YR = #{mgznPbtnYr}
+	</select>
+	
+</mapper>

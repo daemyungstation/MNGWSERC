@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+	
+	
+	<!-- 1년이상 미로그인 시 휴면계정으로 전환 -->
+	<bean id="qscnChngSchedular" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="sCASchdService" />
+		<property name="targetMethod" value="qscnChngScheduler" />
+		<property name="concurrent" value="false" />
+	</bean>
+
+	<bean id="cronTrigger1" class="org.springframework.scheduling.quartz.CronTriggerBean">
+	  	<property name="jobDetail">
+	    	<ref bean="qscnChngSchedular"/>
+	  	</property>
+	  	<property name="cronExpression">
+	    	<value>0 0 0 * * ?</value>
+	  	</property>
+	</bean>
+	
+	<!-- 휴면계정 전환 1주일전 안내메일 발송 -->
+	<bean id="sendMailSchedular" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="sCASchdService" />
+		<property name="targetMethod" value="sendMailSchedular" />
+		<property name="concurrent" value="false" />
+	</bean>
+	
+	<bean id="cronTrigger2" class="org.springframework.scheduling.quartz.CronTriggerBean">
+	  	<property name="jobDetail">
+	    	<ref bean="sendMailSchedular"/>
+	  	</property>
+	  	<property name="cronExpression">
+	    	<!-- run every night at 0 PM -->
+	    	<value>0 5 0 * * ?</value>
+	  	</property>
+	</bean>
+	
+	
+	<!-- LGU 엑셀 다운로드 데이터 생성 -->
+    <bean id="createLguExcel" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="oMACounselMngService" />
+		<property name="targetMethod" value="selectLgusawonUserData"/>
+		<property name="concurrent" value="false" />
+	</bean>
+	
+	<bean id = "cronTrigger3" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail">
+			<ref bean="createLguExcel"/>
+		</property>
+		<property name="cronExpression">
+			<value>0 30 5 * * ?</value>
+		</property>
+	</bean>
+	
+	
+	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+	  	<property name="triggers">
+	    	<list>
+	      		<ref local="cronTrigger1"/>
+	      		<ref local="cronTrigger2"/>
+	      		<ref local="cronTrigger3"/>
+	    	</list>
+	  	</property>
+	</bean>
+	
+</beans>

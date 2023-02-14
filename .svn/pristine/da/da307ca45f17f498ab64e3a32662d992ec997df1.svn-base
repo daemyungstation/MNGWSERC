@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="LimitedChoiceDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+		<result property="prdSpec" column="PRD_SPEC" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+
+	<select id="LimitedChoiceDAO.getLimitedChoiceCategoryList" resultType="emfMap">
+		SELECT /* LimitedChoiceDAO.getLimitedChoiceCategoryList */
+	   		CATE_SEQ,
+			PSTN,
+			CATE_NM
+		FROM
+			CN_LIMITED_CHOICE_CATEGORY_MST
+		ORDER BY PSTN ASC
+	</select>
+
+	<select id="LimitedChoiceDAO.getLimitedChoiceProductList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* LimitedChoiceDAO.getLimitedChoiceProductList */
+			TBL.*
+		FROM (
+			SELECT
+				ROWNUM AS RNUM,
+				A.*
+			FROM (
+				SELECT
+					COUNT(*) OVER() AS TOT_CNT,
+					P.PRDCT_SEQ,
+					P.CATE_SEQ,
+					C.CATE_NM,
+					P.PRDCT_NM,
+					P.MODEL_NM,
+					P.PRICE_BENEFIT,
+					P.USE_YN,
+					P.REG_DTM
+				FROM
+					CN_LIMITED_CHOICE_PRODUCT_MST P
+				LEFT OUTER JOIN
+					CN_LIMITED_CHOICE_CATEGORY_MST C
+				ON
+					P.CATE_SEQ = C.CATE_SEQ
+				<trim prefix="WHERE" prefixOverrides="AND">
+					<if test="q != null and q != ''">
+						<if test="f1 == 1">
+							<![CDATA[C.CATE_NM LIKE '%' || #{q} || '%']]> OR
+							<![CDATA[P.PRDCT_NM LIKE '%' || #{q} || '%']]> OR
+							<![CDATA[P.MODEL_NM LIKE '%' || #{q} || '%']]>
+						</if>
+						<if test="f1 == 2">
+							<![CDATA[C.CATE_NM LIKE '%' || #{q} || '%']]>
+						</if>
+						<if test="f1 == 3">
+							<![CDATA[P.PRDCT_NM LIKE '%' || #{q} || '%']]>
+						</if>
+						<if test="f1 == 4">
+							<![CDATA[P.MODEL_NM LIKE '%' || #{q} || '%']]>
+						</if>
+					</if>
+					<if test="f2 == 2">
+						AND P.USE_YN = 'Y'
+					</if>
+					<if test="f2 == 3">
+						AND P.USE_YN = 'N'
+					</if>
+				</trim>
+				ORDER BY P.REG_DTM DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+
+
+	<select id="LimitedChoiceDAO.getLimitedChoiceProductInfo" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* LimitedChoiceDAO.getLimitedChoiceProductInfo */
+			PRDCT_SEQ
+			, CATE_SEQ
+			, PRDCT_NM
+			, MODEL_NM
+			, PRICE_BENEFIT
+			, REG_DTM
+			, USE_YN
+			, CNTN
+			, PRICE
+			, REG_ID
+			, MOD_ID
+			, INSTALMENT
+			, PRD_SPEC
+			, PRICE_YN
+			, PRICE_BENEFIT_UNIT_YN
+			, PRICE_TEXT
+		FROM
+			CN_LIMITED_CHOICE_PRODUCT_MST
+		WHERE
+			PRDCT_SEQ = #{seq}
+	</select>
+
+	<select id="LimitedChoiceDAO.getLimitedChoiceFileInfo" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			FILE_SEQ,
+			PRD_OR_IMG_SEQ,
+			CLASSIFICATION,
+			FILE_NM,
+			FILE_TYPE,
+			REG_DTM,
+			REG_ID,
+			REG_ORDER,
+			CHF_GB,
+			USING,
+			FILE_SIZE
+		FROM
+			CN_LIMITED_CHOICE_FILE
+		WHERE
+			PRD_OR_IMG_SEQ = #{seq}
+			<if test="using != null">
+				AND USING = #{using}
+			</if>
+		AND
+			CHF_GB = #{gubun}
+		ORDER BY FILE_SEQ ASC
+	</select>
+
+	<select id="LimitedChoiceDAO.getZeroChoiseImgContainerCnt" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT
+    		COUNT(*) as cnt
+		FROM
+		    (
+		        SELECT
+		        	DISTINCT REG_ORDER
+		        FROM
+		        	CN_LIMITED_CHOICE_FILE
+		        WHERE
+		            USING = #{using}
+		        AND
+		            PRD_OR_IMG_SEQ = #{seq}
+		        AND
+		            CHF_GB = #{gubun}
+		    )
+	</select>
+
+
+	<insert id="LimitedChoiceDAO.setLimitedChoiceProduct" parameterType="emfMap">
+		<selectKey keyProperty="seq" resultType="java.lang.Integer" order="BEFORE">
+			SELECT CN_LIMITED_CHOICE_PRODUCT_SEQ.nextval FROM DUAL
+		</selectKey>
+		INSERT /* LimitedChoiceDAO.setLimitedChoiceProduct */ INTO CN_LIMITED_CHOICE_PRODUCT_MST (
+			PRDCT_SEQ
+			, CATE_SEQ
+			, PRDCT_NM
+			, MODEL_NM
+			, PRICE_BENEFIT
+			, REG_DTM
+			, USE_YN
+			, CNTN
+			, PRICE
+			, REG_ID
+			, MOD_ID
+			, INSTALMENT
+			, PRD_SPEC
+			, PRICE_YN
+			, PRICE_BENEFIT_UNIT_YN
+			, PRICE_TEXT
+		) VALUES (
+			#{seq}
+			, #{category}
+			, #{prdctNm}
+			, #{modelNm}
+			, #{priceBenefit}
+			, SYSDATE
+			, #{visibleYn}
+			, #{cntn}
+			, #{price}
+			, #{regId}
+			, #{modId}
+			, #{instalment}
+			, #{prdSpec}
+			, #{priceYn}
+			, #{priceBenefitUnitYn}
+			, #{priceText}
+		)
+	</insert>
+
+	<insert id="LimitedChoiceDAO.setLimitedChoiceFile" parameterType="emfMap">
+		INSERT ALL /* LimitedChoiceDAO.setLimitedChoiceFile */
+		<foreach collection="imgFile" item="img" index="index">
+			INTO CN_LIMITED_CHOICE_FILE (
+				FILE_SEQ
+				, PRD_OR_IMG_SEQ
+				, CLASSIFICATION
+				, FILE_NM
+				, FILE_SIZE
+				, FILE_TYPE
+				, REG_DTM
+				, REG_ID
+				, REG_ORDER
+				, CHF_GB
+				, USING
+				, FILE_PATH
+				, LOCAL_FILE_NM
+			) VALUES (
+				GET_LIMITED_CHOICE_FILE_SEQ
+				, #{limitedChoiceProductSeq}
+				, #{img.classification}
+				, #{img.fileNm}
+				, #{img.fileSize}
+				, #{img.fileType}
+				, SYSDATE
+				, #{regId}
+				, #{img.regOrder}
+				, #{zeroChoiGb}
+				, #{img.using}
+				, #{img.path}
+				, #{img.localFileName}
+			)
+			</foreach>
+		SELECT * FROM DUAL
+	</insert>
+
+	<select id="LimitedChoiceDAO.selectFileInfoByFileSeq" parameterType="emfMap" resultType="emfMap">
+		SELECT /* LimitedChoiceDAO.selectFileInfoByFileSeq */
+			FILE_SEQ
+			,FILE_NM
+			,FILE_PATH
+			,FILE_TYPE
+			,LOCAL_FILE_NM
+		FROM
+			CN_LIMITED_CHOICE_FILE
+		WHERE
+			FILE_SEQ = #{fileSeq}
+	</select>
+
+	<delete id="LimitedChoiceDAO.deleteLimitedChoiceProduct" parameterType="emfMap">
+		DELETE /* LimitedChoiceDAO.deleteLimitedChoiceProduct */
+		FROM CN_LIMITED_CHOICE_PRODUCT_MST
+		WHERE PRDCT_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+	<delete id="LimitedChoiceDAO.deleteLimitedChoiceFile" parameterType="emfMap">
+		DELETE /* LimitedChoiceDAO.deleteLimitedChoiceFile */
+		FROM CN_LIMITED_CHOICE_FILE
+		WHERE PRD_OR_IMG_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+	<update id="LimitedChoiceDAO.modifyLimitedChoiceProduct" parameterType="emfMap">
+		UPDATE /* LimitedChoiceDAO.modifyLimitedChoiceProduct */ CN_LIMITED_CHOICE_PRODUCT_MST
+ 		   SET   CATE_SEQ = #{category}
+		  		, PRDCT_NM = #{prdctNm}
+		  		, MODEL_NM = #{modelNm}
+		  		, PRICE_BENEFIT = #{priceBenefit}
+		  		, PRICE = #{price}
+		  		, INSTALMENT = #{instalment}
+		  		, MOD_ID = #{modId}
+		  		, MOD_DTM = SYSDATE
+	  		   	, USE_YN = #{visibleYn}
+	  		   	, CNTN = #{cntn}
+	  		   	, PRD_SPEC = #{prdSpec}
+	  		   	, PRICE_YN = #{priceYn}
+	 			, PRICE_BENEFIT_UNIT_YN = #{priceBenefitUnitYn}
+	 			, PRICE_TEXT = #{priceText}
+		 WHERE PRDCT_SEQ = #{seq}
+	</update>
+
+	<insert id="LimitedChoiceDAO.mergeLimitedChoiceFile" parameterType="emfMap">
+		MERGE INTO CN_LIMITED_CHOICE_FILE
+		USING DUAL
+		ON (
+				PRD_OR_IMG_SEQ = #{seq}
+			AND
+				CLASSIFICATION = #{fileInfo.classification}
+			AND
+				USING = #{fileInfo.using}
+			AND
+				REG_ORDER = #{fileInfo.regOrder}
+			AND
+				CHF_GB = #{fileInfo.chfGb}
+		)
+		WHEN MATCHED THEN
+			UPDATE /* LimitedChoiceDAO.mergeLimitedChoiceFile */
+			SET
+				FILE_NM = #{fileInfo.fileNm}
+				, FILE_SIZE = #{fileInfo.fileSize}
+				, FILE_TYPE = #{fileInfo.fileType}
+				, MOD_DTM = SYSDATE
+				, MOD_ID = #{modId}
+				, FILE_PATH = #{fileInfo.path}
+				, LOCAL_FILE_NM = #{fileInfo.localFileName}
+			WHERE
+				PRD_OR_IMG_SEQ = #{seq}
+			AND
+				CLASSIFICATION = #{fileInfo.classification}
+			AND
+				USING = #{fileInfo.using}
+			AND
+				REG_ORDER = #{fileInfo.regOrder}
+			AND
+				CHF_GB = #{fileInfo.chfGb}
+		WHEN NOT MATCHED THEN
+			INSERT (
+				FILE_SEQ
+				, PRD_OR_IMG_SEQ
+				, CLASSIFICATION
+				, FILE_NM
+				, FILE_SIZE
+				, FILE_TYPE
+				, REG_DTM
+				, REG_ID
+				, REG_ORDER
+				, CHF_GB
+				, USING
+				, FILE_PATH
+				, LOCAL_FILE_NM
+			) VALUES (
+				GET_LIMITED_CHOICE_FILE_SEQ
+				, #{seq}
+				, #{fileInfo.classification}
+				, #{fileInfo.fileNm}
+				, #{fileInfo.fileSize}
+				, #{fileInfo.fileType}
+				, SYSDATE
+				, #{modId}
+				, #{fileInfo.regOrder}
+				, #{fileInfo.chfGb}
+				, #{fileInfo.using}
+				, #{fileInfo.path}
+				, #{fileInfo.localFileName}
+			)
+	</insert>
+
+	<delete id="LimitedChoiceDAO.deleteLimitedChoiceFileByUpdate" parameterType="emfMap">
+		DELETE /* LimitedChoiceDAO.deleteLimitedChoiceFileByUpdate */
+		FROM
+			CN_LIMITED_CHOICE_FILE
+		WHERE
+			CHF_GB = #{zeroChoiGb}
+		AND
+			PRD_OR_IMG_SEQ = #{seq}
+		AND
+			<choose>
+				<when test="zeroChoiGb eq 'prdmgr'">
+					USING = #{using}
+					AND
+						REG_ORDER IN
+						<foreach collection="spaceDelOrdersList" item="item" index="index" separator=", " open="(" close=")">
+							#{item}
+						</foreach>
+				</when>
+				<otherwise>
+					<foreach collection="spaceDelOrdersList" item="item" index="index" open="(" close=")" separator="OR" >
+						((USING = #{item.gubun} OR USING = '${item.gubun}' || '_pop')
+						AND
+						REG_ORDER = #{item.regOrder})
+					</foreach>
+				</otherwise>
+			</choose>
+
+	</delete>
+
+	<insert id="LimitedChoiceDAO.setCategory" parameterType="emfMap">
+		<selectKey keyProperty="seq" resultType="java.lang.Integer" order="BEFORE">
+			SELECT CN_LIMITED_CHOICE_CATEGORY_SEQ.nextval FROM DUAL
+		</selectKey>
+		INSERT INTO CN_LIMITED_CHOICE_CATEGORY_MST (
+			CATE_SEQ
+			, PSTN
+			, CATE_NM
+			, USE_YN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+		) VALUES (
+			#{seq}
+			, (SELECT MAX(PSTN) FROM CN_LIMITED_CHOICE_CATEGORY_MST WHERE USE_YN = 'Y') + 1
+			, #{cateNm}
+			, #{useYn}
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+		)
+	</insert>
+
+	<update id="LimitedChoiceDAO.modCategoryName" parameterType="emfMap">
+		UPDATE CN_LIMITED_CHOICE_CATEGORY_MST
+		   SET CATE_NM = #{cateNm}
+		     , MOD_ID = #{modId}
+			 , MOD_IP = #{modIp}
+			 , MOD_DTM = SYSDATE
+		 WHERE CATE_SEQ = #{cateSeq}
+	</update>
+
+	<update id="LimitedChoiceDAO.modCategoryOrder" parameterType="emfMap">
+		UPDATE
+			CN_LIMITED_CHOICE_CATEGORY_MST
+		SET
+			PSTN =
+		CASE
+			WHEN
+				(SELECT PSTN FROM CN_LIMITED_CHOICE_CATEGORY_MST WHERE CATE_SEQ = #{cateSeq}) <![CDATA[>]]> #{pstn}
+			THEN
+				CASE
+					WHEN PSTN <![CDATA[>=]]> #{pstn} + 1 AND PSTN <![CDATA[<]]> (SELECT PSTN FROM CN_LIMITED_CHOICE_CATEGORY_MST WHERE CATE_SEQ = #{cateSeq}) THEN PSTN + 1
+					WHEN CATE_SEQ = #{cateSeq} THEN #{pstn} + 1
+					ELSE PSTN
+				END
+			ELSE
+				CASE
+					WHEN PSTN <![CDATA[<=]]> #{pstn} AND PSTN <![CDATA[>]]> (SELECT PSTN FROM CN_LIMITED_CHOICE_CATEGORY_MST WHERE CATE_SEQ = #{cateSeq}) THEN PSTN -1
+					WHEN CATE_SEQ = #{cateSeq} THEN #{pstn}
+					ELSE PSTN
+				END
+		END
+	</update>
+
+	<delete id="LimitedChoiceDAO.removeCategory" parameterType="emfMap">
+		DELETE FROM CN_LIMITED_CHOICE_CATEGORY_MST
+		WHERE
+			CATE_SEQ = #{cateSeq}
+	</delete>
+
+	<update id="LimitedChoiceDAO.sortCategory" parameterType="emfMap">
+		UPDATE CN_LIMITED_CHOICE_CATEGORY_MST MST
+		SET PSTN = (
+			SELECT SUB.RN FROM (SELECT ROW_NUMBER() OVER(ORDER BY PSTN ASC) RN, CATE_SEQ FROM CN_LIMITED_CHOICE_CATEGORY_MST) SUB WHERE MST.CATE_SEQ = SUB.CATE_SEQ
+		)
+	</update>
+
+
+	<select id="LimitedChoiceDAO.getLimitedChoiceImageList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* LimitedChoiceDAO.getLimitedChoiceImageList */
+			TBL.*
+		FROM (
+			SELECT
+				ROWNUM AS RNUM,
+				A.*
+			FROM (
+				SELECT
+					COUNT(*) OVER() AS TOT_CNT
+					, (select count(*) from cn_zero_choi_img_mgr_mst where use_yn = 'Y') as use_yn_chk
+					, IM.IMGR_SEQ
+					, IM.TITLE
+					, A.NAME
+					, IM.REG_DTM
+					, IM.USE_YN
+				FROM
+					CN_LIMITED_CHOICE_IMG_MGR_MST IM
+				LEFT OUTER JOIN
+					CO_ADM_MST A
+				ON
+					(IM.REG_ID = A.ID)
+					<trim prefix="WHERE" prefixOverrides="AND">
+						<if test="q != null and q != ''">
+							<if test="f1 == 1">
+								<![CDATA[IM.TITLE LIKE '%' || #{q} || '%']]> OR
+								<![CDATA[A.NAME LIKE '%' || #{q} || '%']]>
+							</if>
+							<if test="f1 == 2">
+								<![CDATA[IM.TITLE LIKE '%' || #{q} || '%']]>
+							</if>
+							<if test="f1 == 3">
+								<![CDATA[A.NAME LIKE '%' || #{q} || '%']]>
+							</if>
+						</if>
+						<if test="f2 == 2">
+							AND IM.USE_YN = 'Y'
+						</if>
+						<if test="f2 == 3">
+							AND IM.USE_YN = 'N'
+						</if>
+					</trim>
+				ORDER BY IM.REG_DTM DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+
+	<select id="LimitedChoiceDAO.getLimitedChoiceImageInfo" parameterType="emfMap" resultType="emfMap">
+		SELECT /* LimitedChoiceDAO.getLimitedChoiceImageInfo */
+               IMGR_SEQ
+               , TITLE
+               , REG_ID
+               , REG_DTM
+               , USE_YN
+		  FROM CN_LIMITED_CHOICE_IMG_MGR_MST
+		 WHERE IMGR_SEQ = #{seq}
+	</select>
+
+	<update id="LimitedChoiceDAO.modifyLimitedChoiceImage" parameterType="emfMap">
+		UPDATE /* LimitedChoiceDAO.modifyLimitedChoiceImage */
+			CN_LIMITED_CHOICE_IMG_MGR_MST
+		SET
+			TITLE = CASE WHEN IMGR_SEQ = #{imgSeq} THEN #{impTitle} ELSE TITLE END
+			,MOD_ID = CASE WHEN IMGR_SEQ = #{imgSeq} THEN #{modId} ELSE MOD_ID END
+			,MOD_DTM = CASE WHEN IMGR_SEQ = #{imgSeq} THEN SYSDATE ELSE MOD_DTM END
+			,USE_YN = CASE WHEN IMGR_SEQ = #{imgSeq} THEN #{useYn} ELSE 'N' END
+	</update>
+
+	<select id="LimitedChoiceDAO.getLimitedChoiceImageFile" parameterType="emfMap" resultType="emfMap">
+		SELECT
+		    *
+		FROM
+		    CN_LIMITED_CHOICE_FILE
+		WHERE
+		    CHF_GB = 'imgmgr'
+		AND
+			PRD_OR_IMG_SEQ = #{seq}
+		AND
+		    USING = #{fileInfo.using}
+		AND
+		    REG_ORDER = #{fileInfo.regOrder}
+	</select>
+
+	<insert id="LimitedChoiceDAO.setLimitedChoiceImage" parameterType="emfMap">
+		<selectKey keyProperty="seq" resultType="java.lang.Integer" order="BEFORE">
+			SELECT CN_LIMITED_CHOICE_IMAGE_SEQ.nextval FROM DUAL
+		</selectKey>
+		INSERT /* LimitedChoiceDAO.setLimitedChoiceImage */ INTO CN_LIMITED_CHOICE_IMG_MGR_MST (
+			IMGR_SEQ
+ 			, TITLE
+ 			, REG_ID
+ 			, REG_DTM
+ 			, USE_YN
+		) VALUES (
+			#{seq}
+			, #{impTitle}
+			, #{regId}
+			, SYSDATE
+			, #{useYn}
+		)
+	</insert>
+
+	<delete id="LimitedChoiceDAO.deleteLimitedChoiceImage" parameterType="emfMap">
+		DELETE /* LimitedChoiceDAO.deleteLimitedChoiceImage */
+		FROM CN_LIMITED_CHOICE_IMG_MGR_MST
+		WHERE IMGR_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+</mapper>

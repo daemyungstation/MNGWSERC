@@ -1,0 +1,183 @@
+<%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%><%@include file="/WEB-INF/jsp/include/el.jspf"%>
+<%@page import="java.net.URLEncoder"%>
+<%@page import="java.net.URLDecoder"%>
+<%
+	String fileName = "발주관리";
+	String userAgent = request.getHeader("User-Agent");
+	
+	if (userAgent != null && userAgent.indexOf("MSIE 5.5") > -1)
+	{ 
+		// MS IE 5.5 이하
+	    response.setHeader("Content-Disposition", "filename=" + URLEncoder.encode(fileName, "UTF-8") + ";");
+	} 
+	else 
+	{
+	    if (userAgent != null && userAgent.toLowerCase().indexOf("firefox") > -1) 
+	    {                            
+	    	fileName = new String(fileName.getBytes("UTF-8"), "ISO-8859-1");
+	    } 
+	    else 
+	    {
+	    	fileName = URLEncoder.encode(fileName, "UTF-8").replaceAll("\\+", "%20");
+	    }
+	    response.setHeader("Content-Disposition","attachment; filename="+fileName+".xls");
+	}
+
+	response.setHeader("Content-Transfer-Encoding", "binary");
+	response.setContentType("application/vnd.ms-excel");
+%>
+<!-- 
+	######################################################################
+	파일명 		:	OMBOrderExcel.jsp
+	프로그램 명 : 	발주관리 엑셀 목록
+	설명		: 	목록
+	작성자		: 	김필기
+	작성일		:	2016.03.21
+	수정일자	 			수정자				수정내용
+	=====================================================================
+	2016.03.21				김필기				최초작성
+	######################################################################
+-->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>excel</title>
+		<style>
+			td { mso-number-format:"\@"; }
+			br {mso-data-placement : same-cell;}
+		</style>
+	</head>
+	<body>
+		<table border="1">
+			<thead>
+				<tr>
+					<th>번호</th>
+					<th>발주관리 아이디</th>
+					<th>발주일</th>
+					<th>배송상황일</th>
+					<th>납품일</th>
+					<th>보류일</th>
+					<th>회원번호</th>
+					<th>회원명</th>
+					<th>가입일</th>
+					<th>가입상태</th>
+					<th>사전해피콜</th>
+					<th>상품명</th>
+					<th>상품모델</th>
+					<th>상품코드</th>
+					<th>제품타입</th>
+					<th>핸드폰번호</th>
+					<!--
+					<th>주소(자택)</th>
+					-->
+					<th style="width:200px;">주소(설치)</th>
+					<th>전화번호(설치)</th>
+					<th>B2B업체명</th>
+					<c:choose>
+						<c:when test="${loginId eq 'lgorder'}">
+							<th width="350">B2B 사원코드</th>
+						</c:when>
+					</c:choose>
+					<th>미설치사유</th>		
+					<!-- 
+					<th>KBNO</th> 
+					<th>고객청약사유</th>
+					<th>회사청약사유</th>
+					-->
+					<th style="width:200px;">특이사항(대명)</th>
+					<c:if test="${loginId eq 'lgorder'}">
+						<th>특이사항(LG)</th>
+					</c:if>
+					<c:if test="${loginId eq 'csvorder'}">
+						<th>특이사항(CSV)</th>
+					</c:if>
+					<c:if test="${loginId eq 'wmnetwork'}">
+						<th>특이사항(위드민)</th>
+					</c:if>
+					<th>주문번호</th>
+					<th>비고</th>
+				</tr>
+			</thead>
+			<tbody>
+				<%-- 데이터를 없을때 화면에 메세지를 출력해준다 --%>
+				<c:if test="${fn:length(rtnMap.list) == 0}">
+					<tr>
+						<td class="lt_text3" colspan="23" style="text-align:center">
+							<fmt:message key="common.nodata.msg" />
+						</td>
+					</tr>
+				</c:if>	
+				<c:forEach var="list" items="${rtnMap.list}" varStatus="status">
+					<c:set var="insplAddr" value="${list.insplZip})${list.insplAddr} ${list.insplAddr2}" />
+					<c:set var="orderChk" value="" />
+					<c:set var="style" value=""/>
+					
+					<c:if test="${fn:replace(list.updateAddr, ' ', '') ne fn:replace(insplAddr, ' ', '')}">
+						<c:set var="orderChk" value="${orderChk}${insplAddr}<br />" />
+					</c:if>
+					<c:if test="${list.updateType ne list.prodKindNm}">
+						<c:set var="orderChk" value="${orderChk}${list.prodKindNm}<br />" />
+					</c:if>
+					<c:if test="${list.updateCell ne list.cell}">
+						<c:set var="orderChk" value="${orderChk}${list.cell}" />
+					</c:if>
+					
+					<c:if test="${not empty orderChk}">
+						<c:set var="style" value="background:yellow;" />
+					</c:if>
+					
+					<c:if test="${list.accStat ne '정상'}">
+						<c:set var="style" value="background:red;" />
+					</c:if>			
+					<tr>
+						<td style="${style}">${rtnMap.totCnt - (rtnMap.pageIndex - 1) * rtnMap.paginationInfo.pageSize - status.count + 1}</td>
+						<td style="${style}">${list.admId}</td>
+						<td style="${style}">${egov:convertDate(list.orderDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}</td>
+						<td style="${style}">${egov:convertDate(list.confirmDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}</td>
+						<td style="${style}">${egov:convertDate(list.deliveryDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}</td>
+						<td style="${style}">${egov:convertDate(list.holdDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}</td>
+						<td style="${style}">${list.accntNo}</td>
+						<td style="${style}">${list.memNm}</td>
+						<td style="${style}">${egov:convertDate(list.joinDt, 'yyyyMMdd', 'yyyy-MM-dd', '')}</td>				
+						<td style="${style}">${list.accStat}</td>
+						<td style="${style}">${egov:nvl(list.hpcallYn, 'X')}</td>
+						<td style="${style}">${list.prodNm}</td>
+						<td style="${style}">${list.prodModel}</td>
+						<td style="${style}">${list.prodModelNm}</td>
+						<td style="${style}">${egov:nvl(list.updateType, list.prodKindNm)}</td>
+						<td style="${style}">${egov:nvl(list.updateCell, list.cell)}</td>
+						<td style="${style}">${egov:nvl(list.updateAddr, insplAddr)}</td>
+						<td style="${style}">${list.insplPhone}</td>
+						<td style="${style}">${list.b2bCompNm}</td>
+						<c:choose>
+							<c:when test="${loginId eq 'lgorder'}">
+								<td style="${style}">${list.b2bEmpleNo}</td>
+							</c:when>
+						</c:choose>
+						<td style="${style}">${list.nosetupEtc}</td>
+						<!-- 
+						<td style="${style} text-align:center">${list.kbNo}</td> 
+						-->
+						<td style="${style}">
+							${list.note2}<br /><span style="font-weight:bold; color:red; mso-data-placement:same-cell;">${orderChk}</span>
+						</td>
+						<c:choose>
+							<c:when test="${loginId eq 'lgorder'}">
+								<td style="${style}">${list.etc}</td>
+							</c:when>
+							<c:when test="${loginId eq 'csvorder'}">
+								<td style="${style}">${list.etc}</td>
+							</c:when>
+							<c:when test="${loginId eq 'wmnetwork'}">
+								<td style="${style}">${list.etc}</td>
+							</c:when>
+						</c:choose>
+						<td style="${style}">${list.orderNum}</td>
+						<td style="${style}">${list.note}</td>
+					</tr>
+				</c:forEach>
+			</tbody>
+		</table>
+	</body>
+</html>

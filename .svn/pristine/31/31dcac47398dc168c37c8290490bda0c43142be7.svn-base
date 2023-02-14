@@ -1,0 +1,149 @@
+#-----------------------------------------------------------------------
+#
+#   globals.properties : \uc2dc\uc2a4\ud15c
+#
+#-----------------------------------------------------------------------
+#   1.  key = value \uad6c\uc870\uc785\ub2c8\ub2e4.
+#   2.  key\uac12\uc740 \uacf5\ubc31\ubb38\uc790\ub97c \ud3ec\ud568\ubd88\uac00, value\uac12\uc740 \uacf5\ubc31\ubb38\uc790\ub97c \uac00\ub2a5
+#   3.  key\uac12\uc73c\ub85c \ud55c\uae00\uc744 \uc0ac\uc6a9\ubd88\uac00,   value\uac12\uc740 \ud55c\uae00\uc0ac\uc6a9\uc774 \uac00\ub2a5
+#   4.  \uc904\uc744 \ubc14\uafc0 \ud544\uc694\uac00 \uc788\uc73c\uba74 '/'\ub97c \ub77c\uc778\uc758 \ub05d\uc5d0 \ucd94\uac00(\ub9cc\uc57d  '/'\ubb38\uc790\ub97c \uc0ac\uc6a9\ud574\uc57c \ud558\ub294 \uacbd\uc6b0\ub294 '//'\ub97c \uc0ac\uc6a9)
+#   5.  Windows\uc5d0\uc11c\uc758 \ub514\ub809\ud1a0\ub9ac \ud45c\uc2dc : '//' or '/'  ('/' \uc0ac\uc6a9\ud558\uba74 \uc548\ub428)
+#   6.  Unix\uc5d0\uc11c\uc758 \ub514\ub809\ud1a0\ub9ac \ud45c\uc2dc : '/'
+#   7.  \uc8fc\uc11d\ubb38 \ucc98\ub9ac\ub294  #\uc0ac\uc6a9
+#   8.  value\uac12 \ub4a4\uc5d0 \uc2a4\ud398\uc774\uc2a4\uac00 \uc874\uc7ac\ud558\ub294 \uacbd\uc6b0 \uc11c\ube14\ub9bf\uc5d0\uc11c \ucc38\uc870\ud560\ub54c\ub294 \uc5d0\ub7ec\ubc1c\uc0dd\ud560 \uc218 \uc788\uc73c\ubbc0\ub85c trim()\ud558\uac70\ub098 \ub9c8\uc9c0\ub9c9 \uacf5\ubc31\uc5c6\uc774 properties \uac12\uc744 \uc124\uc815\ud560\uac83
+#-----------------------------------------------------------------------
+
+# \uc6b4\uc601\uc11c\ubc84 \ud0c0\uc785(WINDOWS, UNIX)
+Globals.OsType = WINDOWS
+
+# DB\uc11c\ubc84 \ud0c0\uc785(ORACLE, MSSQL, MYSQL) - datasource \ubc0f sqlMap \ud30c\uc77c \uc9c0\uc815\uc5d0 \uc0ac\uc6a9\ub428
+
+
+# \ub300\uba85 WEB \ub85c\uceec
+Globals.DbType = oracle
+Globals.DatabaseDriverClassName = net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+#\uac1c\ubc1c
+Globals.DatabaseUrl = jdbc:log4jdbc:oracle:thin:@192.168.220.83:1521/lifeweb
+#\uc6b4\uc601
+#Globals.DatabaseUrl = jdbc:log4jdbc:oracle:thin:@183.111.69.181:1521/lifeweb
+
+Globals.DatabaseUserName = dmweb
+Globals.DatabasePassword = eoaudfkdlvm
+
+# \ub300\uba85 DLCC_\uace0\uac1d\uc815\ubcf4 \uc6b4\uc601
+Globals.outDbType = mssql
+Globals.outDatabaseDriverClassName = net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+#\uac1c\ubc1c
+Globals.outDatabaseUrl = jdbc:log4jdbc:oracle:thin:@192.168.220.83:1521/dmlife
+#\uc6b4\uc601
+#Globals.outDatabaseUrl = jdbc:log4jdbc:oracle:thin:@183.111.69.203:1521:dmlife1
+Globals.outDatabaseUserName = lf_dmuser
+Globals.outDatabasePassword = dmuser123
+
+
+
+
+# \ubb38\uc790\uc5f4 \uc778\ucf54\ub529
+Global.CHARCODE = UTF-8
+
+# \ud30c\uc77c \uc5c5\ub85c\ub4dc \uacbd\ub85c(\uacbd\ub85c \uc124\uc815\uc740 \ubc18\ub4dc\uc2dc \uc808\ub300\uacbd\ub85c\ub97c \uc0ac\uc6a9\ud574\uc57c\ud568.)
+# \ud30c\uc77c \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/uploadfiles/upload)
+Globals.fileStorePath = D:\\nfs\\dmlifeweb\\www\\uploadfiles\\upload
+# \uc5d0\ub514\ud130 \ud30c\uc77c \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/uploadfiles/editor)
+Globals.editorFileStorePath = D:\\nfs\\dmlifeweb\\www\\uploadfiles\\editor
+# \uc5d1\uc140 \ud30c\uc77c \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/MNGWSERC/source/ROOT/common/editor/LGUExcel)
+Globals.excelFileStorePath = D:\\nfs\\dmlifeweb\\www\\common\\editor\\LGUExcel
+
+# \uc81c\ub85c\ucd08\uc774\uc2a4 \uc774\ubbf8\uc9c0 \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/uploadfiles/upload/zero_choice)
+Globals.imageStorePath = D:\\nfs\\dmlifeweb\\www\\uploadfiles\\upload\\zero_choice
+# \ub2e4\uc774\ub809\ud2b8 \ucd08\uc774\uc2a4 \uc774\ubbf8\uc9c0 \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/uploadfiles/upload/direct_choice)
+Globals.directImageStorePath = D:\\nfs\\dmlifeweb\\www\\uploadfiles\\upload\\direct_choice
+# \ub9ac\ubbf8\ud2f0\ub4dc \ucd08\uc774\uc2a4 \uc774\ubbf8\uc9c0 \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/uploadfiles/upload/limited_choice)
+Globals.limitedImageStorePath = D:\\nfs\\dmlifeweb\\www\\uploadfiles\\upload\\limited_choice
+
+# \ubc30\ub108 \uc774\ubbf8\uc9c0 \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/uploadfiles/upload/banner)
+Globals.imageBannerPath = D:\\nfs\\dmlifeweb\\www\\uploadfiles\\upload\\banner
+# \uba54\uc778 \uc774\ubbf8\uc9c0 \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/www/dmlifeweb/www/USERS/source/ROOT/common/images/main/upload)
+Globals.mainImagesPath = D:\\nfs\\dmlifeweb\\www\\common\\images\\main\\upload
+# SNS \uc774\ubbf8\uc9c0 \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/USERS/source/ROOT/common/images/sns/upload)
+Globals.snsImagesPath =  D:\\nfs\\dmlifeweb\\www\\common\\images\\sns\\upload
+# \ubc15\ub78c\ud68c \uc774\ubbf8\uc9c0 \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/USERS/source/ROOT/common/images/fairimage)
+Globals.fairImagesPath = D:\\nfs\\dmlifeweb\\www\\common\\images\\fairimage
+# \ubc15\ub78c\ud68c JSP \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/USERS/source/ROOT/WEB-INF/jsp/front/fair)
+Globals.fairFilePath = D:\\nfs\\dmlifeweb\\www\\jsp\\front\\fair
+
+# \uc0d8\ud50c\uacbd\ub85c
+Globals.docFileStorePath = D:\\nfs\\dmlifeweb\\www\\sample
+
+# \ucf58\ud150\uce20 \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/USERS/source/ROOT/WEB-INF/jsp/contents/)
+Globals.contentsRootPath = D:\\nfs\\dmlifeweb\\www\\jsp\\contents\\
+
+# \uc678\uc8fc\uc5c5\uccb4 \uc785\ub825\ud398\uc774\uc9c0 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/USERS/source/ROOT/WEB-INF/jsp/front/oc/)
+Globals.outsourcingRootPath = D:\\nfs\\dmlifeweb\\www\\jsp\\front\\oc\\
+
+# \uc774\uba54\uc77c \uc800\uc7a5 \uacbd\ub85c(\ub9c1\ud06c:/home/dmlifeweb/www/MNGWSERC/source/ROOT/WEB-INF/jsp/email/)
+Globals.mailTmplFilePath = D:\\nfs\\dmlifeweb\\www\\jsp\\email\\
+
+# \ucca8\ubd80 \ud30c\uc77c \uc6a9\ub7c9 10MB
+Globals.atchFileSize = 20971520
+
+# \uc378\ub124\uc77c \ud30c\uc77c \uc6a9\ub7c9 500KB
+Globals.thnlFileSize = 512000
+
+# \uc774\ubbf8\uc9c0 \ud30c\uc77c \uc6a9\ub7c9 500KB
+Globals.imgFileSize = 512000
+
+# \ucca8\ubd80\ud30c\uc77c \ud655\uc7a5\uc790 \uccb4\ud06c(\ubc94\uc6a9\uc801\uc778\uac83, \uc804\uccb4 \uc801\uc6a9)
+File.UploadMimeType = pdf,jpg,gif,png,ppt,xls,doc,pptx,xlsx,docx,hwp,txt,zip
+
+# \uc774\ubbf8\uc9c0 \ud30c\uc77c \ud655\uc7a5\uc790 \uccb4\ud06c
+Globals.imgFileExtns = jpg,jpge,gif,png,bmp
+
+# \uc0ac\uc774\ud2b8 \uac1c\uc694
+Globals.SITENAME = \ub300\uba85\ub77c\uc774\ud504\uc6e8\uc774
+
+# \uc774\uba54\uc77c \ubc1c\uc1a1 \uc8fc\uc18c
+mail.host = smtp.gmail.com
+mail.port = 587
+mail.username = hyperion0513@gmail.com
+mail.password = dnfntk1##
+
+# \ubcf4\ub0b4\ub294(\ub300\ud45c) \uc774\uba54\uc77c
+Globals.fromUser = lifeway@daemyung.com
+
+# http, https URL (\uc0ac\uc6a9\uc790)
+Globals.httpUrl = http://www.daemyungimready.com
+Globals.httpsUrl = https://www.daemyungimready.com
+
+# http, https URL (\uad00\ub9ac\uc790)
+Globals.httpAdminUrl = http://sales.daemyungimready.com
+Globals.httpsAdminUrl = https://sales.daemyungimready.com
+
+#\uc811\uc18d\uc790\uc218 \uc81c\ud55c \ud06c\uae30(0\uc774\uba74 \uacc4\uc18d \ubc1b\ub294\ub2e4)
+Session.maxSessionValidCount = 0
+
+# \uc5d0\ub514\ud130\uc758 width
+Globals.editorWidth = 900
+
+# \uc378\ub124\uc77c width
+Globals.thnlImgWidth = 200
+
+# \uad00\ub9ac\uc790 ROLE \uad6c\ubd84 AUTH:\uad8c\ud55c, DEPT:\ubd80\uc11c
+Globals.roleGb = DEPT
+
+#\uc628\ub77c\uc778\uc0c1\ub2f4(\uc77c\ubc18, B2B) \uad6c\ubd84 \ucf54\ub4dc
+Globals.gnrlPrdctCd = normal
+Globals.b2bPrdctCd = b2b
+
+#\uc628\ub77c\uc778\uc0c1\ub2f4 \uacb0\uc81c\uad6c\ubd84 \ucf54\ub4dc
+Globals.cms = cms
+Globals.creditCard = cdt
+
+#\uc778\ud2b8\ub77c\ub137 Default Password
+Globals.intraDefPwd = D/4avRoIIVNTwjPW4AlhPpXuxCU4Mqdhryj/N6xaFQw=
+
+#SSO
+#sso.api.url=http://localhost:9083/api/member/
+sso.api.url=http://dev-sso.daemyungimready.com/api/member/
+#sso.api.url=https://sso.daemyungimready.com/api/member/
+sso.api.servicekey=dmhomepage

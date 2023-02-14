@@ -1,0 +1,783 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RIBBenefitDAO">
+
+	<!--
+         쿼리명 : RIBBenefitDAO.selectYearBenefitList
+         설  명 : 수당내역 목록(년도별)을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.08   김필기     최초 생성
+    -->
+	<select id="RIBBenefitDAO.selectYearBenefitList" parameterType="emfMap" resultType="emfMap">
+	
+		SELECT
+		    ALOW_DT,
+		    CNT,
+		    T21,
+		    T32,
+		    T33,
+		    F7,
+		    F11,
+		    F8,
+		    F10,
+		    F12,
+		    (RT_SUM_T - RT_SUM_F) AS RT_SUM_T ,
+		    RT_SUM_F ,
+		    F5 ,
+		    F6 ,
+		    (F5 + F6) AS TOT_TAX ,
+		    RT_SUM_T - (RT_SUM_F + (F5 + F6)) TOT_ALOW_AMT ,
+		    TRUNC((RT_SUM_T - RT_SUM_F) * NEED_RAT, -1) AS NEED_COST
+		FROM
+		(
+		    SELECT 
+		        TBL2.*,
+		        
+		        CASE WHEN CHK_RT_TAX = 'Y' THEN
+		            CASE WHEN INCOM_CL = '0001' AND (ALOW_AMT-TRUNC(ALOW_AMT * NEED_RAT)) <![CDATA[>]]>  50000 THEN 
+		                    TRUNC(ALOW_AMT * TAX_RAT,-1)
+		                 WHEN INCOM_CL = '0002' AND (ALOW_AMT) <![CDATA[>=]]>  33600 THEN                           
+		                    TRUNC(ALOW_AMT * TAX_RAT,-1)
+		                 ELSE 0 END
+		        ELSE 0 END F5, 
+		        
+		        CASE WHEN CHK_RT_TAX = 'Y' THEN
+		            CASE WHEN INCOM_CL = '0001' AND (ALOW_AMT-TRUNC(ALOW_AMT * NEED_RAT)) <![CDATA[>]]>  50000 THEN   
+		                    TRUNC(ALOW_AMT * TAX_RAT * 0.1,-1)
+		                 WHEN INCOM_CL = '0002' AND (ALOW_AMT) <![CDATA[>=]]>  33600 THEN                              
+		                    TRUNC(ALOW_AMT * TAX_RAT * 0.1,-1)
+		                 ELSE 0 END  
+		         ELSE 0 END F6                                                                            
+		         
+		    FROM
+		    (
+		        SELECT TBL.*,
+		            ED.INCOM_CL,                                                               
+		            ED.OCP_CLUSTER,                                                            
+		            (T21 +  T32 ) AS RT_SUM_T ,                                               
+		            (ASM.PAY_RAT/100) AS NEED_RAT,                                             
+		            
+		            CASE WHEN NVL(ED.INCOM_CL,'X') = 'X' THEN (ASM.PAY_RAT/100) 
+		            ELSE              
+		                 CASE 
+		                 	  WHEN (ED.INCOM_CL = '0001' AND ALOW_DT <![CDATA[>=]]> '201812') THEN 0.08
+		                 	  WHEN (ED.INCOM_CL = '0001' AND ALOW_DT <![CDATA[<=]]> '201803') THEN 0.04
+		                      WHEN (ED.INCOM_CL = '0001' AND ALOW_DT <![CDATA[>]]>  '201803') THEN 0.06
+		                      WHEN ED.INCOM_CL = '0002' THEN 0.03
+		                      WHEN ED.INCOM_CL = '0003' THEN 0
+		                 ELSE 0.9 END                 
+		             END TAX_RAT ,                                                             
+		                                          
+		            
+		            (F7 + F11 + F12) AS RT_SUM_F,                                             
+		            (T21 +  T32 ) - (F7 + F11 + F12) AS ALOW_AMT,                              
+		            CASE WHEN (T21 + T32) - (F7 + F11) <![CDATA[<=]]> 0 THEN 'F' ELSE 'Y' END CHK_RT_TAX   
+		        FROM
+		        (
+		            SELECT
+		                ALOW_DT,  
+		                AD.EMPLE_NO,
+		                COUNT(ACCNT_NO) AS CNT,
+		                SUM(CASE WHEN ALOW_CD = 'T21' THEN AMT ELSE 0 END) AS T21, 
+		                SUM(CASE WHEN ALOW_CD = 'T32' THEN AMT ELSE 0 END) AS T32, 
+		                0 AS T33,  
+		                SUM(CASE WHEN ALOW_CD = 'F7' THEN AMT ELSE 0 END) AS F7,  
+		                SUM(CASE WHEN ALOW_CD = 'F11' THEN AMT ELSE 0 END) AS F11, 
+		                0 AS F8,  
+		                0 AS F10, 
+		                SUM(CASE WHEN ALOW_CD = 'F12' THEN AMT ELSE 0 END) AS F12  
+		            FROM LF_DMUSER.ALOW_DA_DTL AD INNER JOIN
+		                 LF_DMUSER.EMPLOYEE EMP ON AD.EMPLE_NO = EMP.EMPLE_NO
+		            WHERE 1=1
+	         		<choose>
+					<when test="alowDt != null and alowDt != ''">
+						AND AD.ALOW_DT = #{alowDt}			      
+					</when>
+					<otherwise>
+						AND AD.ALOW_DT BETWEEN #{year} || '01' AND #{year} || '12'
+					</otherwise>
+				</choose>	
+                           AND AD.EMPLE_NO =  #{empleNo}
+		            GROUP BY  ALOW_DT, AD.EMPLE_NO
+		        ) TBL LEFT OUTER JOIN
+		        (SELECT 
+		            E.EMPLE_NO, 
+		            E.DEPT_CD, 
+		            E.INCOM_CL, 
+		            D.DEPT_KIND,
+		            CASE WHEN NVL(E.OCP_CLUSTER,'X') != 'X' THEN E.OCP_CLUSTER ELSE D.OCP_CLUSTER END OCP_CLUSTER
+		        FROM LF_DMUSER.EMPLOYEE E JOIN DEPARTMENT D ON E.DEPT_CD = D.DEPT_CD
+		        WHERE D.DEPT_KIND = '02'
+		        AND E.DEPT_CD != '1664'
+		        ) ED ON TBL.EMPLE_NO = ED.EMPLE_NO LEFT OUTER JOIN
+		        LF_DMUSER.ALOW_SET_MST ASM ON ASM.ALOW_CD = 'T23' AND ASM.PROD_JOIN_DT_STR  <![CDATA[<=]]>  TBL.ALOW_DT AND  ASM.PROD_JOIN_DT_END  <![CDATA[>=]]>  TBL.ALOW_DT AND ASM.OCP_CLUSTER = ED.OCP_CLUSTER 
+		    ) TBL2
+		) TBL3 
+		<!-- INNER JOIN 		    LF_DMUSER.ALOW_CLOSE AC ON TBL3.ALOW_DT = AC.YYMM  -->
+		<!-- 
+		SELECT /* RIBBenefitDAO.selectYearBenefitList */
+			   ALOW_DT
+			   , COUNT(ALOW_DT) AS CNT
+			   , SUM(T21) AS T21
+			   , SUM(T32) AS T32
+			   , SUM(T33) AS T33
+			   , SUM(F7) AS F7
+			   , SUM(F11) AS F11
+			   , SUM(F8) AS F8
+			   , SUM(F10) AS F10
+			   , SUM(F12) AS F12
+			   , SUM(RT_SUM_T) AS RT_SUM_T
+			   , SUM(RT_SUM_F) AS RT_SUM_F
+			   , SUM(F5) AS F5
+			   , SUM(F6) AS F6
+			   , SUM(TOT_TAX) AS TOT_TAX
+			   , SUM(TOT_ALOW_AMT) AS TOT_ALOW_AMT
+			   , SUM(NEED_COST) AS NEED_COST
+		FROM (			  	
+			SELECT ALOW_DT
+			       , T21
+			       , T32
+			       , T33
+			       , F7
+			       , F11
+			       , F8
+			       , F10
+			       , F12
+			       , RT_SUM_T
+			       , RT_SUM_F
+			       , RT_ALOW_AMT   
+			       , CASE WHEN CHK_RT_TAX = 'Y' THEN TRUNC(RT_ALOW_AMT * TAX_RAT, -1) ELSE 0 END F5
+			       , CASE WHEN CHK_RT_TAX = 'Y' THEN TRUNC(RT_ALOW_AMT * TAX_RAT * 0.1, -1) ELSE 0 END F6
+			       , CASE WHEN CHK_RT_TAX = 'Y' THEN TRUNC(RT_ALOW_AMT * TAX_RAT, -1) + TRUNC(RT_ALOW_AMT * TAX_RAT * 0.1, -1) ELSE 0 END TOT_TAX  
+				   , CASE WHEN CHK_RT_TAX = 'Y' THEN RT_ALOW_AMT - TRUNC(RT_ALOW_AMT * TAX_RAT, -1) + TRUNC(RT_ALOW_AMT * TAX_RAT * 0.1, -1)
+						  WHEN RT_ALOW_AMT <![CDATA[<=]]> 0 THEN 0 
+						  ELSE RT_ALOW_AMT   
+						   END TOT_ALOW_AMT
+				   , CASE WHEN RT_ALOW_AMT <![CDATA[>]]> 0 THEN TRUNC(RT_ALOW_AMT * NEED_RAT, -1) ELSE 0 END NEED_COST  
+			FROM (
+				SELECT MPA.ACCNT_NO ACCNT_NO
+				       , PD.PROD_NM AS PROD_NM
+				       , NVL(PM.T21, 0) AS T21   
+				       , NVL(PM.T32, 0) AS T32 
+				       , NVL(PM.T33, 0) AS T33
+				       , NVL(PM.F7, 0) AS F7
+				       , NVL(PM.F11, 0) AS F11
+				       , NVL(PM.F8, 0) AS F8
+				       , NVL(PM.F10, 0) AS F10
+				       , NVL(PM.F12, 0) AS F12      
+				       , (NVL(PM.T21, 0) + NVL(PM.T32, 0) + NVL(PM.T33, 0)) AS RT_SUM_T
+				       , (NVL(PM.F7, 0) + NVL(PM.F11, 0) + NVL(PM.F8, 0) + NVL(PM.F10, 0)) AS RT_SUM_F
+				       , CASE WHEN (NVL(PM.T21, 0) + NVL(PM.T32, 0)) - (NVL(PM.F7, 0) + NVL(PM.F11, 0)) <![CDATA[<=]]> 0 THEN 'F' ELSE 'Y' END CHK_RT_TAX
+				       , CASE WHEN (NVL(PM.T21, 0) + NVL(PM.T32, 0)) - (NVL(PM.F7, 0) + NVL(PM.F11, 0)) <![CDATA[<=]]> 0 THEN  0 
+					          ELSE (NVL(PM.T21, 0) + NVL(PM.T32, 0)) - (NVL(PM.F7, 0) + NVL(PM.F11, 0)) + NVL(PM.T33, 0) - (NVL(PM.F10, 0) + NVL(PM.F8, 0)) 
+							   END RT_SUM_FORTAX
+				       , (NVL(PM.T21, 0) + NVL(PM.T32, 0)) - (NVL(PM.F7, 0) + NVL(PM.F11, 0)) + NVL(PM.T33, 0) - (NVL(PM.F10, 0) + NVL(PM.F8, 0)) AS RT_ALOW_AMT                 
+				       , NVL(PM.TAX_RAT, 0) AS TAX_RAT
+				       , NVL(PM.NEED_RAT, 0) AS NEED_RAT
+				       , ALOW_DT
+				FROM MEM_PROD_ACCNT MPA JOIN PRODUCT PD ON MPA.PROD_CD = PD.PROD_CD  
+				JOIN (
+					SELECT ACCNT_NO
+					       , TAX_RAT
+					       , NEED_RAT
+					       , ALOW_DT
+					       , SUM(TO_NUMBER(T21)) AS T21
+					       , SUM(TO_NUMBER(T32)) AS T32
+					       , SUM(TO_NUMBER(T33)) AS T33
+					       , SUM(TO_NUMBER(F7)) AS F7
+					       , SUM(TO_NUMBER(F11)) AS F11
+					       , SUM(TO_NUMBER(F8)) AS F8
+					       , SUM(TO_NUMBER(F10)) AS F10
+					       , SUM(TO_NUMBER(F12)) AS F12
+					FROM (
+						SELECT MPA.ACCNT_NO ACCNT_NO
+							   , ALOW_DT
+							   , NVL(PM.T21, 0) AS T21   
+							   , NVL(PM.T32, 0) AS T32
+							   , NVL(PM.F7, 0) AS F7
+							   , NVL(PM.F11, 0) AS F11
+							   , 0 AS F8
+							   , 0 AS F10
+							   , NVL(PM.F12, 0) AS F12
+							   , 0 AS T33
+							   , NVL(E.TAX_RAT, 0) AS TAX_RAT
+							   , NVL(E.NEED_RAT, 0) AS NEED_RAT
+						FROM MEM_PROD_ACCNT MPA
+						JOIN (
+							SELECT ED.*
+								   , CASE WHEN NVL(ED.INCOM_CL, '') = '' THEN TO_NUMBER(ACD.PAY_RAT)/100
+								   	      ELSE CASE WHEN ED.INCOM_CL = '0001' THEN 0.04
+								   				    WHEN ED.INCOM_CL = '0002' THEN 0.03
+								   				    WHEN ED.INCOM_CL = '0003' THEN 0 ELSE 0.9 END
+								   	       END TAX_RAT
+							       , TO_NUMBER(ACDNEED.PAY_RAT)/100 AS NEED_RAT
+							FROM (
+								SELECT E.EMPLE_NO
+									   , E.INCOM_CL
+									   , D.DEPT_KIND
+									   , CASE WHEN NVL(E.OCP_CLUSTER, '') != '' THEN E.OCP_CLUSTER ELSE D.OCP_CLUSTER END OCP_CLUSTER
+								  FROM EMPLOYEE E JOIN DEPARTMENT D ON E.DEPT_CD = D.DEPT_CD
+								 WHERE E.EMPLE_NO = #{empleNo}			            
+							) ED, ALOW_COM_DA ACD, ALOW_COM_DA ACDNEED
+							WHERE ED.OCP_CLUSTER = ACD.OCP_CLUSTER(+)
+							  AND ED.OCP_CLUSTER = ACDNEED.OCP_CLUSTER(+)
+							  AND ACD.ALOW_CD = 'F5'      
+							  AND ACD.APP_DT = (SELECT MAX(APP_DT) FROM ALOW_COM_DA WHERE ALOW_CD = 'F5' AND  OCP_CLUSTER = ED.OCP_CLUSTER)
+							  AND ACDNEED.ALOW_CD = 'T23'
+						) E ON MPA.EMPLE_NO = E.EMPLE_NO
+						JOIN (
+							SELECT ACCNT_NO
+							       , ALOW_DT
+								   , CASE WHEN ALOW_CD = 'T21' THEN NVL(AMT, 0) ELSE 0 END T21
+								   , CASE WHEN ALOW_CD = 'F7' THEN NVL(AMT, 0) ELSE 0 END F7
+								   , CASE WHEN ALOW_CD = 'T32' THEN NVL(AMT, 0) ELSE 0 END T32
+								   , CASE WHEN ALOW_CD = 'F11' THEN NVL(AMT, 0) ELSE 0 END F11      
+								   , CASE WHEN ALOW_CD = 'F12' THEN NVL(AMT, 0) ELSE 0 END F12
+							FROM (
+								SELECT ACCNT_NO
+								       , AMT
+									   , ALOW_CD
+									   , ALOW_DT
+									   , NOTE
+									   , DTL_SEQ
+								  FROM ALOW_DA_DTL AD
+								 WHERE ALOW_CD NOT IN ('T33', 'F8', 'F10')
+									AND DTL_SEQ = (SELECT MAX(DTL_SEQ) FROM ALOW_DA_DTL 
+													WHERE ACCNT_NO = AD.ACCNT_NO
+													  AND EMPLE_NO = AD.EMPLE_NO
+													  AND PAY_NO = AD.PAY_NO
+													  AND ALOW_DT = AD.ALOW_DT
+													  AND ALOW_CD = AD.ALOW_CD)
+									AND (AMT > 0 OR HIST_YN = 'Y')
+								<choose>
+									<when test="alowDt != null and alowDt != ''">
+										AND ALOW_DT = #{alowDt}			      
+									</when>
+									<otherwise>
+										AND ALOW_DT BETWEEN #{year} || '01' AND #{year} || '12'
+									</otherwise>
+								</choose>				        														
+								    AND EMPLE_NO = #{empleNo}
+							) F  								
+						) PM ON PM.ACCNT_NO = MPA.ACCNT_NO
+						LEFT JOIN RESCISSION R ON R.ACCNT_NO = MPA.ACCNT_NO AND R.DEL_FG = 'N'   
+						WHERE MPA.DEL_FG = 'N'
+						  AND NVL(R.RESN_CL, '00') != '02'
+						  AND ((E.DEPT_KIND = '02' AND NVL(E.OCP_CLUSTER, '') != '04') OR E.DEPT_KIND = '01')
+				
+						UNION ALL
+				
+						SELECT MPA.ACCNT_NO AS ACCNT_NO
+							   , ALOW_DT
+							   , 0 AS T21   
+							   , 0 AS T32
+							   , 0 AS F7
+							   , 0 AS F11
+							   , NVL(PM.F8, 0) AS F8
+							   , NVL(PM.F10, 0) AS F10
+							   , 0 AS F12
+							   , NVL(PM.T33, 0) AS T33
+							   , NVL(E.TAX_RAT, 0) TAX_RAT
+							   , NVL(E.NEED_RAT, 0) NEED_RAT
+						FROM MEM_PROD_ACCNT MPA
+						JOIN (
+							SELECT ED.*
+								   , CASE WHEN NVL(ED.INCOM_CL, '') = '' THEN TO_NUMBER(ACD.PAY_RAT)/100
+										  ELSE CASE WHEN ED.INCOM_CL = '0001' THEN 0.04
+												    WHEN ED.INCOM_CL = '0002' THEN 0.03
+												    WHEN ED.INCOM_CL = '0003' THEN 0 ELSE 0.9 END
+										   END TAX_RAT
+								   , TO_NUMBER(ACDNEED.PAY_RAT)/100 AS NEED_RAT
+							FROM (
+								SELECT E.EMPLE_NO
+									   , E.EMPLE_NM
+									   , E.INCOM_CL
+									   , D.DEPT_KIND
+									   , CASE WHEN NVL(E.OCP_CLUSTER, '') != '' THEN E.OCP_CLUSTER ELSE D.OCP_CLUSTER END OCP_CLUSTER
+								  FROM EMPLOYEE E JOIN DEPARTMENT D ON E.DEPT_CD = D.DEPT_CD
+								 WHERE E.EMPLE_NO = #{empleNo}
+							) ED, ALOW_COM_DA ACD, ALOW_COM_DA ACDNEED
+							WHERE ED.OCP_CLUSTER = ACD.OCP_CLUSTER(+)
+							  AND ED.OCP_CLUSTER = ACDNEED.OCP_CLUSTER(+)
+							  AND ACD.ALOW_CD = 'F5' 
+							  AND ACD.APP_DT = (SELECT MAX(APP_DT) FROM ALOW_COM_DA WHERE ALOW_CD = 'F5' AND OCP_CLUSTER = ED.OCP_CLUSTER)
+							  AND ACDNEED.ALOW_CD = 'T23'
+						) E ON MPA.EMPLE_NO = E.EMPLE_NO   
+						JOIN (
+							SELECT ACCNT_NO
+								   , ALOW_DT
+								   , PAY_NO
+								   , CASE WHEN ALOW_CD = 'T33' THEN NVL(AMT, 0) ELSE 0 END T33 
+								   , CASE WHEN ALOW_CD = 'F8' THEN NVL(AMT, 0) ELSE 0 END F8
+								   , CASE WHEN ALOW_CD = 'F10' THEN NVL(AMT, 0) ELSE 0 END F10
+							FROM (
+								SELECT ACCNT_NO
+									   , AMT
+									   , ALOW_CD
+									   , ALOW_DT
+									   , NOTE
+									   , DTL_SEQ
+									   , PAY_NO
+									   , HIST_YN
+								  FROM ALOW_DA_DTL AD
+								 WHERE ALOW_CD IN ('T33', 'F8', 'F10')
+								   AND DTL_SEQ = (SELECT MAX(DTL_SEQ) FROM ALOW_DA_DTL 
+								                   WHERE ACCNT_NO = AD.ACCNT_NO 
+												     AND EMPLE_NO = AD.EMPLE_NO
+													 AND PAY_NO = AD.PAY_NO
+													 AND ALOW_DT = AD.ALOW_DT
+													 AND ALOW_CD = AD.ALOW_CD)
+								   AND (AMT > 0 OR HIST_YN = 'Y')
+								<choose>
+									<when test="alowDt != null and alowDt != ''">
+										AND ALOW_DT = #{alowDt}			      
+									</when>
+									<otherwise>
+										AND ALOW_DT BETWEEN #{year} || '01' AND #{year} || '12'
+									</otherwise>
+								</choose>										
+								   AND EMPLE_NO = #{empleNo}
+							) F 
+						) PM ON PM.ACCNT_NO = MPA.ACCNT_NO
+						WHERE MPA.DEL_FG = 'N'
+					) TMP   
+					GROUP BY ACCNT_NO, TAX_RAT, NEED_RAT, ALOW_DT
+				) PM ON PM.ACCNT_NO = MPA.ACCNT_NO 					
+				WHERE MPA.DEL_FG = 'N'
+			) TMP			  			  	
+		) TBL
+		GROUP BY ALOW_DT	
+		 -->
+	</select>
+
+	<!--
+         쿼리명 : RIBBenefitDAO.selectBenefitList
+         설  명 : 수당내역 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.08   김필기     최초 생성
+    -->
+    <select id="RIBBenefitDAO.selectBenefitList" parameterType="emfMap" resultType="emfMap">
+        SELECT 
+        	/* RIBBenefitDAO.selectBenefitList */
+            MAIN_TBL.*
+        FROM
+        (
+            SELECT
+            	ROW_NUMBER() OVER(ORDER BY TBL.ACCNT_NO ASC) AS RNUM,
+                TBL.ACCNT_NO,
+                SUBSTR(MB.MEM_NM,0,1) || '*' || SUBSTR(MB.MEM_NM,-1) AS MEM_NM,
+                PD.PROD_NM,
+                MPA.JOIN_DT,
+                DECODE(MPA.KSTBIT,'01','대기','02','가입','03','해약','04','행사','기타') AS KSTBIT,
+                PAY_NO AS DA_PAY_NO,
+	            (SELECT MAX(ALOW_DT)
+	         	 FROM TB_ALOW_PAY_INFO
+	        	 WHERE YYYYMM = TBL.ALOW_DT
+	          	  AND ACCNT_NO = TBL.ACCNT_NO
+	          	  AND PAY_NO = TBL.PAY_NO) AS PAY_DAY,                
+                T21 AS T21,
+                T21 AS RT_SUM_T,
+                0 AS T32,
+                F07 AS F7,
+                F07 AS RT_SUM_F,
+                0 AS F11,
+                (T21 - F07) AS RT_ALOW_AMT
+               FROM
+            (
+                SELECT
+                    ALOW_DT,
+                    ACCNT_NO,
+                    PAY_NO,                    
+                    SUM((CASE WHEN ALOW_CD = 'T21' THEN AMT ELSE  0 END )) AS T21,
+                    SUM((CASE WHEN ALOW_CD = 'F7' THEN AMT ELSE  0 END  )) AS F07 
+                FROM
+                (
+                    SELECT
+                        ROW_NUMBER() OVER(PARTITION BY ACCNT_NO, ALOW_CD ORDER BY DTL_SEQ DESC) AS MAX_SEQ,
+                        A.*
+                    FROM ALOW_DA_DTL A
+                    WHERE 1=1                     
+	                <choose>
+						<when test="alowDt != null and alowDt != ''">
+							AND ALOW_DT = #{alowDt}			      
+						</when>
+						<otherwise>
+							AND ALOW_DT BETWEEN SUBSTR(REPLACE(#{strtDt}, '-', ''), 1, 6) AND SUBSTR(REPLACE(#{endDt}, '-', ''), 1, 6)
+						</otherwise>
+					</choose>	
+                     
+                ) AD
+                GROUP BY ALOW_DT,ACCNT_NO,PAY_NO
+            ) TBL INNER JOIN
+                TB_MEMBER_BASIC_INFO_DAY MPA ON TBL.ACCNT_NO = MPA.ACCNT_NO INNER JOIN
+                MEMBER MB ON MPA.MEM_NO = MB.MEM_NO AND MB.DEL_FG = 'N' INNER JOIN
+                PRODUCT PD ON MPA.PROD_CD = PD.PROD_CD LEFT OUTER JOIN
+                EMPLOYEE EMP ON MPA.EMPLE_NO = EMP.EMPLE_NO 
+            WHERE 1=1			        		
+				 AND MPA.EMPLE_NO = #{empleNo}                       
+            ORDER BY ACCNT_NO ASC
+        ) MAIN_TBL
+        WHERE 1=1
+		AND RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+    
+    </select>
+	
+	<!--
+         쿼리명 : RIBBenefitDAO.selectBenefitList
+         설  명 : 수당내역 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.08   김필기     최초 생성
+    -->
+    <select id="RIBBenefitDAO.selectBenefitListCnt" parameterType="emfMap" resultType="emfMap">
+        SELECT 
+        	/* RIBBenefitDAO.selectBenefitListCnt */	 
+            COUNT(*) AS TOT_CNT 	
+        FROM
+        (
+            SELECT
+                TBL.ACCNT_NO,
+                SUBSTR(MB.MEM_NM,0,1) || '*' || SUBSTR(MB.MEM_NM,-1) AS MEM_NM,
+                PD.PROD_NM,
+                MPA.JOIN_DT,
+                DECODE(MPA.KSTBIT,'01','대기','02','가입','03','해약','04','행사','기타') AS KSTBIT,
+                PAY_NO AS DA_PAY_NO,
+                T21 AS T21,
+                T21 AS RT_SUM_T,
+                0 AS T32,
+                F07 AS F07,
+                F07 AS RT_SUM_F,
+                0 AS F11,
+                (T21 - F07) AS RT_ALOW_AMT
+               FROM
+            (
+                SELECT
+                    ALOW_DT,
+                    ACCNT_NO,
+                    PAY_NO,                    
+                    SUM((CASE WHEN ALOW_CD = 'T21' THEN AMT ELSE  0 END )) AS T21,
+                    SUM((CASE WHEN ALOW_CD = 'F7' THEN AMT ELSE  0 END  )) AS F07 
+                FROM
+                (
+                    SELECT
+                        ROW_NUMBER() OVER(PARTITION BY ACCNT_NO, ALOW_CD ORDER BY DTL_SEQ DESC) AS MAX_SEQ,
+                        A.*
+                    FROM ALOW_DA_DTL A
+                    WHERE 1=1                     
+	                <choose>
+						<when test="alowDt != null and alowDt != ''">
+							AND ALOW_DT = #{alowDt}			      
+						</when>
+						<otherwise>
+							AND ALOW_DT BETWEEN SUBSTR(REPLACE(#{strtDt}, '-', ''), 1, 6) AND SUBSTR(REPLACE(#{endDt}, '-', ''), 1, 6)
+						</otherwise>
+					</choose>	
+                     
+                ) AD
+                GROUP BY ALOW_DT,ACCNT_NO,PAY_NO
+            ) TBL INNER JOIN
+                TB_MEMBER_BASIC_INFO_DAY MPA ON TBL.ACCNT_NO = MPA.ACCNT_NO INNER JOIN
+                MEMBER MB ON MPA.MEM_NO = MB.MEM_NO AND MB.DEL_FG = 'N' INNER JOIN
+                PRODUCT PD ON MPA.PROD_CD = PD.PROD_CD LEFT OUTER JOIN
+                EMPLOYEE EMP ON MPA.EMPLE_NO = EMP.EMPLE_NO 
+            WHERE 1=1			        		
+				 AND MPA.EMPLE_NO = #{empleNo}                       
+            ORDER BY ACCNT_NO ASC
+        ) MAIN_TBL
+        WHERE 1=1
+    	
+    	<!-- 
+		SELECT /* RIBBenefitDAO.selectBenefitListCnt */	 
+			   COUNT(*) AS TOT_CNT 			   
+		FROM (
+			SELECT MPA.ACCNT_NO AS ACCNT_NO
+		           , MB.MEM_NM AS MEM_NM   
+		           , PM.EMPLE_NO
+		           , PM.EMPLE_NM
+		           , PM.JOIN_DT
+		           , MPA.PROD_CD AS PROD_CD
+		           , PD.PROD_NM AS PROD_NM
+		           , PM.OCP_CLUSTER_NM
+		           , P.TOT_PAY_NO
+		           , P.TOT_PAY_AMT
+		           , NVL(PM.PAY_NO, 0) AS DA_PAY_NO
+		           , NVL(PM.T21, 0) AS T21   
+		           , NVL(PM.T32, 0) AS T32 
+		           , NVL(PM.T33, 0) AS T33
+		           , NVL(PM.F7, 0) AS F7
+		           , NVL(PM.F11, 0) AS F11
+		           , NVL(PM.F8, 0) AS F8
+		           , NVL(PM.F10, 0) AS F10
+		           , NVL(PM.F12, 0) AS F12      
+		           , NVL(PM.T21, 0) + NVL(PM.T32, 0) + NVL(PM.T33, 0) AS RT_SUM_T
+		           , NVL(PM.F7, 0) + NVL(PM.F11, 0) + NVL(PM.F8, 0) + NVL(PM.F10, 0) AS RT_SUM_F
+		           , CASE WHEN (NVL(PM.T21, 0) + NVL(PM.T32, 0)) - (NVL(PM.F7, 0) + NVL(PM.F11, 0)) <![CDATA[<=]]> 0 THEN 'F' ELSE 'Y' END CHK_RT_TAX
+		           , CASE WHEN (NVL(PM.T21, 0) + NVL(PM.T32, 0)) - (NVL(PM.F7, 0) + NVL(PM.F11, 0)) <![CDATA[<=]]> 0 THEN 0 
+		                  ELSE (NVL(PM.T21, 0) + NVL(PM.T32, 0)) - (NVL(PM.F7, 0) + NVL(PM.F11, 0)) + NVL(PM.T33, 0) - (NVL(PM.F10, 0) + NVL(PM.F8, 0))
+		                   END RT_SUM_FORTAX
+		           , (NVL(PM.T21, 0) + NVL(PM.T32, 0)) - (NVL(PM.F7, 0) + NVL(PM.F11, 0)) + NVL(PM.T33, 0) - (NVL(PM.F10, 0) + NVL(PM.F8, 0)) AS RT_ALOW_AMT                 
+		           , NVL(PM.TAX_RAT, 0) AS TAX_RAT
+		           , NVL(PM.NEED_RAT, 0) AS NEED_RAT
+		           , PM.HIST_YN
+		           , NVL((SELECT MODEL_CL_NM FROM PRODUCT_MODEL_CL_CD WHERE MODEL_CL_CD = MPA.PROD_MODEL_KIND), '') AS MODEL_CL_NM
+			FROM MEM_PROD_ACCNT MPA
+			JOIN MEMBER MB ON MPA.MEM_NO = MB.MEM_NO
+			JOIN PRODUCT PD ON MPA.PROD_CD = PD.PROD_CD  
+			JOIN (
+				SELECT ACCNT_NO
+				       , EMPLE_NO
+					   , EMPLE_NM
+					   , OCP_CLUSTER_NM
+					   , JOIN_DT
+					   , PROD_CD
+					   , TAX_RAT
+					   , NEED_RAT
+		               , SUM(TO_NUMBER(T21)) AS T21
+		               , SUM(TO_NUMBER(T32)) AS T32
+		               , SUM(TO_NUMBER(T33)) AS T33
+		               , SUM(TO_NUMBER(F7)) AS F7
+		               , SUM(TO_NUMBER(F11)) AS F11
+		               , SUM(TO_NUMBER(F8)) AS F8
+		               , SUM(TO_NUMBER(F10)) AS F10
+		               , SUM(TO_NUMBER(F12)) AS F12
+		               , MAX(PAY_NO) AS PAY_NO
+		               , MAX(HIST_YN) AS HIST_YN
+				FROM (
+					SELECT MPA.ACCNT_NO AS ACCNT_NO
+					       , E.EMPLE_NO AS EMPLE_NO
+					       , E.EMPLE_NM AS EMPLE_NM
+					       , NVL(FN_COM_NM('96', E.OCP_CLUSTER), '') AS OCP_CLUSTER_NM
+					       , MPA.JOIN_DT AS JOIN_DT
+					       , MPA.PROD_CD AS PROD_CD
+					       , NVL(PM.T21, 0) AS T21   
+					       , NVL(PM.T32, 0) AS T32
+					       , NVL(PM.F7, 0) AS F7
+					       , NVL(PM.F11, 0) AS F11
+					       , 0 AS F8
+					       , 0 AS F10
+					       , NVL(PM.F12, 0) AS F12
+					       , 0 AS T33
+					       , NVL(E.TAX_RAT, 0) AS TAX_RAT
+					       , NVL(E.NEED_RAT, 0) AS NEED_RAT
+					       , PM.PAY_NO
+					       , PM.HIST_YN
+					FROM MEM_PROD_ACCNT MPA    
+					JOIN (
+						SELECT ED.*
+		                       , CASE WHEN NVL(ED.INCOM_CL, '') = '' THEN TO_NUMBER(ACD.PAY_RAT)/100
+		                              ELSE 		                                        
+											CASE 
+												WHEN (ED.INCOM_CL = '0001' AND ALOW_DT <![CDATA[>=]]>  '201812') THEN 0.08
+												WHEN (ED.INCOM_CL = '0001' AND ALOW_DT <![CDATA[<=]]>  '201803') THEN 0.04
+												WHEN (ED.INCOM_CL = '0001' AND ALOW_DT <![CDATA[>]]>  '201803') THEN 0.06
+											     WHEN ED.INCOM_CL = '0002' THEN 0.03
+											     WHEN ED.INCOM_CL = '0003' THEN 0
+											ELSE 0.9 END    
+		                               END TAX_RAT
+		                       , TO_NUMBER(ACDNEED.PAY_RAT)/100 AS NEED_RAT
+						FROM (
+							SELECT 
+									#{alowDt} AS ALOW_DT
+								   , E.EMPLE_NO
+						           , E.EMPLE_NM
+						           , E.DEPT_CD
+						           , E.INCOM_CL
+						           , D.DEPT_KIND
+						           , CASE WHEN NVL(E.OCP_CLUSTER, '') != '' THEN E.OCP_CLUSTER ELSE D.OCP_CLUSTER END OCP_CLUSTER
+							  FROM EMPLOYEE E, DEPARTMENT D
+							 WHERE E.DEPT_CD = D.DEPT_CD     
+						) ED, ALOW_COM_DA ACD, ALOW_COM_DA ACDNEED
+						WHERE ED.OCP_CLUSTER = ACD.OCP_CLUSTER(+)
+						  AND ED.OCP_CLUSTER = ACDNEED.OCP_CLUSTER(+)
+						  AND ACD.ALOW_CD = 'F5'      
+						  AND ACD.APP_DT = (SELECT MAX(APP_DT) FROM ALOW_COM_DA WHERE ALOW_CD = 'F5' AND OCP_CLUSTER = ED.OCP_CLUSTER)
+						  AND ACDNEED.ALOW_CD = 'T23'      
+					) E ON MPA.EMPLE_NO = E.EMPLE_NO
+					JOIN (
+						SELECT ACCNT_NO
+						       , MAX(NO) AS TOT_PAY_NO
+							   , SUM(PAY_AMT) AS TOT_PAY_AMT
+					      FROM PAY_MNG
+					     WHERE DEL_FG = 'N'
+					     GROUP BY ACCNT_NO
+					) P ON P.ACCNT_NO = MPA.ACCNT_NO  
+					/* 개별 근거 JOIN */
+					JOIN (
+						SELECT ACCNT_NO
+							   , NVL(SUM(T21), 0) AS T21
+							   , NVL(SUM(F7), 0) AS F7
+							   , NVL(SUM(T32), 0) AS T32
+							   , NVL(SUM(F11), 0) AS F11
+							   , NVL(SUM(F12), 0) AS F12 
+							   , NVL(MAX(PAY_NO), 0) AS PAY_NO
+							   , NVL(MAX(HIST_YN), 'N') AS HIST_YN
+						FROM (
+							SELECT ACCNT_NO
+							       , PAY_NO
+							       , CASE WHEN ALOW_CD = 'T21' THEN NVL(AMT, 0) ELSE 0 END T21
+							       , CASE WHEN ALOW_CD = 'F7' THEN NVL(AMT, 0) ELSE 0 END F7
+							       , CASE WHEN ALOW_CD = 'T32' THEN NVL(AMT, 0) ELSE 0 END T32
+							       , CASE WHEN ALOW_CD = 'F11' THEN NVL(AMT, 0) ELSE 0 END F11       
+							       , CASE WHEN ALOW_CD = 'F12' THEN NVL(AMT, 0) ELSE 0 END F12
+							       , HIST_YN       
+							FROM (
+								SELECT ACCNT_NO
+									   , AMT
+									   , ALOW_CD
+									   , ALOW_DT
+									   , NOTE
+									   , DTL_SEQ
+									   , PAY_NO
+									   , HIST_YN
+								  FROM ALOW_DA_DTL AD
+								 WHERE ALOW_CD NOT IN ('T33', 'F8', 'F10')
+								   AND DTL_SEQ = (SELECT MAX(DTL_SEQ) FROM ALOW_DA_DTL
+												   WHERE ACCNT_NO = AD.ACCNT_NO
+												     AND EMPLE_NO = AD.EMPLE_NO
+												     AND PAY_NO = AD.PAY_NO
+												     AND ALOW_DT = AD.ALOW_DT
+												     AND ALOW_CD = AD.ALOW_CD)
+								   AND (AMT <![CDATA[>]]> 0 OR HIST_YN = 'Y')
+								<choose>
+									<when test="alowDt != null and alowDt != ''">
+										AND ALOW_DT = #{alowDt}			      
+									</when>
+									<otherwise>
+										AND ALOW_DT BETWEEN SUBSTR(REPLACE(#{strtDt}, '-', ''), 1, 6) AND SUBSTR(REPLACE(#{endDt}, '-', ''), 1, 6)
+									</otherwise>
+								</choose>		        
+							       AND EMPLE_NO = #{empleNo}
+							) F 
+						) TMP
+						GROUP BY ACCNT_NO
+					)PM ON PM.ACCNT_NO = MPA.ACCNT_NO
+					LEFT JOIN RESCISSION R ON R.ACCNT_NO = MPA.ACCNT_NO AND R.DEL_FG = 'N'   
+					WHERE MPA.DEL_FG = 'N'
+					  AND NVL(R.RESN_CL, '00') != '02'
+					  AND ((E.DEPT_KIND ='02' AND NVL(E.OCP_CLUSTER, '') != '04') OR E.DEPT_KIND = '01')
+		
+					UNION ALL
+		    
+					SELECT MPA.ACCNT_NO AS ACCNT_NO
+						   , E.EMPLE_NO AS EMPLE_NO
+						   , E.EMPLE_NM AS EMPLE_NM
+						   , NVL(FN_COM_NM('96',E.OCP_CLUSTER), '') AS OCP_CLUSTER_NM
+						   , MPA.JOIN_DT AS JOIN_DT
+						   , MPA.PROD_CD AS PROD_CD
+						   , 0 AS T21   
+						   , 0 AS T32
+						   , 0 AS F7
+						   , 0 AS F11
+						   , NVL(PM.F8, 0) AS F8
+						   , NVL(PM.F10, 0) AS F10
+						   , 0 AS F12
+						   , NVL(PM.T33, 0) AS T33
+						   , NVL(E.TAX_RAT, 0) AS TAX_RAT
+						   , NVL(E.NEED_RAT, 0) AS NEED_RAT
+						   , NVL(PM.PAY_NO, 0) AS PAY_NO
+						   , PM.HIST_YN
+					FROM MEM_PROD_ACCNT MPA
+					JOIN (
+						SELECT ED.*
+						       , CASE WHEN NVL(ED.INCOM_CL, '') = '' THEN TO_NUMBER(ACD.PAY_RAT)/100
+									  ELSE 
+										  	CASE WHEN (ED.INCOM_CL = '0001' AND ALOW_DT <![CDATA[>=]]>  '201812') THEN 0.08
+										  		 WHEN (ED.INCOM_CL = '0001' AND ALOW_DT <![CDATA[<=]]>  '201803') THEN 0.04
+												 WHEN (ED.INCOM_CL = '0001' AND ALOW_DT <![CDATA[>]]>  '201803') THEN 0.06
+												 WHEN ED.INCOM_CL = '0002' THEN 0.03
+												 WHEN ED.INCOM_CL = '0003' THEN 0
+										    ELSE 0.9 END 
+						               END TAX_RAT
+							   , TO_NUMBER(ACDNEED.PAY_RAT)/100 AS NEED_RAT
+						FROM (
+							SELECT 
+									#{alowDt}  AS ALOW_DT
+								   , E.EMPLE_NO
+						           , E.EMPLE_NM
+						           , E.DEPT_CD
+						           , E.INCOM_CL
+						           , D.DEPT_KIND
+						           , CASE WHEN NVL(E.OCP_CLUSTER, '') != '' THEN E.OCP_CLUSTER ELSE D.OCP_CLUSTER END OCP_CLUSTER
+						      FROM EMPLOYEE E, DEPARTMENT D
+						     WHERE E.DEPT_CD = D.DEPT_CD
+						) ED, ALOW_COM_DA ACD, ALOW_COM_DA ACDNEED
+						WHERE ED.OCP_CLUSTER = ACD.OCP_CLUSTER(+)
+						  AND ED.OCP_CLUSTER = ACDNEED.OCP_CLUSTER(+)
+						  AND ACD.ALOW_CD = 'F5'
+						  AND ACD.APP_DT = (SELECT MAX(APP_DT) FROM ALOW_COM_DA WHERE ALOW_CD = 'F5' AND OCP_CLUSTER = ED.OCP_CLUSTER)
+						  AND ACDNEED.ALOW_CD = 'T23'   
+					) E ON MPA.EMPLE_NO = E.EMPLE_NO   
+					/* 개별 근거 JOIN */
+					JOIN (
+						SELECT ACCNT_NO
+					           , NVL(SUM(T33), 0) AS T33
+					           , NVL(SUM(F8), 0) AS F8
+					           , NVL(SUM(F10), 0) AS F10
+					           , NVL(MAX(PAY_NO), 0) AS PAY_NO
+					           , NVL(MAX(HIST_YN), 'N') AS HIST_YN
+						FROM (
+							SELECT ACCNT_NO
+						           , PAY_NO
+						           , CASE WHEN ALOW_CD = 'T33' THEN NVL(AMT, 0) ELSE 0 END T33
+						           , CASE WHEN ALOW_CD = 'F8' THEN NVL(AMT, 0) ELSE 0 END F8
+						           , CASE WHEN ALOW_CD = 'F10' THEN NVL(AMT, 0) ELSE 0 END F10
+						           , HIST_YN  
+							FROM (
+								SELECT ACCNT_NO
+									   , AMT
+									   , ALOW_CD
+									   , ALOW_DT
+									   , NOTE
+									   , DTL_SEQ
+									   , PAY_NO
+									   , HIST_YN
+								  FROM ALOW_DA_DTL AD
+							     WHERE ALOW_CD IN ('T33','F8','F10')
+							       AND DTL_SEQ = (SELECT MAX(DTL_SEQ) FROM ALOW_DA_DTL
+											       WHERE ACCNT_NO = AD.ACCNT_NO
+											       AND EMPLE_NO = AD.EMPLE_NO
+											       AND PAY_NO = AD.PAY_NO
+											       AND ALOW_DT = AD.ALOW_DT
+											       AND ALOW_CD = AD.ALOW_CD)
+								   AND (AMT <![CDATA[>]]> 0 OR HIST_YN = 'Y')
+								<choose>
+									<when test="alowDt != null and alowDt != ''">
+										AND ALOW_DT = #{alowDt}			      
+									</when>
+									<otherwise>
+										AND ALOW_DT BETWEEN SUBSTR(REPLACE(#{strtDt}, '-', ''), 1, 6) AND SUBSTR(REPLACE(#{endDt}, '-', ''), 1, 6)
+									</otherwise>
+								</choose>			                   
+								   AND EMPLE_NO = #{empleNo}
+							) F
+						) TMP
+						GROUP BY ACCNT_NO
+					) PM ON PM.ACCNT_NO = MPA.ACCNT_NO
+					WHERE MPA.DEL_FG = 'N'
+				) TMP   
+				GROUP BY ACCNT_NO, EMPLE_NO, EMPLE_NM, OCP_CLUSTER_NM, JOIN_DT, PROD_CD, TAX_RAT, NEED_RAT
+			) PM ON PM.ACCNT_NO = MPA.ACCNT_NO 
+			JOIN (
+				SELECT ACCNT_NO
+					   , MAX(NO) AS TOT_PAY_NO
+					   , SUM(PAY_AMT) AS TOT_PAY_AMT
+				  FROM PAY_MNG
+				 WHERE DEL_FG='N'
+				 GROUP BY ACCNT_NO
+			) P ON P.ACCNT_NO = MPA.ACCNT_NO
+			WHERE MPA.DEL_FG = 'N'
+			  AND MB.DEL_FG = 'N' 
+		) TMP
+		WHERE 1=1
+		<if test="memNm != null and memNm != ''">
+			AND MEM_NM = #{memNm}
+		</if>
+		<if test="accntNo != null and accntNo != ''">
+			AND ACCNT_NO = #{accntNo}
+		</if>
+		 -->
+    </select>
+	
+</mapper>

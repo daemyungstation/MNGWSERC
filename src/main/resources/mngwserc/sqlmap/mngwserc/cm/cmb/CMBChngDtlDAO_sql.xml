@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CMBChngDtlDAO">
+	
+	<resultMap id="emfMap" type="emfMap">
+		<result column="PRDCT_CNTN" property="PRDCT_CNTN" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+	
+	<!--
+         쿼리명 : CMCPfmcInfDAO.selectChngDtlList
+         설  명 : 전환서비스 상품내역 목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+    <select id="CMBChngDtlDAO.selectChngDtlList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CMBChngDtlDAO.selectChngDtlList */
+			   TBL.* 
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRDCT_GB' AND CD = TBL.PRDCT_CD) AS PRDCT_GB
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (		
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		           	   , PRDCT_DTL_SEQ
+					   , PRDCT_CD
+					   , PRDCT_TITL
+					   , RQST_STRT_DT
+					   , RQST_END_DT
+					   , ODTM_YN
+					   , SCHD
+			           , REG_ID
+					   , REG_DTM
+					   , USE_YN
+					   , PRCS_CD
+	       	 	  FROM CM_PRDCT_DTL 
+				 WHERE 1=1
+				<if test="prdctCd != null and prdctCd != ''">
+					AND PRDCT_CD = #{prdctCd}
+		 		</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND REG_ID LIKE '%' || #{q} || '%' ]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND PRDCT_TITL LIKE '%' || #{q} || '%' ]]>
+					</if>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+    </select>
+    
+    <!--
+         쿼리명 : CMBChngDtlDAO.selectChngDtl
+         설  명 : 전환서비스 상품내역 상세를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+    <select id="CMBChngDtlDAO.selectChngDtl" parameterType="emfMap" resultMap="emfMap">
+ 		SELECT /* CMBChngDtlDAO.selectChngDtl */ 
+ 			   PRDCT_DTL_SEQ
+			   , PRDCT_CD
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRDCT_GB' AND CD = A.PRDCT_CD) AS PRDCT_GB
+			   , PRDCT_TITL
+			   , RQST_STRT_DT
+			   , RQST_END_DT
+			   , ODTM_YN
+			   , SCHD
+			   , PRDCT_CNTN
+			   , THNL_FILE_ID
+			   , ATCH_FILE_ID
+			   , LINK
+			   , PRCS_CD
+		  FROM CM_PRDCT_DTL A
+		 WHERE PRDCT_DTL_SEQ = #{prdctDtlSeq}
+    </select>
+    
+    <!--
+         쿼리명 : CMBChngDtlDAO.insertChngDtl
+         설  명 : 전환서비스 상품내역을 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+  	<insert id="CMBChngDtlDAO.insertChngDtl" parameterType="emfMap">
+  		INSERT /* CMBChngDtlDAO.insertChngDtl */ INTO CM_PRDCT_DTL
+  			(PRDCT_DTL_SEQ
+			, PRDCT_CD
+			, PRDCT_TITL
+			, RQST_STRT_DT
+		    , RQST_END_DT
+		    , ODTM_YN
+		    , SCHD
+			, PRDCT_CNTN
+			, THNL_FILE_ID
+			, ATCH_FILE_ID
+			, LINK
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+  			)
+  		VALUES
+  			(#{prdctDtlSeq}
+			, #{prdctCd}
+			, #{prdctTitl}
+			, #{rqstStrtDt, jdbcType=VARCHAR}
+		    , #{rqstEndDt, jdbcType=VARCHAR}
+		    , #{odtmYn, jdbcType=VARCHAR}
+		    , #{schd}
+			, #{prdctCntn}			
+			, #{thnlFileId, jdbcType=VARCHAR}
+			, #{atchFileId, jdbcType=VARCHAR}
+			, #{link, jdbcType=VARCHAR}
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+  			)
+  	</insert>
+  	
+  	<!--
+         쿼리명 : CMBChngDtlDAO.updateChngDtl
+         설  명 : 전환서비스 상품내역을 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+  	<update id="CMBChngDtlDAO.updateChngDtl" parameterType="emfMap">
+		UPDATE /* CMBChngDtlDAO.updateChngDtl */ CM_PRDCT_DTL
+		   SET PRDCT_CD = #{prdctCd}
+			   , PRDCT_TITL = #{prdctTitl}
+			   , RQST_STRT_DT = #{rqstStrtDt, jdbcType=VARCHAR}
+			   , RQST_END_DT = #{rqstEndDt, jdbcType=VARCHAR}
+			   , ODTM_YN = #{odtmYn, jdbcType=VARCHAR}
+			   , SCHD = #{schd}
+			   , PRDCT_CNTN = #{prdctCntn}
+			   , THNL_FILE_ID = #{thnlFileId, jdbcType=VARCHAR}
+			   , ATCH_FILE_ID = #{atchFileId, jdbcType=VARCHAR}
+			   , LINK = #{link, jdbcType=VARCHAR}
+			   , PRCS_CD = #{prcsCd, jdbcType=VARCHAR}
+		       , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = SYSDATE
+		 WHERE PRDCT_DTL_SEQ = #{prdctDtlSeq}
+  	</update>
+  	
+  	<!--
+         쿼리명 : CMBChngDtlDAO.deleteChngDtl
+         설  명 : 전환서비스 상품내역을 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+	<delete id="CMBChngDtlDAO.deleteChngDtl" parameterType="emfMap">
+		DELETE /* CMBChngDtlDAO.deleteChngDtl */ 
+		  FROM CM_PRDCT_DTL
+		 WHERE PRDCT_DTL_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+	<!--
+         쿼리명 : CMBChngDtlDAO.deleteChngDtlInfAll
+         설  명 : 전환서비스 상품내역 정보를 전체삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+	<delete id="CMBChngDtlDAO.deleteChngDtlInfAll" parameterType="emfMap">
+		DELETE /* CMBChngDtlDAO.deleteChngDtlInfAll */ 
+		  FROM CM_PRDCT_INF
+		 WHERE PRDCT_DTL_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+    <!--
+         쿼리명 : CMBChngDtlDAO.selectChngDtlInf
+         설  명 : 전환서비스 상품내역 정보를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+    <select id="CMBChngDtlDAO.selectChngDtlInf" parameterType="emfMap" resultType="emfMap">
+ 		SELECT /* CMBChngDtlDAO.selectChngDtlInf */
+ 			   PRDCT_INF_SEQ
+			   , PRDCT_DTL_SEQ
+			   , TITL
+			   , CNTN
+		  FROM CM_PRDCT_INF
+		 WHERE PRDCT_DTL_SEQ = #{prdctDtlSeq}
+		 ORDER BY PRDCT_INF_SEQ
+    </select>
+    
+	<!--
+         쿼리명 : CMBChngDtlDAO.insertChngDtlInf
+         설  명 : 전환서비스 상품내역 정보를 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+  	<insert id="CMBChngDtlDAO.insertChngDtlInf" parameterType="emfMap">
+  		INSERT /* CMBChngDtlDAO.insertChngDtlInf */ INTO CM_PRDCT_INF
+  			(PRDCT_INF_SEQ
+  			, PRDCT_DTL_SEQ
+			, TITL
+			, CNTN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		VALUES
+			(#{prdctInfSeq}
+			, #{prdctDtlSeq}
+			, #{titl}
+			, #{cntn}
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+			)
+  	</insert>
+  	
+  	<!--
+         쿼리명 : CMBChngDtlDAO.deleteChngDtlInf
+         설  명 : 전환서비스 상품내역 정보를 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+	<delete id="CMBChngDtlDAO.deleteChngDtlInf" parameterType="emfMap">
+		DELETE /* CMBChngDtlDAO.deleteChngDtlInf */ 
+		  FROM CM_PRDCT_INF
+		 WHERE PRDCT_DTL_SEQ = #{prdctDtlSeq}
+	</delete>
+	
+	<!--
+         쿼리명 : CMBChngDtlDAO.insertChngDtlCopy
+         설  명 : 전환서비스 상품내역을 복사한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+	<insert id="CMBChngDtlDAO.insertChngDtlCopy" parameterType="emfMap">
+		INSERT /* CMBChngDtlDAO.insertChngDtlCopy */ INTO CM_PRDCT_DTL 
+			(PRDCT_DTL_SEQ
+			, PRDCT_CD
+			, PRDCT_TITL
+			, THNL_FILE_ID
+			, ATCH_FILE_ID
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)	
+		SELECT #{prdctDtlSeq}
+			   , PRDCT_CD
+			   , PRDCT_TITL
+			   , null
+			   , null
+			   , #{regId}
+			   , #{regIp}
+			   , SYSDATE
+	           , #{modId}
+	           , #{modIp}
+	           , SYSDATE
+		  FROM CM_PRDCT_DTL 
+		 WHERE PRDCT_DTL_SEQ = #{delSeq}
+	</insert>
+	
+	<!--
+         쿼리명 : CMBChngDtlDAO.insertChngDtlInfCopy
+         설  명 : 전환서비스 상품내역을 정보를 복사한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   허진영      최초생성
+    -->
+	<insert id="CMBChngDtlDAO.insertChngDtlInfCopy" parameterType="emfMap">
+		INSERT /* CMBChngDtlDAO.insertChngDtlInfCopy */ INTO CM_PRDCT_INF 
+			(PRDCT_INF_SEQ
+			, PRDCT_DTL_SEQ
+			, TITL
+			, CNTN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+	        )
+		VALUES
+			(#{prdctInfSeq}
+		   	, #{prdctDtlSeq}
+		   	, #{titl}
+		   	, #{cntn}
+		   	, #{regId}
+		   	, #{regIp}
+		   	, SYSDATE
+		   	, #{modId}
+		   	, #{modIp}
+		   	, SYSDATE
+			)
+	</insert>
+	
+	<!--
+         쿼리명 : CMBChngDtlDAO.updateChngDtlBlind
+         설  명 : 전환서비스 상품내역을 블라인드 처리한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.08.10   김필기      최초생성
+    -->
+	<delete id="CMBChngDtlDAO.updateChngDtlBlind" parameterType="emfMap">
+		UPDATE /* CMBChngDtlDAO.updateChngDtlBlind */ CM_PRDCT_DTL
+		   SET USE_YN = #{useYn}
+		 WHERE PRDCT_DTL_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+</mapper>

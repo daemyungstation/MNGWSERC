@@ -1,0 +1,96 @@
+<%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%><%@include file="/WEB-INF/jsp/include/el.jspf"%>
+<%@page import="java.net.URLEncoder"%>
+<%@page import="java.net.URLDecoder"%>
+<%
+	String fileName = "네이버 실시간 검색 타임어택 프로모션 응모내역";
+	String userAgent = request.getHeader("User-Agent");
+	
+	if (userAgent != null && userAgent.indexOf("MSIE 5.5") > -1)
+	{ 
+		// MS IE 5.5 이하
+	    response.setHeader("Content-Disposition", "filename=" + URLEncoder.encode(fileName, "UTF-8") + ";");
+	} 
+	else 
+	{
+	    if (userAgent != null && userAgent.toLowerCase().indexOf("firefox") > -1) 
+	    {                            
+	    	fileName = new String(fileName.getBytes("UTF-8"), "ISO-8859-1");
+	    } 
+	    else 
+	    {
+	    	fileName = URLEncoder.encode(fileName, "UTF-8").replaceAll("\\+", "%20");
+	    }
+	    
+	    response.setHeader("Content-Disposition","attachment; filename="+fileName+".xls");
+	}
+	
+	response.setHeader("Content-Transfer-Encoding", "binary");
+	response.setContentType("application/vnd.ms-excel");
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>excel</title>
+		<style> td { mso-number-format:"\@"; } </style>
+	</head>
+	<body>
+	<table border="1">
+	 	<thead>
+	  		<tr>
+			    <th>이름</th>
+			    <th>핸드폰</th>
+			    <th>약관동의</th>
+			    <th>마케팅동의</th>
+			    <th>사용자ID</th>
+			    <th>등록일</th>
+			    <th>등록IP</th>
+			    <th>FROMURL</th>
+			    <th>AGENT</th>
+	  		</tr>
+	 	</thead>
+	 	<tbody>
+			<%-- 데이터를 없을때 화면에 메세지를 출력해준다 --%>
+			<c:if test="${fn:length(rtnMap.list) == 0}">
+				<tr>
+					<td class="lt_text3" colspan="9" style="text-align:center;">
+						<fmt:message key="common.nodata.msg" />
+					</td>
+				</tr>
+			</c:if>	
+		 	<c:forEach var="list" items="${rtnMap.list}" varStatus="status">
+		  		<tr>
+				    <td style="text-align:center;">
+				    	${ list.ntevtName }
+				    </td>
+				    <td style="text-align:center;">
+				    	${ list.ntevtPhone }
+				    </td>
+				    <td style="text-align:center;">
+				    	${ list.tnevtAgree }
+				    </td>
+				    <td style="text-align:center;">
+				    	${list.ntevtMarketingAgree}
+				    </td>
+				    <td style="text-align:center;">
+				    	${list.ntevtUserid}
+			    	</td>
+			    	<td style="text-align:center;">
+				    	${list.ntevtRegDtm}
+			    	</td>
+			    	<td style="text-align:center;">
+				    	${list.ntevtRegIp}
+			    	</td>
+			    	<td style="text-align:center;">
+				    	${list.ntevtFromurl}
+			    	</td>
+			    	<td style="text-align:center;">
+				    	${list.ntevtAgent}
+			    	</td>
+			  	</tr>
+		 	</c:forEach>
+			 
+	 	</tbody>
+	</table>
+	</body>
+</html>

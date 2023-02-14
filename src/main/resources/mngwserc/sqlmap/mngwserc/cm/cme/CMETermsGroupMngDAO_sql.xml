@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CMETermsGroupMngDAO">
+
+	<!--
+         쿼리명 : CMETermsGroupMngDAO.selectTermsGroupMngList
+         설  명 : 상품 약관그룹관리 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.17   김필기     최초 생성
+    -->
+    <select id="CMETermsGroupMngDAO.selectTermsGroupMngList" parameterType="emfMap" resultType="emfMap">
+		SELECT TBL.* /* CMETermsGroupMngDAO.selectTermsGroupMngList */
+			, ( SELECT listagg(DTL.TRS_EXPS_YN,',') within group (order by CDDTL.CD_ORD) YN  
+                FROM cm_trs_grp_dtl DTL, CO_CD_DTL CDDTL
+                WHERE DTL.TRS_GRP_PRDCT_SEQ = TBL.TRS_GRP_PRDCT_SEQ
+                  AND DTL.CD_ID = CDDTL.CD
+              ) YNS		
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , TRS_GRP_PRDCT_SEQ
+					   , PRDCT_CD
+					   , PRDCT_NM
+					   , MOD_DTM
+			      FROM CM_TRS_GRP_PRDCT_MST
+				 WHERE 1=1
+				<if test="q != null and q != ''">
+					<![CDATA[	AND PRDCT_NM LIKE '%' || #{q} || '%'	]]>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}	     	     
+	</select>
+
+	<select id="selectTermsGroupMngListAll" parameterType="emfMap" resultType="emfMap">
+		SELECT TRS_GRP_PRDCT_SEQ, PRDCT_CD, PRDCT_NM
+		FROM CM_TRS_GRP_PRDCT_MST		
+	</select>
+	<!--
+         쿼리명 : CMETermsGroupMngDAO.selectTermsGroupMng
+         설  명 : 상품 약관그룹관리 상세를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.17   김필기     최초 생성
+    	
+	<select id="CMETermsGroupMngDAO.selectTermsGroupMng" parameterType="emfMap" resultType="emfMap">
+		
+	</select>
+	-->
+
+
+	<!--
+         쿼리명 : CMETermsGroupMngDAO.insertTermsGroupMng
+         설  명 : 상품 약관그룹관리를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.17   김필기     최초 생성
+    -->	
+	<insert id="CMETermsGroupMngDAO.insertTermsGroupMng" parameterType="emfMap">
+		INSERT /* CMETermsGroupMngDAO.insertTermsGroupMng */ 
+			INTO 
+			CM_TRS_GRP_PRDCT_MST
+			(TRS_GRP_PRDCT_SEQ
+			, PRDCT_CD
+			, PRDCT_NM
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			<if test="modDtm != null and modDtm != ''">
+			, MOD_DTM
+			</if>
+			)
+		VALUES(
+			#{trsGrpPrdctSeq}
+		,	#{prdctCd}
+		,	#{prdctNm}
+		,	#{regId}
+		,	#{regIp}
+		,	SYSDATE
+		,	#{regId}
+		,	#{regIp}
+		<if test="modDtm != null and modDtm != ''">
+		,	TO_DATE(#{modDtm}, 'mm/dd/yyyy')
+		</if>
+		)
+	</insert>
+	
+	<insert id="CMETermsGroupMngDAO.insertTermsGroupDtl" parameterType="emfMap">
+		INSERT /* CMETermsGroupMngDAO.insertTermsGroupDtl */
+			INTO CM_TRS_GRP_DTL(TRS_GRP_SEQ, TRS_GRP_PRDCT_SEQ, CD_ID, TRS_EXPS_YN)
+		SELECT #{trsGrpSeq}, #{trsGrpPrdctSeq}, CD, 'N'
+			FROM CO_CD_DTL
+			WHERE 1=1 AND CD_ID = #{trsGb}		
+	</insert>
+
+	<!--
+         쿼리명 : CMETermsGroupMngDAO.updateTermsGroupMng
+         설  명 : 상품 약관그룹관리를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.17   김필기     최초 생성
+    -->		
+	<update id="CMETermsGroupMngDAO.updateTermsGroupMng" parameterType="emfMap">
+		UPDATE CM_TRS_GRP_PRDCT_MST
+			SET MOD_ID = #{modId}
+				, MOD_IP = #{modIp}
+				<if test="modDtm != null and modDtm != ''">
+				, MOD_DTM = TO_DATE(#{modDtm}, 'YYYY-MM-DD')
+				</if>
+				<if test="modDtm == null or modDtm == ''">
+				, MOD_DTM = SYSDATE
+				</if>
+		WHERE PRDCT_CD = #{prdctCd}
+	</update>
+	
+	<!--
+         쿼리명 : CMETermsGroupMngDAO.updateTermsGroupDtlMng
+         설  명 : 상품 약관그룹관리를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.17   김필기     최초 생성
+    -->		
+	<update id="CMETermsGroupMngDAO.updateTermsGroupDtlMng" parameterType="emfMap">
+		UPDATE CM_TRS_GRP_DTL
+			SET TRS_EXPS_YN = #{expsYn}
+		WHERE TRS_GRP_PRDCT_SEQ = (SELECT TRS_GRP_PRDCT_SEQ FROM CM_TRS_GRP_PRDCT_MST WHERE PRDCT_CD = #{prdctCd})
+			AND CD_ID = UPPER(#{cdId})
+	</update>
+	
+	<!--
+         쿼리명 : CMETermsGroupMngDAO.deleteTermsGroupMng
+         설  명 : 상품 약관그룹관리를 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.17   김필기     최초 생성
+    -->		
+	<delete id="CMETermsGroupMngDAO.deleteTermsGroupMng" parameterType="emfMap">
+		DELETE FROM CM_TRS_GRP_PRDCT_MST
+		WHERE PRDCT_CD = #{prdctCd}
+	</delete>
+
+	<!--
+         쿼리명 : CMETermsGroupMngDAO.deleteTermsGroupDtlMng
+         설  명 : 상품 약관그룹관리를 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.17   김필기     최초 생성
+    -->		
+	<delete id="CMETermsGroupMngDAO.deleteTermsGroupDtlMng" parameterType="emfMap">
+		DELETE FROM CM_TRS_GRP_DTL
+		WHERE TRS_GRP_PRDCT_SEQ = (SELECT TRS_GRP_PRDCT_SEQ FROM CM_TRS_GRP_PRDCT_MST WHERE PRDCT_CD = #{prdctCd})
+	</delete>
+
+	<!--
+         쿼리명 : CMETermsGroupMngDAO.insertTermsGroupMngLog
+         설  명 : 상품 약관그룹관리 로그를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.17   김필기     최초 생성
+    -->	
+	<insert id="CMETermsGroupMngDAO.insertTermsGroupMngLog" parameterType="emfMap">
+		INSERT /* CMETermsGroupMngDAO.insertTermsGroupMngLog */ 
+			INTO CM_TRS_GRP_MST_LOG(TRS_GRP_MST_LOG_SEQ, TRS_GRP_PRDCT_SEQ, PRDCT_CD, PRDCT_NM, MOD_DTM)
+		SELECT #{trsGrpMstLogSeq},  TRS_GRP_PRDCT_SEQ, PRDCT_CD, PRDCT_NM, MOD_DTM
+			FROM CM_TRS_GRP_PRDCT_MST	
+			WHERE PRDCT_CD = #{prdctCd}	
+	</insert>
+	
+	<insert id="CMETermsGroupMngDAO.insertTermsGroupDtlLog" parameterType="emfMap">
+		INSERT /* CMETermsGroupMngDAO.insertTermsGroupDtlLog */
+			INTO CM_TRS_GRP_DTL_LOG(TRS_GRP_LOG_SEQ, TRS_GRP_MST_LOG_SEQ, CD_ID, TRS_EXPS_YN)
+		SELECT #{trsGrpLogSeq}, #{trsGrpMstLogSeq}, CD_ID, TRS_EXPS_YN
+			FROM CM_TRS_GRP_DTL
+			WHERE 1=1 AND TRS_GRP_PRDCT_SEQ = (SELECT TRS_GRP_PRDCT_SEQ FROM CM_TRS_GRP_PRDCT_MST WHERE PRDCT_CD = #{prdctCd})		
+	</insert>
+
+	<!--
+         쿼리명 : CMETermsGroupMngDAO.logTermGroupLogExcelList
+         설  명 : 상품 약관그룹관리 로그를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   김필기     최초 생성
+    -->	
+	<select id="logTermGroupLogExcelList" parameterType="emfMap" resultType="emfMap">
+		SELECT TBL.* /* CMETermsGroupMngDAO.logTermGroupLogExcelList */
+			, ( SELECT listagg(DTL.TRS_EXPS_YN,',') within group (order by CDDTL.CD_ORD) YN  
+                FROM cm_trs_grp_dtl_log DTL, CO_CD_DTL CDDTL
+                WHERE DTL.TRS_GRP_MST_LOG_SEQ = TBL.TRS_GRP_MST_LOG_SEQ
+                  AND DTL.CD_ID = CDDTL.CD
+              ) YNS		
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , TRS_GRP_MST_LOG_SEQ
+					   , PRDCT_CD
+					   , PRDCT_NM
+					   , MOD_DTM
+			      FROM CM_TRS_GRP_MST_LOG
+				 WHERE 1=1
+				 ORDER BY PRDCT_NM DESC, MOD_DTM DESC
+			) A
+		) TBL
+		WHERE MOD_DTM IS NOT NULL
+	</select>
+	
+	<!--
+         쿼리명 : CMETermsGroupMngDAO.selectCheckProductCode
+         설  명 : 상품 코드 중복 검사를 한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   김필기     최초 생성
+    -->	
+	
+	<select id="CMETermsGroupMngDAO.selectCheckProductCode" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT COUNT(1)
+			FROM CM_TRS_GRP_PRDCT_MST
+			WHERE PRDCT_CD = #{prdctCd}
+	</select>
+	
+	<!--
+         쿼리명 : CMETermsGroupMngDAO.insertAddTerms
+         설  명 : 그룹 등록후 추가되는 약관 코드를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.19   김필기     최초 생성
+    -->		
+	<insert id="CMETermsGroupMngDAO.insertAddTerms"  parameterType="emfMap" >
+		INSERT INTO CM_TRS_GRP_DTL(TRS_GRP_SEQ, TRS_GRP_PRDCT_SEQ, CD_ID, TRS_EXPS_YN)
+			SELECT TRS_GRP_SEQ
+					, TRS_GRP_PRDCT_SEQ
+					, #{cd}
+					, 'N'
+			FROM CM_TRS_GRP_DTL
+			GROUP BY TRS_GRP_SEQ, TRS_GRP_PRDCT_SEQ			
+	</insert>
+	
+	<!--
+         쿼리명 : CMETermsGroupMngDAO.selectTermsGroupExcelList
+         설  명 : 엑셀로 등록한 약관그룹 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.05.02   김필기     최초 생성
+    -->		
+	<select id="CMETermsGroupMngDAO.selectTermsGroupExcelList" parameterType="emfMap" resultType="emfMap">
+		SELECT * FROM test
+	</select>
+	
+	<insert id="CMETermsGroupMngDAO.insertTermsGroupExcelDtl" parameterType="emfMap">
+		INSERT /* CMETermsGroupMngDAO.insertTermsGroupExcelDtl */
+			INTO CM_TRS_GRP_DTL(TRS_GRP_SEQ, TRS_GRP_PRDCT_SEQ, CD_ID, TRS_EXPS_YN)
+		VALUES	
+		(
+			#{trsGrpSeq}
+		,	#{trsGrpPrdctSeq}
+		,	#{cd}
+		,	#{trsExpsYn}
+		)
+	</insert>	
+	
+</mapper>

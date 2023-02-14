@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CNALimitedChoiceDAO">
+
+	<!--
+         쿼리명 : CNALimitedChoiceDAO.selectLimitedChoiList
+         설  명 : 리미티드 초이스 상품관리 목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.03.28   박주윤      최초생성
+    -->
+	<select id="CNALimitedChoiceDAO.selectLimitedChoiList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* CNALimitedChoiceDAO.selectLimitedChoiList */
+			   TBL.*
+		FROM (
+			SELECT ROWNUM AS RNUM, A.*
+			FROM ( 
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , (select count(*) from CN_LIMITED_CHOI_MST where OPRT_YN = 'Y') as oprt_yn_chk
+					   , LM.LIMT_SEQ
+			   		   , LM.TITLE
+			   		   , A.NAME
+	               	   , LM.REG_DTM
+	               	   , LM.USE_YN
+	               	   , LM.START_DTM
+	               	   , LM.END_DTM
+	               	   , LM.OPRT_YN
+			      FROM CN_LIMITED_CHOI_MST LM
+			      LEFT OUTER JOIN CO_ADM_MST A ON (LM.REG_ID = A.ID)
+			     <trim prefix="WHERE" prefixOverrides="AND">
+					<if test="q != null and q != ''">
+						<if test="f1 == 1">
+							<![CDATA[	LM.TITLE LIKE '%' || #{q} || '%' ]]> OR
+							<![CDATA[	A.NAME LIKE '%' || #{q} || '%' ]]> 
+						</if>
+						<if test="f1 == 2">
+							<![CDATA[	LM.TITLE LIKE '%' || #{q} || '%' ]]>
+						</if>
+						<if test="f1 == 3">
+							<![CDATA[	A.NAME LIKE '%' || #{q} || '%' ]]>
+						</if>
+	              	</if>
+	              	<if test="f2 == 2">
+						AND LM.USE_YN = 'Y'
+					</if>
+					<if test="f2 == 3">
+						AND LM.USE_YN = 'N'
+					</if>
+              	</trim>
+			 	ORDER BY LM.REG_DTM DESC
+				 
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+
+	<!--
+         쿼리명 : CNALimitedChoiceDAO.insertLimitedChoiseInfo
+         설  명 : 리미티드 초이스 정보를 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->	
+	<insert id="CNALimitedChoiceDAO.insertLimitedChoiseInfo" parameterType="emfMap">
+		INSERT /* CNALimitedChoiceDAO.insertLimitedChoiseInfo */ INTO CN_LIMITED_CHOI_MST 
+			(LIMT_SEQ
+ 			, TITLE
+ 			, REG_ID
+ 			, REG_DTM
+ 			, USE_YN
+ 			, OPRT_YN
+ 			, START_DTM
+ 			, END_DTM
+ 			)
+		VALUES        
+			(#{limtSeq}
+			, #{title}
+			, #{regId}
+			, SYSDATE
+			, #{useYn}
+			, #{oprtYn}
+			, #{startDtm}
+			, #{endDtm}
+		  	)
+	</insert>
+	
+	<!--
+         쿼리명 : CNALimitedChoiceDAO.insertLimitedChoiseFile
+         설  명 : 리미티드 초이스 이미지 파일을 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<insert id="CNALimitedChoiceDAO.insertLimitedChoiseFile" parameterType="emfMap">
+		INSERT ALL /* CNALimitedChoiceDAO.insertLimitedChoiseFile */ 
+		<foreach collection="imgFile" item="img" index="index">
+			INTO CN_LIMITED_CHOI_FILE 
+				(FILE_SEQ
+				, LIMT_SEQ
+	 			, CLASSIFICATION
+	 			, FILE_NM
+	 			, FILE_SIZE
+	 			, FILE_TYPE
+	 			, REG_DTM
+	 			, REG_ID
+	 			, USING
+	 			, FILE_PATH
+	 			, LOCAL_FILE_NM
+	 			, REG_ORDER
+	 			)
+			VALUES
+				(#{img.fileSeq}
+				, #{limtSeq}
+				, #{img.classification}
+				, #{img.fileNm}
+				, #{img.fileSize}
+				, #{img.fileType}
+				, SYSDATE
+				, #{modId}
+				, #{img.using}
+				, #{img.path}
+				, #{img.localFileName}
+				, #{img.regOrder})
+		</foreach>
+		 SELECT * FROM DUAL
+	</insert>
+	
+	<!--
+         쿼리명 : CNALimitedChoiceDAO.selectLimitedChoice
+         설  명 : 리미티드 초이스 정보를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<select id="CNALimitedChoiceDAO.selectLimitedChoice" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CNALimitedChoiceDAO.selectLimitedChoice */ 
+               LIMT_SEQ
+               , TITLE
+               , REG_ID
+               , REG_DTM
+               , USE_YN
+               , OPRT_YN           
+               , START_DTM           
+               , END_DTM           
+		  FROM CN_LIMITED_CHOI_MST
+		 WHERE LIMT_SEQ = #{seq}
+	</select>	
+	
+	<!--
+         쿼리명 : CNALimitedChoiceDAO.selectLimitedChoiceFileInfo
+         설  명 : 리미티드 초이스 파일 정보를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<select id="CNALimitedChoiceDAO.selectLimitedChoiceFileInfo" parameterType="emfMap" resultType="emfMap">
+		SELECT
+		    FILE_SEQ,
+		    LIMT_SEQ,
+		    CLASSIFICATION,
+		    FILE_NM,
+		    FILE_TYPE,
+		    REG_DTM,
+		    REG_ID,
+		    USING,
+		    FILE_SIZE,
+		    FILE_PATH,
+		    LOCAL_FILE_NM,
+		    REG_ORDER
+		FROM
+		    CN_LIMITED_CHOI_FILE
+		WHERE
+		    LIMT_SEQ = #{seq}
+		ORDER BY
+			FILE_SEQ ASC
+	</select>
+	
+	<!--
+         쿼리명 : CNALimitedChoiceDAO.selectLimitedChoiFileOne
+         설  명 : 리미티드 초이스 해당하는 파일 정보를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<select id="CNALimitedChoiceDAO.selectLimitedChoiFileOne" parameterType="emfMap" resultType="emfMap">
+		SELECT
+		    FILE_SEQ,
+		    LIMT_SEQ,
+		    CLASSIFICATION,
+		    FILE_NM,
+		    FILE_TYPE,
+		    REG_DTM,
+		    REG_ID,
+		    USING,
+		    FILE_SIZE,
+		    FILE_PATH,
+		    LOCAL_FILE_NM,
+		    REG_ORDER
+		FROM
+		    CN_LIMITED_CHOI_FILE
+		WHERE
+				LIMT_SEQ = #{seq}
+			AND
+				CLASSIFICATION = #{fileInfo.classification}
+			AND
+				USING = #{fileInfo.using}
+			AND
+				REG_ORDER = #{fileInfo.regOrder}
+	</select>
+	
+	<!--
+         쿼리명 : CNALimitedChoiceDAO.selectLimitedChoiFileOne2
+         설  명 : 리미티드 초이스 해당하는 파일 정보를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<select id="CNALimitedChoiceDAO.selectLimitedChoiFileOne2" parameterType="emfMap" resultType="emfMap">
+		SELECT
+		    FILE_SEQ,
+		    LIMT_SEQ,
+		    CLASSIFICATION,
+		    FILE_NM,
+		    FILE_TYPE,
+		    REG_DTM,
+		    REG_ID,
+		    USING,
+		    FILE_SIZE,
+		    FILE_PATH,
+		    LOCAL_FILE_NM
+		FROM
+		    CN_LIMITED_CHOI_FILE
+		WHERE
+				LIMT_SEQ = #{seq}
+			AND
+				USING = 'pop'
+	</select>
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.deleteLimitedchoiPopFile
+         설  명 : 리미티드 초이스 팝업 노출 해제에 따른 기존 등록된 팝업 노출 이미지를 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<delete id="CNALimitedChoiceDAO.deleteLimitedChoiPopFile" parameterType="emfMap">
+		DELETE
+		FROM
+		    CN_LIMITED_CHOI_FILE
+		WHERE
+				LIMT_SEQ = #{seq}
+			AND
+				USING = 'pop'
+	</delete>
+	
+	<!--
+         쿼리명 : CNALimitedChoiceDAO.deleteLimitedChoiList
+         설  명 : 이미지 관리를 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<delete id="CNALimitedChoiceDAO.deleteLimitedChoiList" parameterType="emfMap">
+		DELETE /* CNALimitedChoiceDAO.deleteLimitedChoiList */ 
+		  FROM CN_LIMITED_CHOI_MST
+		 WHERE LIMT_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+	<!--
+         쿼리명 : CNALimitedChoiceDAO.deleteLimitedChoiFileList
+         설  명 : 이미지 파일을 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<delete id="CNALimitedChoiceDAO.deleteLimitedChoiFileList" parameterType="emfMap">
+		DELETE /* CNALimitedChoiceDAO.deleteLimitedChoiFileList */ 
+		  FROM CN_LIMITED_CHOI_FILE
+		 WHERE LIMT_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+	<!--
+         쿼리명 : CNALimitedChoiceDAO.deleteLimitedChoiFileBySeq
+         설  명 : 파일 인덱스 기준으로 이미지 파일을 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<delete id="CNALimitedChoiceDAO.deleteLimitedChoiFileBySeq" parameterType="emfMap">
+		DELETE /* CNALimitedChoiceDAO.deleteLimitedChoiFileBySeq */ 
+		  FROM CN_LIMITED_CHOI_FILE
+		 WHERE FILE_SEQ IN 
+		<foreach collection="delFileseq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+	
+	<insert id="CNALimitedChoiceDAO.insertLimitedChoiFileOne" parameterType="emfMap">
+		INSERT  /* CNALimitedChoiceDAO.insertLimitedChoiFileOne */ 
+			INTO CN_LIMITED_CHOI_FILE 
+				(FILE_SEQ
+				, LIMT_SEQ
+	 			, CLASSIFICATION
+	 			, FILE_NM
+	 			, FILE_SIZE
+	 			, FILE_TYPE
+	 			, REG_DTM
+	 			, REG_ID
+	 			, USING
+	 			, FILE_PATH
+	 			, LOCAL_FILE_NM
+	 			, REG_ORDER
+	 			)
+			VALUES
+				(#{fileInfo.fileSeq}
+				, #{seq}
+				, #{fileInfo.classification}
+				, #{fileInfo.fileNm}
+				, #{fileInfo.fileSize}
+				, #{fileInfo.fileType}
+				, SYSDATE
+				, #{modId}
+				, #{fileInfo.using}
+				, #{fileInfo.path}
+				, #{fileInfo.localFileName}
+				, #{fileInfo.regOrder})
+	</insert>
+	
+	<!--
+         쿼리명 : CNALimitedChoiceDAO.updateLimitedChoiFileInfo
+         설  명 : 리미티드 초이스 파일을 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<update id="CNALimitedChoiceDAO.updateLimitedChoiFileInfo" parameterType="emfMap">
+		UPDATE /* CNALimitedChoiceDAO.updateLimitedChoiFileInfo */ CN_LIMITED_CHOI_FILE 
+			SET	 FILE_NM = #{fileInfo.fileNm}
+	 			, FILE_SIZE = #{fileInfo.fileSize}
+	 			, FILE_TYPE = #{fileInfo.fileType}
+	 			, MOD_DTM = SYSDATE
+	 			, MOD_ID = #{modId}
+	 			, FILE_PATH = #{fileInfo.path}
+	 			, LOCAL_FILE_NM = #{fileInfo.localFileName}
+	 		WHERE
+				LIMT_SEQ = #{seq}
+			AND
+				CLASSIFICATION = #{fileInfo.classification}
+			AND
+				USING = #{fileInfo.using}
+			AND
+				REG_ORDER = #{fileInfo.regOrder}
+	</update>
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.updateZeroChoiseImgMgr
+         설  명 : 리미티드 초이스 정보를 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<update id="CNALimitedChoiceDAO.updateLimitedChoiInfo" parameterType="emfMap">
+		UPDATE /* CNALimitedChoiceDAO.updateLimitedChoiInfo */ CN_LIMITED_CHOI_MST
+ 		   SET   TITLE = #{title}
+	  		   , MOD_ID = #{modId}
+	  		   , MOD_DTM = SYSDATE
+	  		   , USE_YN = #{useYn}
+	  		   , START_DTM = #{startDtm}
+	  		   , END_DTM = #{endDtm}
+	  		   , OPRT_YN = #{oprtYn}
+		 WHERE LIMT_SEQ = #{seq}
+	</update>
+	
+	<!--
+         쿼리명 : CNAZeroChoiceDAO.updateZeroChoiseImgMgrN
+         설  명 : 이용안내를 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+ 	<update id="CNALimitedChoiceDAO.updateLimitedChoiInfoN" parameterType="emfMap">
+		UPDATE /* CNALimitedChoiceDAO.updateLimitedChoiInfoN */ CN_LIMITED_CHOI_MST
+ 		   SET   OPRT_YN = 'N'
+		 WHERE 1=1
+	</update>
+	
+	<!--
+         쿼리명 : CNALimitedChoiceDAO.selectFileInfoByFileSeq
+         설  명 : 다이렉트 이미지 미리보기 정보를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   박주윤      최초생성
+    -->
+	<select id="CNALimitedChoiceDAO.selectFileInfoByFileSeq" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			FILE_SEQ
+			,FILE_NM
+			,FILE_PATH
+			,FILE_TYPE
+			,LOCAL_FILE_NM
+		FROM
+			CN_LIMITED_CHOI_FILE
+		WHERE
+			FILE_SEQ = #{fileSeq}
+	</select>
+</mapper>

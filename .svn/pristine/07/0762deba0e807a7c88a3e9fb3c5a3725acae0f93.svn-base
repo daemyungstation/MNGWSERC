@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FairEventDAO">
+
+	<!--
+         쿼리명 : FairEventDAO.selectList
+         설  명 : 제품 결합상품 목록 조회
+    -->	
+	<select id="selectList" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.* 
+			  FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		                ,FE_SEQ
+						,FE_IMAGE_1_W_PATH
+						,FE_IMAGE_1_W_SAVE_NM
+						,FE_IMAGE_1_W_REAL_NM
+						,FE_IMAGE_1_M_PATH
+						,FE_IMAGE_1_M_SAVE_NM
+						,FE_IMAGE_1_M_REAL_NM
+						,FE_IMAGE_2_W_PATH
+						,FE_IMAGE_2_W_SAVE_NM
+						,FE_IMAGE_2_W_REAL_NM
+						,FE_IMAGE_2_M_PATH
+						,FE_IMAGE_2_M_SAVE_NM
+						,FE_IMAGE_2_M_REAL_NM
+						,FE_IMAGE_3_W_PATH
+						,FE_IMAGE_3_W_SAVE_NM
+						,FE_IMAGE_3_W_REAL_NM
+						,FE_IMAGE_3_M_PATH
+						,FE_IMAGE_3_M_SAVE_NM
+						,FE_IMAGE_3_M_REAL_NM
+						,FE_TYPE
+						,FE_LINK_1
+						,FE_LINK_1_TYPE
+						,FE_LINK_2
+						,FE_LINK_2_TYPE
+						,FE_LINK_3
+						,FE_LINK_3_TYPE
+						,FE_ORDER
+						,FE_STIME
+						,FE_ETIME
+						,TO_CHAR(FE_STIME, 'YYYY-MM-DD') AS FE_STIME_DAY
+						,TO_CHAR(FE_STIME, 'HH24') AS FE_STIME_HH
+						,TO_CHAR(FE_STIME, 'MI') AS FE_STIME_MI
+						,TO_CHAR(FE_STIME, 'SS') AS FE_STIME_SS
+						,TO_CHAR(FE_ETIME, 'YYYY-MM-DD') AS FE_ETIME_DAY
+						,TO_CHAR(FE_ETIME, 'HH24') AS FE_ETIME_HH
+						,TO_CHAR(FE_ETIME, 'MI') AS FE_ETIME_MI
+						,TO_CHAR(FE_ETIME, 'SS') AS FE_ETIME_SS
+						,FE_STATUS
+		          FROM FAIR_EVENT   
+				 ORDER BY FE_ORDER ASC, REG_DTM DESC   
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}           
+	</select>	
+	
+	<!--
+         쿼리명 : FairEventDAO.select
+         설  명 : 제품 결합상품 상세 조회
+    -->	
+	<select id="select" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+            FE_SEQ
+			,FE_IMAGE_1_W_PATH
+			,FE_IMAGE_1_W_SAVE_NM
+			,FE_IMAGE_1_W_REAL_NM
+			,FE_IMAGE_1_M_PATH
+			,FE_IMAGE_1_M_SAVE_NM
+			,FE_IMAGE_1_M_REAL_NM
+			,FE_IMAGE_2_W_PATH
+			,FE_IMAGE_2_W_SAVE_NM
+			,FE_IMAGE_2_W_REAL_NM
+			,FE_IMAGE_2_M_PATH
+			,FE_IMAGE_2_M_SAVE_NM
+			,FE_IMAGE_2_M_REAL_NM
+			,FE_IMAGE_3_W_PATH
+			,FE_IMAGE_3_W_SAVE_NM
+			,FE_IMAGE_3_W_REAL_NM
+			,FE_IMAGE_3_M_PATH
+			,FE_IMAGE_3_M_SAVE_NM
+			,FE_IMAGE_3_M_REAL_NM
+			,FE_TYPE
+			,FE_LINK_1
+			,FE_LINK_1_TYPE
+			,FE_LINK_2
+			,FE_LINK_2_TYPE
+			,FE_LINK_3
+			,FE_LINK_3_TYPE
+			,FE_ORDER
+			,FE_STIME
+			,FE_ETIME
+			,TO_CHAR(FE_STIME, 'YYYY-MM-DD') AS FE_STIME_DAY
+			,TO_CHAR(FE_STIME, 'HH24') AS FE_STIME_HH
+			,TO_CHAR(FE_STIME, 'MI') AS FE_STIME_MI
+			,TO_CHAR(FE_STIME, 'SS') AS FE_STIME_SS
+			,TO_CHAR(FE_ETIME, 'YYYY-MM-DD') AS FE_ETIME_DAY
+			,TO_CHAR(FE_ETIME, 'HH24') AS FE_ETIME_HH
+			,TO_CHAR(FE_ETIME, 'MI') AS FE_ETIME_MI
+			,TO_CHAR(FE_ETIME, 'SS') AS FE_ETIME_SS
+			,FE_STATUS
+         FROM FAIR_EVENT   
+		 WHERE FE_SEQ = #{seq}   
+	</select>
+	
+	
+	<!--
+         쿼리명 : FairEventDAO.selectMaxOrder
+         설  명 : 제품 결합상품 MAX ORDER 조회
+    -->	
+	<select id="selectMaxOrder" resultType="emfMap">
+		SELECT 
+        	NVL(max(FE_ORDER), 0) + 1 as FE_ORDER
+        FROM FAIR_EVENT   
+	</select>
+	
+	<!--
+         쿼리명 : FairEventDAO.insert
+         설  명 : 제품 결합상품 등록
+    -->	
+	<insert id="insert" parameterType="emfMap">
+		INSERT INTO FAIR_EVENT
+			(
+			FE_SEQ
+			<if test="feImage1WPath != null">
+			,FE_IMAGE_1_W_PATH
+			,FE_IMAGE_1_W_SAVE_NM
+			,FE_IMAGE_1_W_REAL_NM
+			</if>
+			<if test="feImage1MPath != null">
+			,FE_IMAGE_1_M_PATH
+			,FE_IMAGE_1_M_SAVE_NM
+			,FE_IMAGE_1_M_REAL_NM
+			</if>
+			<if test="feImage2WPath != null">
+			,FE_IMAGE_2_W_PATH
+			,FE_IMAGE_2_W_SAVE_NM
+			,FE_IMAGE_2_W_REAL_NM
+			</if>
+			<if test="feImage2MPath != null">
+			,FE_IMAGE_2_M_PATH
+			,FE_IMAGE_2_M_SAVE_NM
+			,FE_IMAGE_2_M_REAL_NM
+			</if>
+			<if test="feImage3WPath != null">
+			,FE_IMAGE_3_W_PATH
+			,FE_IMAGE_3_W_SAVE_NM
+			,FE_IMAGE_3_W_REAL_NM
+			</if>
+			<if test="feImage3MPath != null">
+			,FE_IMAGE_3_M_PATH
+			,FE_IMAGE_3_M_SAVE_NM
+			,FE_IMAGE_3_M_REAL_NM
+			</if>
+			,FE_TYPE
+			,FE_LINK_1
+			,FE_LINK_1_TYPE
+			,FE_LINK_2
+			,FE_LINK_2_TYPE
+			,FE_LINK_3
+			,FE_LINK_3_TYPE
+			,FE_ORDER
+			<if test="feStime != null">
+			,FE_STIME
+			</if>
+			<if test="feEtime != null">
+			,FE_ETIME
+			</if>
+			,FE_STATUS
+			<if test="regId != null">
+			,REG_ID
+			</if>
+			<if test="regIp != null">
+			,REG_IP
+			</if>
+			,REG_DTM
+			)
+		VALUES
+			(
+			#{feSeq}
+			<if test="feImage1WPath != null">
+			,#{feImage1WPath, jdbcType=VARCHAR}
+			,#{feImage1WSaveNm, jdbcType=VARCHAR}
+			,#{feImage1WRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="feImage1MPath != null">
+			,#{feImage1MPath, jdbcType=VARCHAR}
+			,#{feImage1MSaveNm, jdbcType=VARCHAR}
+			,#{feImage1MRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="feImage2WPath != null">
+			,#{feImage2WPath, jdbcType=VARCHAR}
+			,#{feImage2WSaveNm, jdbcType=VARCHAR}
+			,#{feImage2WRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="feImage2MPath != null">
+			,#{feImage2MPath, jdbcType=VARCHAR}
+			,#{feImage2MSaveNm, jdbcType=VARCHAR}
+			,#{feImage2MRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="feImage3WPath != null">
+			,#{feImage3WPath, jdbcType=VARCHAR}
+			,#{feImage3WSaveNm, jdbcType=VARCHAR}
+			,#{feImage3WRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="feImage3MPath != null">
+			,#{feImage3MPath, jdbcType=VARCHAR}
+			,#{feImage3MSaveNm, jdbcType=VARCHAR}
+			,#{feImage3MRealNm, jdbcType=VARCHAR}
+			</if>
+			,#{feType, jdbcType=VARCHAR}
+			,#{feLink1, jdbcType=VARCHAR}
+			,#{feLink1Type, jdbcType=VARCHAR}
+			,#{feLink2, jdbcType=VARCHAR}
+			,#{feLink2ype, jdbcType=VARCHAR}
+			,#{feLink3, jdbcType=VARCHAR}
+			,#{feLink3ype1, jdbcType=VARCHAR}
+			,#{feOrder}
+			<if test="feStime != null">
+			,TO_DATE(#{feStime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="feEtime != null">
+			,TO_DATE(#{feEtime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			,#{feStatus}
+			<if test="regId != null">
+			,#{regId, jdbcType=VARCHAR}
+			</if>
+			<if test="regIp != null">
+			,#{regIp, jdbcType=VARCHAR}
+			</if>
+			,SYSDATE
+			)					
+	</insert>
+	
+	<!--
+         쿼리명 : FairEventDAO.update
+         설  명 : 제품 결합상품 수정
+    -->	
+	<update id="update" parameterType="emfMap">
+		UPDATE FAIR_EVENT SET
+			FE_STATUS = #{feStatus}
+			,FE_TYPE = #{feType, jdbcType=VARCHAR}
+			,FE_LINK_1 = #{feLink1, jdbcType=VARCHAR}
+			,FE_LINK_1_TYPE = #{feLink1Type, jdbcType=VARCHAR}
+			,FE_LINK_2 = #{feLink2, jdbcType=VARCHAR}
+			,FE_LINK_2_TYPE = #{feLink2Type, jdbcType=VARCHAR}
+			,FE_LINK_3 = #{feLink3, jdbcType=VARCHAR}
+			,FE_LINK_3_TYPE = #{feLink3Type, jdbcType=VARCHAR}
+			<if test="feImage1WPath != null">
+			,FE_IMAGE_1_W_PATH = #{feImage1WPath, jdbcType=VARCHAR}
+			,FE_IMAGE_1_W_SAVE_NM = #{feImage1WSaveNm, jdbcType=VARCHAR}
+			,FE_IMAGE_1_W_REAL_NM = #{feImage1WRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="feImage1MPath != null">
+			,FE_IMAGE_1_M_PATH = #{feImage1MPath, jdbcType=VARCHAR}
+			,FE_IMAGE_1_M_SAVE_NM = #{feImage1MSaveNm, jdbcType=VARCHAR}
+			,FE_IMAGE_1_M_REAL_NM = #{feImage1MRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="feImage2WPath != null">
+			,FE_IMAGE_2_W_PATH = #{feImage2WPath, jdbcType=VARCHAR}
+			,FE_IMAGE_2_W_SAVE_NM = #{feImage2WSaveNm, jdbcType=VARCHAR}
+			,FE_IMAGE_2_W_REAL_NM = #{feImage2WRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="feImage2MPath != null">
+			,FE_IMAGE_2_M_PATH = #{feImage2MPath, jdbcType=VARCHAR}
+			,FE_IMAGE_2_M_SAVE_NM = #{feImage2MSaveNm, jdbcType=VARCHAR}
+			,FE_IMAGE_2_M_REAL_NM = #{feImage2MRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="feImage3WPath != null">
+			,FE_IMAGE_3_W_PATH = #{feImage3WPath, jdbcType=VARCHAR}
+			,FE_IMAGE_3_W_SAVE_NM = #{feImage3WSaveNm, jdbcType=VARCHAR}
+			,FE_IMAGE_3_W_REAL_NM = #{feImage3WRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="feImage3MPath != null">
+			,FE_IMAGE_3_M_PATH = #{feImage3MPath, jdbcType=VARCHAR}
+			,FE_IMAGE_3_M_SAVE_NM = #{feImage3MSaveNm, jdbcType=VARCHAR}
+			,FE_IMAGE_3_M_REAL_NM = #{feImage3MRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="feStime != null">
+			,FE_STIME = TO_DATE(#{feStime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="feEtime != null">
+			,FE_ETIME = TO_DATE(#{feEtime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="modId != null">
+			,MOD_ID = #{modId}
+			</if>
+			<if test="modIp != null">
+			,MOD_IP = #{modIp}
+			</if>
+			,MOD_DTM = SYSDATE
+         WHERE FE_SEQ = #{feSeq}
+	</update>
+	
+	<!--
+         쿼리명 : FairEventDAO.order
+         설  명 : 제품 결합상품 순서변경
+    -->		
+	<update id="order" parameterType="emfMap">
+		UPDATE FAIR_EVENT SET
+			FE_ORDER = #{feOrder}
+        WHERE FE_SEQ = #{feSeq}
+	</update>
+
+	<!--
+         쿼리명 : FairEventDAO.delete
+         설  명 : 제품 결합상품 삭제
+    -->		
+	<delete id="delete" parameterType="emfMap">
+		 DELETE FAIR_EVENT
+	     WHERE FE_SEQ = #{feSeq}
+	</delete>
+
+</mapper>

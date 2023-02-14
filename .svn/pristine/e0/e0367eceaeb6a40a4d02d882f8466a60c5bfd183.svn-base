@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="LOGAdmLogMngDAO">
+
+    <!--
+         쿼리명 : LOGAdmLogMngDAO.selectLogAdmList
+         설  명 : 로그 정보 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.01.03   강재석      최초생성
+    -->
+    <select id="LOGAdmLogMngDAO.selectLogAdmList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBAMemInfDAO.selectLogAdmList */
+			TBL2.*
+			, (
+		 		select count(*)
+		 		from CO_ADM_LOG a
+		 		where 1=1
+		 			and a.FLAG = TBL2.FLAG
+		 			and a.ID = TBL2.ID
+		 			and a.NAME = TBL2.NAME
+		 			and a.GUBUN = TBL2.GUBUN
+ 					AND a.FLAG = 'E'
+		 			and a.ISSUE_DATE <![CDATA[ <= ]]> TBL2.ISSUE_DATE
+			) AS CNT
+		FROM (
+			SELECT 
+				   TBL.* 
+			FROM (
+				SELECT ROWNUM AS RNUM, A.* 
+				FROM (
+						SELECT COUNT(*) OVER() AS TOT_CNT
+						     , LOG_SEQ
+						     , ID
+						     , HP
+						     , NAME
+						     , DECODE(PAGE_GUBUN, 'A', '관리자', '홈페이지') AS PAGE_GUBUN_NAME
+						     , DECODE(FLAG,'L', '로그인', DECODE(FLAG,'C', '등록', DECODE(FLAG,'M', '수정', DECODE(FLAG,'S', '조회',
+						       DECODE(FLAG,'R', '삭제', DECODE(FLAG,'W', '회원탈퇴', DECODE(FLAG,'E', '엑셀다운로드', DECODE(FLAG,'D', '상세', 
+						       DECODE(FLAG,'U', '엑셀업로드', DECODE(FLAG,'J', '회원가입')))))))))) AS FLAG_NAME
+						     , GUBUN
+						     , LOGIN
+						     , LOGOUT
+						     , ISSUE_DATE
+						     , IP
+							 , FLAG
+							 , REASON
+						  FROM CO_ADM_LOG
+						 WHERE 1=1
+						 <if test="strtDt != null and strtDt != ''">
+						   AND TO_CHAR(ISSUE_DATE, 'YYYYMMDD') >= REPLACE(#{strtDt}, '-', '')
+						 </if>
+						 <if test="endDt != null and endDt != ''">
+						   AND TO_CHAR(ISSUE_DATE, 'YYYYMMDD') <![CDATA[ <= ]]> REPLACE(#{endDt}, '-', '')
+						 </if>
+						 <if test="q != null and q != ''">
+						    <if test="f == 1">
+						        <![CDATA[    AND NAME LIKE '%' || #{q} || '%'    ]]>
+						    </if>
+						    <if test="f == 2">
+						        <![CDATA[    AND ID LIKE '%' || #{q} || '%'    ]]>
+						    </if>
+						 </if>
+						 <if test="flag != null and flag != ''">
+						   AND FLAG = #{flag}
+						 </if>
+						 <if test="pageGubun != null and pageGubun != ''">
+						   AND PAGE_GUBUN = #{pageGubun}
+						 </if> 
+						 ORDER BY LOG_SEQ DESC
+				) A
+			) TBL
+			WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+		) TBL2
+	</select>
+
+    <!--
+         쿼리명 : LOGAdmLogMngDAO.excelLogAdmList
+         설  명 : 로그 정보 목록을 조회한다. (엑셀다운로드)
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.01.03   강재석      최초생성
+    -->
+    <select id="LOGAdmLogMngDAO.excelLogAdmList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBAMemInfDAO.excelLogAdmList */
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+					SELECT COUNT(*) OVER() AS TOT_CNT
+					     , LOG_SEQ
+					     , ID
+					     , HP
+					     , NAME
+					     , DECODE(PAGE_GUBUN, 'A', '관리자', '홈페이지') AS PAGE_GUBUN_NAME
+					     , DECODE(FLAG,'L', '로그인', DECODE(FLAG,'C', '등록', DECODE(FLAG,'M', '수정', DECODE(FLAG,'S', '조회',
+					       DECODE(FLAG,'R', '삭제', DECODE(FLAG,'W', '회원탈퇴', DECODE(FLAG,'E', '엑셀다운로드', DECODE(FLAG,'D', '상세', 
+					       DECODE(FLAG,'U', '엑셀업로드', DECODE(FLAG,'J', '회원가입')))))))))) AS FLAG_NAME
+					     , GUBUN
+					     , LOGIN
+					     , LOGOUT
+					     , ISSUE_DATE
+					     , IP
+					  FROM CO_ADM_LOG
+					 WHERE 1=1
+					 <if test="strtDt != null and strtDt != ''">
+					   AND TO_CHAR(ISSUE_DATE, 'YYYYMMDD') >= REPLACE(#{strtDt}, '-', '')
+					 </if>
+					 <if test="endDt != null and endDt != ''">
+					   AND TO_CHAR(ISSUE_DATE, 'YYYYMMDD') <![CDATA[ <= ]]> REPLACE(#{endDt}, '-', '')
+					 </if>
+					 <if test="q != null and q != ''">
+					    <if test="f == 1">
+					        <![CDATA[    AND NAME LIKE '%' || #{q} || '%'    ]]>
+					    </if>
+					    <if test="f == 2">
+					        <![CDATA[    AND ID LIKE '%' || #{q} || '%'    ]]>
+					    </if>
+					 </if>
+					 <if test="flag != null and flag != ''">
+					   AND FLAG = #{flag}
+					 </if>
+					 <if test="pageGubun != null and pageGubun != ''">
+					   AND PAGE_GUBUN = #{pageGubun}
+					 </if> 
+					 ORDER BY LOG_SEQ DESC
+			) A
+		) TBL
+	</select>
+</mapper>

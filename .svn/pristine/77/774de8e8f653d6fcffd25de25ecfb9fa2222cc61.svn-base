@@ -1,0 +1,191 @@
+<%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%><%@include file="/WEB-INF/jsp/include/el.jspf"%>
+<!-- 
+	######################################################################
+	파일명 		:	OMCDepositList.jsp
+	프로그램 명 : 	외주업체 입금관리 목록
+	설명		: 	목록
+	작성자		: 	김필기
+	작성일		:	2016.02.29
+	수정일자	 			수정자				수정내용
+	=====================================================================
+	2016.02.29				김필기				최초작성
+	######################################################################
+-->
+
+<form name="frm" method="post" action="${pageLink}">
+	<input type="hidden" name="pageIndex" value="${rtnMap.pageIndex}" />
+	
+	<div class="well well-small">
+		입금일 : 
+		<div class="input-append" style="margin-bottom:0px;">
+			<input type="text" id="strtDt" name="strtDt" class="datepicker_input input-small" value="${rtnMap.strtDt}" readonly="readonly" />
+			<button class="btn" type="button" onclick="jQuery(this).prev().focus();"><i class="icon-calendar"></i></button>
+		</div>
+		~
+		<div class="input-append" style="margin-bottom:0px;">
+			<input type="text" id="endDt" name="endDt" class="datepicker_input input-small" value="${rtnMap.endDt}" readonly="readonly" />
+			<button class="btn" type="button" onclick="jQuery(this).prev().focus();"><i class="icon-calendar"></i></button>
+		</div>
+		&nbsp;&nbsp;	
+	
+		<select name="f">
+			<option value="1" <c:if test="${rtnMap.f eq '1'}">selected</c:if>>이름</option>
+			<option value="2" <c:if test="${rtnMap.f eq '2'}">selected</c:if>>회원번호</option>    
+		</select>
+		<input type="text" name="q" value="${rtnMap.q}" class="inputType w146" maxlength="15" />
+		<a href="javascript:getPageList();" class="btn" title="검색"><i class="icon-search"></i></a>
+		<a href="${pageLink}" class="btn " title="전체검색"><i class="icon-refresh"></i></a>
+	</div>	
+	
+	<p>전체 회원 수 : ${rtnMap.totalCount }</p>
+	<table class="table table-bordered table-hover">
+		<caption style="display: none;">외주업체 입금 관리</caption>
+		<thead>
+			<tr>
+				<th>번호</th>
+				<th>회원번호</th>
+				<th>B2B회사명</th>
+				<th>휴대전화</th>
+				<th>전화번호</th>
+				<th>결합금</th>
+				<th>회원명</th>
+				<c:if test="${loginMap.id ne 'lgupay'}">
+				<th>생년월일</th>
+				</c:if>
+				<th>가입일</th>
+				<th>최초가입일</th>
+				<th>가입상품</th>
+				<th>모델분류</th>
+				<th>당월회차</th>
+				<th>실납입회차</th>
+				<th>회분</th>
+				<th>납입방법</th>
+				<th>가입상태</th>
+				<th>IDNO</th>
+				<th>주문번호</th>
+				<c:if test="${loginMap.id ne 'lgupay'}">
+				<th>설치주소</th>
+				</c:if>
+				<th>B2B사원코드</th>
+				<th>KB NO</th>
+				<th>U+가입번호</th>
+				<th>행사일자</th>
+			</tr>
+		</thead>
+		<tbody>
+			<%-- 데이터를 없을때 화면에 메세지를 출력해준다 --%>
+			<c:if test="${fn:length(rtnMap.list) == 0}">
+			<tr>
+				<td class="lt_text3" colspan="20" style="text-align:center">
+					<fmt:message key="common.nodata.msg" />
+				</td>
+			</tr>
+			</c:if>
+						
+			<c:forEach var="list" items="${rtnMap.list}" varStatus="status">
+			<tr>
+				<td style="text-align:center;">${rtnMap.totCnt - (rtnMap.pageIndex - 1) * rtnMap.paginationInfo.pageSize - status.count + 1}</td>
+				<td>${list.accntNo}</td>				
+				<td>${list.b2bCompNm}</td>
+				<td>${list.cell}</td>				
+				<td>${list.insplPhone}</td>
+				<td>${list.apayAmt}</td>
+				<td>${list.memNm}</td>
+				<c:if test="${loginMap.id ne 'lgupay'}">
+					<c:if test="${!empty list.brthMonDay}">
+					<td>${egov:convertDate(list.brthMonDay, 'yyyy-MM-dd', 'yyyy-MM-dd', '')}</td>
+					</c:if>
+					<c:if test="${empty list.brthMonDay}">
+					<td></td>
+					</c:if>
+				</c:if>
+				<td>${list.joinDt}</td>
+				<td>${list.regDm}</td>
+				<td>${list.prodNm}</td>
+				<td>${list.modelClNm}</td>
+				<td>${list.mouthCount}</td>
+				<td>${list.trueCount}</td>
+				<td>${list.no}</td>
+				<td>${list.payState}</td>
+				<td>${list.accStat}</td>
+				<td>${list.idNo}</td>
+				<td>${list.orderNum}</td>
+				<c:if test="${loginMap.id ne 'lgupay'}">
+					<td>${list.insplAddr2}</td>
+				</c:if>
+				<td>${list.b2bEmpleNo}</td>
+				<td>${list.kbNo}</td>
+				<td>${list.homeno}</td>
+				<td>${list.eventDay}</td>
+			</tr>
+			</c:forEach>
+		</tbody>
+	</table>
+</form>
+
+<div style="float:right;">
+	<input type="button" value="엑셀 다운로드" class="btn btn-info2"  onclick="Excel()" />
+</div>
+
+<div class="paging_all c_box">
+	<div class="paging">
+		<ul>
+			<ui:pagination paginationInfo="${rtnMap.paginationInfo}" type="text" jsFunction="getPageList" />
+		</ul>
+	</div>
+</div>
+
+<script type="text/javascript">
+	function Excel(){
+		var strtDt = parseInt(jQuery("#strtDt").val().replace(/-/gi, ""));
+		var endDt = parseInt(jQuery("#endDt").val().replace(/-/gi, ""));
+	
+		if(!strtDt || !endDt)
+		{
+			alert("* 검색 기간을 입력해주세요.");
+			return;
+		}
+		else if(strtDt > endDt)
+		{
+			alert("* 검색 시작일이 종료일보다 클 수 없습니다.");
+			return;
+		}
+		else
+		{
+			var arrStrgDt = jQuery("#strtDt").val().split("-");
+			var arrEndDt = jQuery("#endDt").val().split("-");
+			
+			var strtDate = new Date(arrStrgDt[0], parseInt(arrStrgDt[1]) - 1, arrStrgDt[2]); 
+			var endDate = new Date(arrEndDt[0], parseInt(arrEndDt[1]) - 1, arrEndDt[2]); 
+
+			if((endDate.getTime() - strtDate.getTime()) / (24 * 60 * 60 * 1000) > 30)
+			{
+				alert("* 검색 기간을 30일 이하로 입력해주세요.");
+				return;
+			}
+		}
+
+		var f = document.frm;
+		
+		frm.action = "excel.do";
+		frm.submit();
+	}
+
+	//리스트 가져오기
+	function getPageList()
+	{	
+		var f = document.frm;
+		
+		if(arguments.length > 0)
+		{
+			f.pageIndex.value = arguments[0];
+		}
+		else
+		{
+			f.pageIndex.value = 1;
+		}
+		
+		f.action = "./list.do";
+		f.submit();
+	}
+</script>

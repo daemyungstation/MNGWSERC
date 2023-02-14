@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CSAPrsnCnslDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+		<result property="cntn" column="CNTN" javaType="java.lang.String" jdbcType="CLOB" />
+		<result property="answ" column="ANSW" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+	
+	<!--
+         쿼리명 : CSAPrsnCnslDAO.selectPrsnCnslList
+         설  명 : 1:1 상담 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+    <select id="CSAPrsnCnslDAO.selectPrsnCnslList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CSAPrsnCnslDAO.selectPrsnCnslList */
+			   TBL.* 
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRSN_INQRY_GB' AND CD = TBL.INQRY_CD) AS INQRY_NM
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRSN_INQRY_DTL_GB' AND CD = TBL.INQRY_DTL_CD) AS INQRY_DTL_NM
+			   , (SELECT UNQ_NO FROM MB_MEM_MST WHERE ID = TBL.ID) AS UNQ_NO
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = TBL.ID) AS NAME
+			   , (SELECT MAX(MOD_DTM) FROM CS_PRSN_CNSL_LOG WHERE PRSN_CNSL_SEQ = TBL.PRSN_CNSL_SEQ AND TASK_GB = 'S') AS MAIL_SEND_DTM
+      		   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PROCESS_TYPE' AND CD = TBL.PRCS_CD) AS PRCS_NM
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+				       , PRSN_CNSL_SEQ
+				       , ID
+					   , INQRY_CD
+					   , INQRY_DTL_CD
+					   , TITL
+					   , PRCS_CD
+					   , REG_DTM
+					   , OLD_REG_NM
+				  FROM CS_PRSN_CNSL_MST
+				 WHERE 1=1
+				<if test="inqryCd != null and inqryCd != ''">
+					AND INQRY_CD = #{inqryCd}
+			 	</if>
+			 	<if test="inqryDtlCd != null and inqryDtlCd != ''">
+					AND INQRY_DTL_CD = #{inqryDtlCd}
+			 	</if>
+			 	<if test="prcsCd != null and prcsCd != ''">
+					AND PRCS_CD = #{prcsCd}
+			 	</if>
+			 	<if test="strtDt != null and strtDt != ''">
+					<![CDATA[	AND REG_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+				</if>
+				<if test="endDt != null and endDt != ''">
+					<![CDATA[	AND REG_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND TITL LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND CNTN LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 3">
+						<![CDATA[	AND (ID IN(SELECT ID FROM MB_MEM_MST WHERE NAME LIKE '%' || #{q} || '%') OR OLD_REG_NM LIKE '%' || #{q} || '%')	]]>
+					</if>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) A
+		) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}             
+    </select>
+    
+    <!--
+         쿼리명 : CSAPrsnCnslDAO.selectPrsnCnsl
+         설  명 : 1:1 상담 상세를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+    <select id="CSAPrsnCnslDAO.selectPrsnCnsl" parameterType="emfMap" resultMap="emfMap">
+     	SELECT /* CSAPrsnCnslDAO.selectPrsnCnsl */      
+			   PRSN_CNSL_SEQ
+			   , ID
+			   , INQRY_CD
+			   , INQRY_DTL_CD
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRSN_INQRY_GB' AND CD = A.INQRY_CD) AS INQRY_NM
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRSN_INQRY_DTL_GB' AND CD = A.INQRY_DTL_CD) AS INQRY_DTL_NM
+			   , (SELECT UNQ_NO FROM MB_MEM_MST WHERE ID = A.ID) AS UNQ_NO
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = A.ID) AS NAME
+			   , (SELECT HP FROM MB_MEM_MST WHERE ID = A.ID) AS CTEL
+			   , (SELECT EMAIL FROM MB_MEM_MST WHERE ID = A.ID) AS EMAIL
+			   , TITL
+			   , CNTN
+			   , ANSW
+			   , (SELECT COUNT(*) FROM CS_PRSN_CNSL_LOG WHERE PRSN_CNSL_SEQ = A.PRSN_CNSL_SEQ AND TASK_GB = 'S') AS MAIL_SEND_CNT
+			   , PRCS_CD
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PROCESS_TYPE' AND CD = A.PRCS_CD) AS PRCS_NM
+			   , REG_DTM
+			   , OLD_REG_NM
+			   , OLD_REG_EMAIL
+			   , OLD_REG_CTEL
+		  FROM CS_PRSN_CNSL_MST A
+         WHERE PRSN_CNSL_SEQ = #{prsnCnslSeq}
+   	</select>
+    
+	<!--
+         쿼리명 : CSAPrsnCnslDAO.updatePrsnCnslAnsw
+         설  명 : 1:1 상담 답변을 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+    <update id="CSAPrsnCnslDAO.updatePrsnCnslAnsw" parameterType="emfMap">
+    	UPDATE /* CSAPrsnCnslDAO.updatePrsnCnslAnsw */ CS_PRSN_CNSL_MST
+    	   SET ANSW = #{answ}
+    	   	   , MOD_ID = #{modId}
+    	   	   , MOD_IP = #{modIp}
+			   , MOD_DTM = SYSDATE
+    	 WHERE PRSN_CNSL_SEQ = #{prsnCnslSeq}
+    </update>
+    
+ 	<!--
+         쿼리명 : CSAPrsnCnslDAO.deletePrsnCnsl
+         설  명 : 1:1 상담을 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+ 	<delete id="CSAPrsnCnslDAO.deletePrsnCnsl" parameterType="emfMap">
+		DELETE /* CSAPrsnCnslDAO.deletePrsnCnsl */ 
+		  FROM CS_PRSN_CNSL_MST
+		 WHERE PRSN_CNSL_SEQ IN 
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+ 	</delete>
+ 	
+ 	<!--
+         쿼리명 : CSAPrsnCnslDAO.updatePrsnCnslPrcsCd
+         설  명 : 1:1상담 처리상태를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+    <update id="CSAPrsnCnslDAO.updatePrsnCnslPrcsCd" parameterType="emfMap">
+    	UPDATE /* CSAPrsnCnslDAO.updatePrsnCnslPrcsCd */ CS_PRSN_CNSL_MST
+    	   SET PRCS_CD = #{prcsCd}
+    	 WHERE PRSN_CNSL_SEQ = #{prsnCnslSeq}
+    	   AND NOT EXISTS (SELECT 'X' FROM CS_PRSN_CNSL_LOG WHERE PRSN_CNSL_SEQ = #{prsnCnslSeq} AND TASK_GB = #{taskGb})
+    </update>
+ 	
+ 	<!--
+         쿼리명 : CSAPrsnCnslDAO.selectPrsnCnslLog
+         설  명 : 1:1 상담 로그를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+    <select id="CSAPrsnCnslDAO.selectPrsnCnslLog" parameterType="emfMap" resultType="emfMap">
+    	SELECT /* CSAPrsnCnslDAO.selectPrsnCnslLog */
+    		   TBL.*
+    		   , (SELECT NAME FROM CO_ADM_MST WHERE ID = TBL.MOD_ID) AS MOD_NM 
+    	FROM (
+    		SELECT ROW_NUMBER() OVER(PARTITION BY TASK_GB ORDER BY MOD_DTM DESC) RNK
+			   	   , MOD_ID
+			   	   , MOD_DTM
+		  	  FROM CS_PRSN_CNSL_LOG
+             WHERE PRSN_CNSL_SEQ = #{prsnCnslSeq}
+    	) TBL
+    	WHERE RNK = 1
+    	ORDER BY MOD_DTM
+   	</select>
+   	
+ 	<!--
+         쿼리명 : CSAPrsnCnslDAO.insertPrsnCnslLog
+         설  명 : 1:1 상담 로그를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.07   허진영     최초 생성
+    -->
+    <insert id="CSAPrsnCnslDAO.insertPrsnCnslLog" parameterType="emfMap">
+		INSERT /* CSAPrsnCnslDAO.insertPrsnCnslLog */ INTO CS_PRSN_CNSL_LOG
+			(PRSN_CNSL_SEQ
+			, TASK_GB
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		SELECT #{prsnCnslSeq}
+			   , #{taskGb}
+			   , #{modId}
+			   , #{modIp}
+			   , SYSDATE
+		  FROM DUAL
+		<if test="taskGb == 'R'.toString()">
+			WHERE NOT EXISTS (SELECT 'X' FROM CS_PRSN_CNSL_LOG WHERE PRSN_CNSL_SEQ = #{prsnCnslSeq} AND TASK_GB = #{taskGb})
+		</if>
+    </insert>
+	
+	<!--
+         쿼리명 : CSAPrsnCnslDAO.excelPrsnCnslList
+         설  명 : 1:1 상담 목록을 조회한다. (엑셀 다운로드)
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.20   허진영     최초 생성
+    -->
+    <select id="CSAPrsnCnslDAO.excelPrsnCnslList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CSAPrsnCnslDAO.excelPrsnCnslList */
+			   TBL.* 
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRSN_INQRY_GB' AND CD = TBL.INQRY_CD) AS INQRY_NM
+			   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PRSN_INQRY_DTL_GB' AND CD = TBL.INQRY_DTL_CD) AS INQRY_DTL_NM
+			   , (SELECT UNQ_NO FROM MB_MEM_MST WHERE ID = TBL.ID) AS UNQ_NO
+			   , (SELECT NAME FROM MB_MEM_MST WHERE ID = TBL.ID) AS NAME
+			   , (SELECT MAX(MOD_DTM) FROM CS_PRSN_CNSL_LOG WHERE PRSN_CNSL_SEQ = TBL.PRSN_CNSL_SEQ AND TASK_GB = 'S') AS MAIL_SEND_DTM
+      		   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = 'PROCESS_TYPE' AND CD = TBL.PRCS_CD) AS PRCS_NM
+		FROM (
+			SELECT COUNT(*) OVER() AS TOT_CNT
+			       , PRSN_CNSL_SEQ
+			       , ID
+				   , INQRY_CD
+				   , INQRY_DTL_CD
+				   , TITL
+				   , PRCS_CD
+				   , REG_DTM
+				   , OLD_REG_NM
+			  FROM CS_PRSN_CNSL_MST
+			 WHERE 1=1
+			<if test="inqryCd != null and inqryCd != ''">
+				AND INQRY_CD = #{inqryCd}
+		 	</if>
+		 	<if test="inqryDtlCd != null and inqryDtlCd != ''">
+				AND INQRY_DTL_CD = #{inqryDtlCd}
+		 	</if>
+		 	<if test="prcsCd != null and prcsCd != ''">
+				AND PRCS_CD = #{prcsCd}
+		 	</if>
+		 	<if test="strtDt != null and strtDt != ''">
+				<![CDATA[	AND REG_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+			</if>
+			<if test="endDt != null and endDt != ''">
+				<![CDATA[	AND REG_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+			</if>
+			<if test="q != null and q != ''">
+				<if test="f == 1">
+					<![CDATA[	AND TITL LIKE '%' || #{q} || '%'	]]>
+				</if>
+				<if test="f == 2">
+					<![CDATA[	AND CNTN LIKE '%' || #{q} || '%'	]]>
+				</if>
+				<if test="f == 3">
+					<![CDATA[	AND (ID IN(SELECT ID FROM MB_MEM_MST WHERE NAME LIKE '%' || #{q} || '%') OR OLD_REG_NM LIKE '%' || #{q} || '%')	]]>
+				</if>
+			</if>
+			 ORDER BY REG_DTM DESC
+		) TBL
+    </select>
+	
+</mapper>

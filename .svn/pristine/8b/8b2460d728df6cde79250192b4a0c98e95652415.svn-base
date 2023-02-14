@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CMETermsMngDAO">
+
+	<resultMap id="emfMap" type="emfMap">
+	    <result property="cntn" column="CNTN" javaType="java.lang.String" jdbcType="CLOB" />
+	    <result property="trsInfo" column="TRS_INFO" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+
+
+	<!--
+         쿼리명 : CMETermsMngDAO.selectTermsMngList
+         설  명 : 약관별관리 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   김필기     최초 생성
+    -->
+    <select id="CMETermsMngDAO.selectTermsMngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CMETermsMngDAO.selectTermsMngList */
+			TBL.*,
+			(
+				SELECT CD_NM FROM CO_CD_DTL WHERE CD = TBL.TRS_GB
+			) AS CD_NM
+		FROM (
+			SELECT ROWNUM AS RNUM, A.* 
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , TRS_MST_SEQ
+					   , TRS_GB
+					   , TITLE
+					   , APPLY_DT
+					   , REG_NM
+					   , REG_DT
+					   , READ_CNT
+			      FROM CM_TRS_MST
+				 WHERE 1=1 AND DEL_YN = 'N'				
+				<if test="trsGb != null and trsGb != ''">	
+					<![CDATA[ AND TRS_GB = #{trsGb} ]]>
+				</if>
+				<if test="f == 1">
+					<![CDATA[ AND TITLE LIKE '%' || #{q} || '%' ]]>
+				</if>
+				<if test="f == 2">
+					<![CDATA[ AND REG_NM LIKE '%' || #{q} || '%' ]]>
+				</if>
+					
+				 <if test="strtDt != null and strtDt != ''">
+					<![CDATA[	AND APPLY_DT  >= #{strtDt} ]]>
+				 </if>
+				 <if test="endDt != null and endDt != ''">
+					<![CDATA[	AND APPLY_DT <= #{endDt}]]>
+				 </if>
+				
+				 ORDER BY REG_DT DESC
+			) A
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}	     	     
+	</select>
+
+	<!--
+         쿼리명 : CMETermsMngDAO.selectTermsMng
+         설  명 : 약관별관리 상세를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   김필기     최초 생성
+    -->	
+	<select id="CMETermsMngDAO.selectTermsMng" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* CMETermsMngDAO.selectTermsMng */
+			   TRS_MST_SEQ
+			   , TITLE
+			   ,	 TRS_DESC
+			   , TRS_INFO
+			   , REG_NM
+			   , REG_DT
+			   , TRS_GB
+			   , APPLY_DT
+			   , ( SELECT CD_NM FROM CO_CD_DTL WHERE CD = A.TRS_GB ) AS CD_NM			   
+		  FROM CM_TRS_MST A
+		 WHERE TRS_MST_SEQ = #{trsMstSeq} 
+		 	AND DEL_YN = 'N'		
+	</select>
+
+	<!--
+         쿼리명 : CMETermsMngDAO.insertTermsMng
+         설  명 : 약관별관리를 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   김필기     최초 생성
+    -->	
+	<insert id="CMETermsMngDAO.insertTermsMng" parameterType="emfMap">
+		INSERT /* CMETermsMngDAO.insertTermsMng */ 
+			INTO CM_TRS_MST(TRS_MST_SEQ, TRS_GB, TITLE, TRS_DESC, TRS_INFO,  APPLY_DT, REG_ID, REG_NM, REG_IP)
+		VALUES(
+			#{trsMstSeq}
+		,	#{trsGb}
+		,	#{title}
+		,	#{trsDesc, jdbcType=VARCHAR}
+		,   #{trsInfo, jdbcType=VARCHAR}
+		,	TO_DATE(#{applyDt}, 'yyyy-mm-dd')
+		,	#{regId}
+		,	#{regNm}
+		,	#{regIp}		 
+		)
+	</insert>
+
+	<!--
+         쿼리명 : CMETermsMngDAO.updateTermsMng
+         설  명 : 약관별관리를 수정한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   김필기     최초 생성
+    -->		
+	<update id="CMETermsMngDAO.updateTermsMng" parameterType="emfMap">
+		UPDATE CM_TRS_MST
+			SET TRS_GB = #{trsGb}
+				, APPLY_DT = TO_DATE(#{applyDt}, 'yyyy-mm-dd')
+				, TITLE = #{title}
+				, TRS_DESC = #{trsDesc, jdbcType=VARCHAR}
+				, TRS_INFO = #{trsInfo, jdbcType=VARCHAR}				
+				, MOD_ID = #{modId}
+				, MOD_IP = #{modIp}
+				, MOD_NM = #{modNm}
+				, MOD_DT = SYSDATE
+		WHERE TRS_MST_SEQ = #{trsMstSeq}
+	</update>
+		
+	<!--
+         쿼리명 : CMETermsMngDAO.deleteTermsMng
+         설  명 : 약관별관리를 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   김필기     최초 생성
+    -->		
+	<delete id="CMETermsMngDAO.deleteTermsMng" parameterType="emfMap">
+		DELETE CM_TRS_MST
+		WHERE TRS_MST_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+          	#{item}
+      	</foreach>		
+		
+	</delete>
+	
+	<delete id="CMETermsMngDAO.deleteTermsMngDtl" parameterType="emfMap">
+		DELETE CM_TRS_DTL			
+		WHERE TRS_MST_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+          	#{item}
+      	</foreach>		
+	</delete>	
+	
+<!--
+         쿼리명 : CMETermsMngDAO.updateReadCnt
+         설  명 : 조회수 증가
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.18   김필기     최초 생성
+    -->		
+	<update id="CMETermsMngDAO.updateReadCnt" parameterType="emfMap">
+		UPDATE CM_TRS_MST
+			SET READ_CNT = READ_CNT + 1
+		WHERE TRS_MST_SEQ = #{trsMstSeq}
+	</update>
+	
+	<!--
+         쿼리명 : CMETermsMngDAO.insertTermsDtl
+         설  명 : 약관별관리 상세내용을 등록한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.04   김필기     최초 생성
+    -->	
+	<insert id="CMETermsMngDAO.insertTermsDtl" parameterType="emfMap">
+		INSERT /* CMETermsMngDAO.insertTermsDtl */ 
+			INTO CM_TRS_DTL(TRS_DTL_SEQ, TRS_MST_SEQ, PARENT_SEQ, LEV, CNTN, REG_DT, TRS_DTL_SEQ_OLD)
+		VALUES(
+			#{seq}
+		,	#{trsMstSeq}
+		,	#{parentSeq}
+		,	#{lev}
+		,	#{cntn}		
+		,	SYSDATE
+		,	#{oldSeq, jdbcType=VARCHAR}
+		)
+	</insert>	
+	
+	
+	
+
+	<!--
+         쿼리명 : CMETermsMngDAO.selectTermsDtl
+         설  명 : 약관별관리 상세내용을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.04   김필기     최초 생성
+    -->
+    <select id="CMETermsMngDAO.selectTermsDtl" parameterType="emfMap" resultMap="emfMap">
+		SELECT /* CMETermsMngDAO.selectTermsDtl */
+			PARENT_SEQ
+		,	LEV
+		,	CNTN
+		,	TRS_MST_SEQ
+		,	TRS_DTL_SEQ
+		FROM CM_TRS_DTL
+		WHERE 1=1
+			AND TRS_MST_SEQ = #{seq}
+			<if test="lev != null and lev != ''">
+			AND LEV = #{lev} 
+			</if>
+		ORDER BY TRS_DTL_SEQ ASC
+	</select>
+	
+	<!--
+         쿼리명 : CMETermsMngDAO.selectOldTermsDtl
+         설  명 : 약관별관리 상세내용을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.04   김필기     최초 생성
+    -->
+    <select id="CMETermsMngDAO.selectOldTermsDtl" parameterType="emfMap" resultType="java.lang.Integer">
+		SELECT /* CMETermsMngDAO.selectOldTermsDtl */			
+			TRS_DTL_SEQ
+		FROM CM_TRS_DTL
+		WHERE 1=1
+			AND TRS_MST_SEQ = #{trsMstSeq}
+			AND TRS_DTL_SEQ_OLD = #{parentSeq}
+		
+	</select>	
+	
+	
+<!--
+         쿼리명 : CMETermsMngDAO.updateTermDtl
+         설  명 : 약관 상세내용 수정
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.04   김필기     최초 생성
+    -->		
+	<update id="CMETermsMngDAO.updateTermDtl" parameterType="emfMap">
+		UPDATE CM_TRS_DTL
+			SET CNTN = #{cntn}
+		WHERE TRS_DTL_SEQ = #{trsDtlSeq}
+	</update>
+		
+	<!--
+         쿼리명 : CMETermsMngDAO.deleteTermsDtl
+         설  명 : 약관 상세내용을 삭제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.04   김필기     최초 생성
+    -->		
+	<delete id="CMETermsMngDAO.deleteTermsDtl" parameterType="emfMap">
+		DELETE 
+		FROM CM_TRS_DTL
+		WHERE TRS_DTL_SEQ IN
+		(
+			SELECT TRS_DTL_SEQ
+			FROM
+			(
+			  SELECT TRS_DTL_SEQ FROM CM_TRS_DTL
+			  WHERE TRS_MST_SEQ = #{trsMstSeq} AND LEV = 1 AND TRS_DTL_SEQ = #{trsDtlSeq}
+			  
+			  UNION ALL
+			  
+			  SELECT TRS_DTL_SEQ FROM CM_TRS_DTL
+			  WHERE TRS_MST_SEQ = #{trsMstSeq} 
+			  	AND LEV = 2 
+			  	AND ( TRS_DTL_SEQ = #{trsDtlSeq} OR PARENT_SEQ IN (SELECT TRS_DTL_SEQ FROM CM_TRS_DTL WHERE TRS_MST_SEQ = #{trsMstSeq} AND LEV = 1 AND TRS_DTL_SEQ = #{trsDtlSeq}))
+			  
+			  UNION ALL
+			  
+			  SELECT TRS_DTL_SEQ FROM CM_TRS_DTL
+			  WHERE TRS_MST_SEQ = #{trsMstSeq} 
+			  	AND LEV = 3 
+			  	AND ( TRS_DTL_SEQ = #{trsDtlSeq} OR PARENT_SEQ IN (SELECT TRS_DTL_SEQ FROM CM_TRS_DTL WHERE TRS_MST_SEQ = #{trsMstSeq} AND LEV = 2 AND TRS_DTL_SEQ = #{trsDtlSeq}))
+
+			)
+		)
+	</delete>	
+	
+
+	
+	
+	
+</mapper>

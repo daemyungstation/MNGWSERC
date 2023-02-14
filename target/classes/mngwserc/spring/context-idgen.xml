@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+	수정일                 수정자                          수정내용
+  =========     =======    =================================================
+  2011.09.21    서준식              NTT_ID 에대한 IDGEN서비스 등록
+  2011.10.18    서준식              StsfdgNo 에대한 IDGEN서비스 등록
+ 				            AnswerNo 에대한 IDGEN서비스 등록
+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+	 
+	<bean name="egovFileIdGnrService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="fileStrategy" />
+		<property name="blockSize"  value="10" />
+		<property name="table"      value="CO_SEQ_MST" />
+		<property name="tableName"  value="FILE_ID" />
+	</bean>
+	
+	<bean name="fileStrategy" class="egovframework.rte.fdl.idgnr.impl.strategy.EgovIdGnrStrategyImpl">
+		<property name="prefix"     value="FILE_" />
+		<property name="cipers"     value="15" />
+		<property name="fillChar"   value="0" />
+	</bean>
+	
+	<!-- System Log... START-->			
+	<bean name="egovSysLogIdGnrService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="sysLogStrategy" />
+		<property name="blockSize" 	value="1"/>
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="SYSLOG_ID" />
+	</bean>
+
+	<bean name="sysLogStrategy" class="egovframework.rte.fdl.idgnr.impl.strategy.EgovIdGnrStrategyImpl">
+		<property name="prefix"     value="SYSLOG_" />
+		<property name="cipers"     value="13" />
+		<property name="fillChar"   value="0" />
+	</bean>		
+	<!-- System Log... END-->		
+	
+	<!-- 메뉴 관리... START -->
+	<bean name="menuIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="MENU_SEQ" />
+	</bean>
+	<!-- 메뉴 관리... END -->
+	
+	<!-- 관리자 관리... START -->
+	<bean name="admIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1"/>
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="ADM_SEQ" />
+	</bean>
+	<!-- 관리자 관리... END -->
+	
+	<!-- ROLE 관리... START-->
+	<bean name="roleIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="roleStrategy" />
+		<property name="blockSize" 	value="1"/>
+		<property name="table"	   	value="CO_SEQ_MST"/>
+		<property name="tableName"	value="ROLE_SEQ"/>
+	</bean>
+	
+	<bean name="roleStrategy" class="egovframework.rte.fdl.idgnr.impl.strategy.EgovIdGnrStrategyImpl">
+		<property name="prefix"     value="ROLE_" />
+		<property name="cipers"     value="5" />
+		<property name="fillChar"   value="0" />
+	</bean>
+	<!-- ROLE 관리... END-->
+	
+	<!-- 게시판 관리... START -->
+	<bean name="BoardMasterIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="PreFixBoardMaster" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="COMMUNITY_ID" />
+	</bean>
+	
+	<bean name="PreFixBoardMaster" class="egovframework.rte.fdl.idgnr.impl.strategy.EgovIdGnrStrategyImpl">
+		<property name="prefix"     value="" />		
+		<property name="cipers"     value="5" />
+		<property name="fillChar"   value="0" />
+	</bean>	
+	<!-- 게시판 관리... END -->
+	
+	<!-- 게시글 관리... START -->
+	<bean name="BoardIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1"/>
+		<property name="table"	   	value="CO_SEQ_MST"/>
+		<property name="tableName"	value="BOARD_ID"/>
+	</bean>
+	<!-- 게시글 관리... END -->
+	
+	<!-- 게시글 댓글 관리.. START -->
+	<bean name="BoardCommentIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1"/>
+		<property name="table"	   	value="CO_SEQ_MST"/>
+		<property name="tableName"	value="COMMENT_ID"/>
+	</bean>
+	<!-- 게시글 댓글 관리... END -->
+	
+	<!-- 컨텐츠 관리 IDX... START -->
+	<bean name="cntnsIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1"/>
+		<property name="table"	   	value="CO_SEQ_MST"/>
+		<property name="tableName"	value="CONTENTS_ID"/>
+	</bean>
+	<!-- 컨텐츠 관리 IDX... END -->
+	
+	<!-- 팝업 관리... START -->
+	<bean name="popIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="POP_SEQ"/>
+	</bean>
+	<!-- 팝업 관리... END -->
+	
+	<!-- 배너 관리... START -->
+	<bean name="banrIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="BANR_SEQ"/>
+	</bean>
+	<!-- 배너 관리... END -->
+	
+	<!-- 다운로드 양식 관리... START -->
+	<bean name="dnldFormIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="DNLD_FROM_SEQ"/>
+	</bean>
+	<!-- 다운로드 양식 관리... END -->
+
+	<!-- 이용안내 관리... START -->
+	<bean name="oprtGuideIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="OPRT_GUIDE_SEQ"/>
+	</bean>
+	<!-- 이용안내 관리... END -->
+	
+	<!-- 제로초이스 상품관리... START -->
+	<bean name="zeroChoiPrdMgrIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="ZERO_CHOI_PRD_MGR_SEQ"/>
+	</bean>
+	<!-- 제로초이스 상품관리... END -->
+	
+	<!-- 제로초이스 이미지 관리... START -->
+	<bean name="zeroChoiImgMgrIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="ZERO_CHOI_IMG_MGR_SEQ"/>
+	</bean>
+	<!-- 제로초이스 이미지 관리... END -->
+	
+	<!-- 제로초이스 파일 관리... START -->
+	<bean name="zeroChoiFileIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="ZERO_CHOI_FILE_SEQ"/>
+	</bean>
+	<!-- 제로초이스 이미지 관리... END -->
+	
+	<!-- 다이렉트 초이스 관리... START -->
+	<bean name="directChoiIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="DIRECT_CHOI_SEQ"/>
+	</bean>
+	<!-- 다이렉트 이미지 관리... END -->
+	
+	<!-- 리미티드 초이스 관리... START -->
+	<bean name="limitedChoiIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="LIMITED_CHOI_SEQ"/>
+	</bean>
+	<!-- 리미티드 초이스 관리... END -->
+	
+	<!-- 다이렉트 초이스 파일 관리... START -->
+	<bean name="directChoiFileIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="DIRECT_CHOI_FILE_SEQ"/>
+	</bean>
+	<!-- 다이렉트 이미지 관리... END -->
+	
+	<!-- 리미티드 초이스 파일 관리... START -->
+	<bean name="limitedChoiFileIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="LIMITED_CHOI_FILE_SEQ"/>
+	</bean>
+	<!-- 리미티드 초이스 관리... END -->
+	
+	<!-- 회원정보 변경 내역 관리... START -->
+	<bean name="memChngIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="MEM_CHNG_SEQ"/>
+	</bean>
+	<!-- 회원정보 변경 내역 관리... END -->
+	
+	<!-- 전환서비스 체계 그룹 관리 ... START -->
+	<bean name="grpIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="GRP_SEQ"/>
+	</bean>
+	<!-- 전환서비스 체계 그룹 관리... END -->
+	
+	<!-- 전환서비스 체계 그룹 상품 관리 ... START -->
+	<bean name="grpPrdctIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="GRP_PRDCT_SEQ"/>
+	</bean>
+	<!-- 전환서비스 체계 그룹 상품 관리... END -->
+	
+	<!-- 전환서비스 상품 관리 ... START -->
+	<bean name="prdctIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="PRDCT_SEQ"/>
+	</bean>	
+	<!-- 전환서비스 상품 관리 ... END -->
+	
+	<!-- 전환서비스 상세 관리 ... START -->
+	<bean name="prdctDtlIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="PRDCT_DTL_SEQ"/>
+	</bean>	
+	<!-- 전환서비스 상세 관리 ... END -->
+	
+	<!-- 전환서비스 상세 상품정보 관리 ... START -->
+	<bean name="prdctInfIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="PRDCT_INF_SEQ"/>
+	</bean>	
+	<!-- 전환서비스 상세 상품정보 관리 ... END -->
+	
+	<!-- 공연 정보 관리 ... START -->
+	<bean name="pfmcIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="PFMC_SEQ"/>
+	</bean>
+	<!-- 공연 정보 관리... END -->
+	
+	<!-- 공연 예약정보 관리 ... START -->
+	<bean name="rsvtnDtmIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="RSVTN_DTM_SEQ"/>
+	</bean>
+	<!-- 공연 예약정보 관리... END -->
+	
+	<!-- 상품약관 그룹관리 ... START -->
+	<bean name="trsGrpPrdctIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="TRS_GRP_PRDCT_SEQ"/>
+	</bean>	
+	<!-- 상품약관 그룹관리 ... END -->
+
+	<!-- 약관 관리  ... START -->
+	<bean name="trsGrpIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="TRS_GRP_SEQ"/>
+	</bean>	
+	<!-- 약관 관리 ... END -->
+	
+	<!-- 상품약관 그룹관리 로그 ... START -->
+	<bean name="trsGrpMstLogIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="TRS_GRP_MST_LOG_SEQ"/>
+	</bean>	
+	<!-- 상품약관 그룹관리 로그 ... END -->
+
+	<!-- 상품약관 그룹관리 로그  ... START -->
+	<bean name="trsGrpLogIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="TRS_GRP_LOG_SEQ"/>
+	</bean>	
+	<!-- 상품약관 그룹관리 로그 ... END -->
+	
+	<!-- 약관관리  ... START -->
+	<bean name="trsMstIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="TRS_MST_SEQ"/>
+	</bean>	
+	<!-- 약관관리 ... END -->
+
+	<!-- 온라인 상담신청(일반, b2b)  ... START -->
+	<bean name="onlinePrdctCsMstIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="GNRL_PRDCT_CS_MST_SEQ"/>
+	</bean>	
+	<!-- 온라인 상담신청(일반, b2b) ... END -->
+
+	<!-- 라이프 메거진 관리... START -->
+	<bean name="mgznIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="MGZN_SEQ"/>
+	</bean>
+	<!-- 라이프 메거진 관리... END -->
+
+	<!-- 약관 상세 관리  ... START -->
+	<bean name="trsDtlIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="TRS_DTL_SEQ"/>
+	</bean>	
+	<!-- 약관 상세 관리 ... END -->
+
+	<!-- 외주업체 상담 신청 답변  ... START -->
+	<bean name="outsourcingDtlIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="OSC_CNSL_DTL_SEQ"/>
+	</bean>	
+	<!-- 외주업체 상담 신청 ... END -->
+
+	<!-- 외주업체 페이지 관리 마스트  ... START -->
+	<bean name="outsourcingPageMstIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="OSC_INPUT_MST_SEQ"/>
+	</bean>	
+	<!-- 외주업체 페이지 관리 마스트 ... END -->	
+	
+	<!-- 외주업체 관리자 조건 관리  ... START -->
+	<bean name="outsourcingAdmMstIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="OSC_ADM_MST_SEQ"/>
+	</bean>	
+	<!-- 외주업체 관리자 조건 관리 ... END -->
+	
+	<!-- 외주업체 상담 신청 ... START -->
+	<bean name="outsourcingIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="OSC_CNSL_SEQ"/>
+	</bean>	
+	<!-- 외주업체 상담 신청 ... END -->
+
+	<!-- 외주업체 상담 신청 ... START -->
+	<bean name="bannerFileIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="BANNER_SEQ"/>
+	</bean>	
+	<!-- 외주업체 상담 신청 ... END -->
+
+	<bean name="prodCnclIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="PROD_CNCL_SEQ"/>
+	</bean>
+
+	<!-- 속성제어 -->   
+	<bean name="IntegrityIdStrategy" class="egovframework.rte.fdl.idgnr.impl.strategy.EgovIdGnrStrategyImpl">
+		<property name="cipers" value="15" />
+	</bean>
+	
+	<!-- 메인 비주얼 영역 START -->
+	<bean name="mainVisualIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="MAIN_VISUAL_SEQ"/>
+	</bean>	
+	<!-- 메인 비주얼 영역 ... END -->
+	
+	<!-- 메인 컨텐츠 영역 START -->
+	<bean name="mainContentIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="CNTNS_MST_SEQ"/>
+	</bean>	
+	<!-- 메인 컨텐츠 영역 ... END -->
+	
+	<!-- 메인 컨텐츠 상세 영역 START -->
+	<bean name="mainContentDtlIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="CNTNS_DTL_SEQ"/>
+	</bean>	
+	<!-- 메인 컨텐츠 상세 영역 ... END -->
+	
+	<!-- SNS START -->
+	<bean name="snsIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="SNS_SEQ"/>
+	</bean>	
+	<!-- SNS END -->
+	
+	<!-- FAIR CONFIG START -->
+	<bean name="fairConfigIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="FCFG_SEQ"/>
+	</bean>	
+	<!-- FAIR CONFIG END -->
+	
+	<!-- FAIR BANNER TOP START -->
+	<bean name="fairBannerTopIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="FBT_SEQ"/>
+	</bean>	
+	<!-- FAIR BANNER TOP END -->
+	
+	<!-- FAIR MAIN START -->
+	<bean name="fairMainIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="FM_SEQ"/>
+	</bean>	
+	<!-- FAIR MAIN TOP END -->	
+	
+	<!-- FAIR MAIN SUB START -->
+	<bean name="fairMainSubIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="FMS_SEQ"/>
+	</bean>	
+	<!-- FAIR MAIN SUB END -->	
+	
+	<!-- FAIR EVENT START -->
+	<bean name="fairEventIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="FBT_SEQ"/>
+	</bean>	
+	<!-- FAIR EVENT END -->
+	
+	<!-- FAIR BENEFIT START -->
+	<bean name="fairProductBenefitIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="FB_SEQ"/>
+	</bean>	
+	<!-- FAIR BENEFIT END -->
+	
+	<!-- FAIR PRODUCT INPUT START -->
+	<bean name="fairProductInputIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="FPI_SEQ"/>
+	</bean>	
+	<!-- FAIR PRODUCT INPUT END -->
+	
+	<!-- FAIR PRODUCT CATEGORY START -->
+	<bean name="fairProductCategoryIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="FC_SEQ"/>
+	</bean>	
+	<!-- FAIR PRODUCT CATEGORY END -->	
+	
+	<!-- FAIR PRODUCT DETAIL START -->
+	<bean name="fairProductDetailIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="FP_SEQ"/>
+	</bean>	
+	<!-- FAIR PRODUCT DETAIL END -->
+	
+	<!-- FAIR USER START -->
+	<bean name="fairUserIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="FU_SEQ"/>
+	</bean>	
+	<!-- FAIR USER END -->
+	
+	<!-- FAIR USER PRODUCT START -->
+	<bean name="fairUserProductIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="FUP_SEQ"/>
+	</bean>	
+	<!-- FAIR USER PRODUCT END -->	
+	
+	<!-- FAIR USER PRODUCT CONSULT START -->
+	<bean name="fairUserProductConsultIdgen" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="egov.dataSource" />
+		<property name="strategy"   ref="IntegrityIdStrategy" />
+		<property name="blockSize" 	value="1" />
+		<property name="table"	   	value="CO_SEQ_MST" />
+		<property name="tableName"	value="FUPC_SEQ"/>
+	</bean>	
+	<!-- FAIR USER PRODUCT CONSULT END -->
+
+</beans>

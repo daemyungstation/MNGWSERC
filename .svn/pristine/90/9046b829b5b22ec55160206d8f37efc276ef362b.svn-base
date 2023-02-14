@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MBCQscnMemDAO">
+    
+    <!--
+         쿼리명 : MBCQscnMemDAO.selectQscnMemList
+         설  명 : 휴면계정 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+    <select id="MBCQscnMemDAO.selectQscnMemList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBCQscnMemDAO.selectQscnMemList */
+		  	   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, A.*
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   ,ID
+					   , DROT_RSN
+					   , DROT_DTM
+					   , UNQ_NO
+					   , NAME
+					   , EMAIL
+					   , LAST_LGN_DTM
+					   , REG_DTM
+					   , CI
+		    	  <!-- FROM MB_MEM_MST -->
+		    	  <!-- 2018.02.08 휴먼회원 테이블 추가 -->
+		    	  FROM MB_QSCN_MEM_MST
+		    	 <!-- WHERE QSCN_YN = 'Y' -->
+			     WHERE 1=1
+				<if test="strtDt != null and strtDt != ''">
+					<if test="dtGb == 1">
+						<![CDATA[	AND LAST_LGN_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+					</if>
+					<if test="dtGb == 2">
+						<![CDATA[	AND REG_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+					</if>
+				</if>
+				<if test="endDt != null and endDt != ''">
+					<if test="dtGb == 1">
+						<![CDATA[	AND LAST_LGN_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+					</if>
+					<if test="dtGb == 2">
+						<![CDATA[	AND REG_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+					</if>	
+				</if>	
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND NAME = #{q}]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND ID = #{q}]]>
+					</if>
+					<if test="f == 3">
+						<![CDATA[	AND CI = #{ci}]]>
+					</if>
+					<if test="f == 4">
+						<![CDATA[	AND UNQ_NO = #{q}]]>
+					</if>
+				</if>
+				 ORDER BY REG_DTM DESC
+			) A
+		) TBL 
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+    </select>
+
+    <!--
+         쿼리명 : MBCQscnMemDAO.selectQscnMem
+         설  명 : 휴면계정 상세를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+    <select id="MBCQscnMemDAO.selectQscnMem" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBCQscnMemDAO.selectQscnMem */
+			   A.ID
+			   , A.UNQ_NO
+			   , A.NAME
+			   , A.BIRTH
+			   , A.EMAIL
+			   , A.HP
+			   , A.TEL
+			   , A.ZIPCD
+			   , A.ADR
+			   , A.ADR_DTL
+			   , A.SMS_RCV_YN
+			   , A.TEL_RCV_YN
+			   , A.CTLG_RCV_YN
+			   , A.EMAIL_RCV_YN
+			   , A.USE_YN
+			   , A.LAST_LGN_DTM
+			   , A.REG_DTM
+			   , A.CI
+			   , B.MRRG_YN
+			   , B.CHDRN_GB
+			   , B.INTR_PTC
+			   , B.JOIN_PATH
+			   , B.JOIN_PATH_ETC
+			   , B.PFRN_PTC
+			   , B.PFRN_ETC
+		  FROM MB_QSCN_MEM_MST A, MB_ETC_INF B
+         WHERE A.ID = B.ID(+)
+           AND A.ID = #{id}
+    </select>
+    
+    <!--
+         쿼리명 : MBCQscnMemDAO.updateQscnYn
+         설  명 : 휴면상태를 해제한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.04.23   허진영      최초생성
+    -->
+    <!--
+    <select id="MBCQscnMemDAO.updateQscnYn" parameterType="emfMap" resultType="emfMap">
+		UPDATE /* MBCQscnMemDAO.updateQscnYn */ MB_MEM_MST
+		   SET QSCN_YN = 'N'
+			   , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = SYSDATE
+         WHERE ID = #{id}
+    </select>
+    -->
+
+    <!--
+         쿼리명 : MBCQscnMemDAO.excelQscnMemList
+         설  명 : 휴면계정 목록을 조회한다. (엑셀다운로드)
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+	<select id="MBCQscnMemDAO.excelQscnMemList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBCQscnMemDAO.excelQscnMemList */
+		  	   TBL.* 
+		FROM (
+			SELECT COUNT(*) OVER() AS TOT_CNT
+			  	   ,ID
+				   , DROT_RSN
+				   , DROT_DTM
+				   , UNQ_NO
+				   , NAME
+				   , EMAIL
+				   , LAST_LGN_DTM
+				   , REG_DTM
+	          FROM MB_QSCN_MEM_MST
+		     WHERE QSCN_YN = 'Y'
+			<if test="strtDt != null and strtDt != ''">
+				<if test="dtGb == 1">
+					<![CDATA[	AND LAST_LGN_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+				</if>
+				<if test="dtGb == 2">
+					<![CDATA[	AND REG_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]>
+				</if>
+			</if>
+			<if test="endDt != null and endDt != ''">
+				<if test="dtGb == 1">
+					<![CDATA[	AND LAST_LGN_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+				</if>
+				<if test="dtGb == 2">
+					<![CDATA[	AND REG_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]>
+				</if>	
+			</if>	
+			<if test="q != null and q != ''">
+				<if test="f == 1">
+					<![CDATA[	AND NAME = #{q}]]>
+				</if>
+				<if test="f == 2">
+					<![CDATA[	AND ID = #{q}]]>
+				</if>
+			</if>
+			 ORDER BY REG_DTM DESC
+		) TBL 
+	</select>
+   	
+   <!--
+         쿼리명 : MBCQscnMemDAO.qscnChange
+         설  명 : 휴먼회원으로 전환한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.02.08   강재석     최초생성
+    -->
+   	<update id="MBCQscnMemDAO.qscnChange" parameterType="emfMap">
+        INSERT INTO MB_QSCN_MEM_MST (
+                ID
+                , PWD
+                , UNQ_NO
+                , NAME
+                , SEX
+                , BIRTH
+                , EMAIL
+                , HP
+                , TEL
+                , ZIPCD
+                , ADR
+                , ADR_DTL
+                , SMS_RCV_YN
+                , TEL_RCV_YN
+                , CTLG_RCV_YN
+                , EMAIL_RCV_YN
+                , USE_YN
+                , LAST_LGN_DTM
+                , DROT_YN
+                , DROT_RSN
+                , DROT_DTM
+                , QSCN_YN
+                , USER_GB
+                , OLD_AUTH_YN
+                , MARKETING_YN
+                , CI
+                , REG_ID
+                , REG_IP
+                , REG_DTM
+                , MOD_ID
+                , MOD_IP
+                , MOD_DTM
+                , TEMP_HP
+                , AGREEMENT_FOR_THIRD_PARTY
+                , MARKETING_INFO_YN
+                , RETRY
+                , INTR_FIELD
+        )
+        SELECT  ID
+                , PWD
+                , UNQ_NO
+                , NAME
+                , SEX
+                , BIRTH
+                , EMAIL
+                , HP
+                , TEL
+                , ZIPCD
+                , ADR
+                , ADR_DTL
+                , SMS_RCV_YN
+                , TEL_RCV_YN
+                , CTLG_RCV_YN
+                , EMAIL_RCV_YN
+                , USE_YN
+                , LAST_LGN_DTM
+                , DROT_YN
+                , DROT_RSN
+                , DROT_DTM
+                , 'Y'
+                , USER_GB
+                , OLD_AUTH_YN
+                , MARKETING_YN
+                , CI
+                , REG_ID
+                , REG_IP
+                , REG_DTM
+                , #{modId}
+                , #{modIp}
+                , SYSDATE
+                , TEMP_HP
+                , AGREEMENT_FOR_THIRD_PARTY
+                , MARKETING_INFO_YN
+                , RETRY
+                , INTR_FIELD
+          FROM MB_MEM_MST A
+         WHERE (TO_CHAR(LAST_LGN_DTM, 'YYYY-MM-DD') <![CDATA[ < ]]> to_char(add_months(sysdate, -12), 'YYYY-MM-DD')
+                OR (LAST_LGN_DTM IS NULL 
+                    AND TO_CHAR(REG_DTM, 'YYYY-MM-DD') <![CDATA[ < ]]> to_char(add_months(sysdate, -12), 'YYYY-MM-DD')))
+                AND A.ID NOT IN ( SELECT ID FROM MB_QSCN_MEM_MST )
+        ORDER BY TO_CHAR(LAST_LGN_DTM, 'YYYY-MM-DD') DESC
+   	</update>
+
+    <!--
+         쿼리명 : MBCQscnMemDAO.deleteQscnChange
+         설  명 : 휴먼 회원 전환 후 회원테이블에서 삭제
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.02.08   강재석     최초생성
+    -->
+   	<delete id="MBCQscnMemDAO.deleteQscnChange" parameterType="emfMap">
+		DELETE MB_MEM_MST
+         WHERE (TO_CHAR(LAST_LGN_DTM, 'YYYY-MM-DD') <![CDATA[ < ]]> to_char(add_months(sysdate, -12), 'YYYY-MM-DD')
+                OR (LAST_LGN_DTM IS NULL 
+                    AND TO_CHAR(REG_DTM, 'YYYY-MM-DD') <![CDATA[ < ]]> to_char(add_months(sysdate, -12), 'YYYY-MM-DD')))
+   	</delete>
+
+   <!--
+         쿼리명 : MBCQscnMemDAO.qscnMemChange
+         설  명 : 휴먼회원을 일반회원으로 전환한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.02.08   강재석     최초생성
+    -->
+   	<update id="qscnMemChange" parameterType="emfMap">
+        INSERT INTO MB_MEM_MST (
+                ID
+                , PWD
+                , UNQ_NO
+                , NAME
+                , SEX
+                , BIRTH
+                , EMAIL
+                , HP
+                , TEL
+                , ZIPCD
+                , ADR
+                , ADR_DTL
+                , SMS_RCV_YN
+                , TEL_RCV_YN
+                , CTLG_RCV_YN
+                , EMAIL_RCV_YN
+                , USE_YN
+                , LAST_LGN_DTM
+                , DROT_YN
+                , DROT_RSN
+                , DROT_DTM
+                , QSCN_YN
+                , USER_GB
+                , OLD_AUTH_YN
+                , MARKETING_YN
+                , CI
+                , REG_ID
+                , REG_IP
+                , REG_DTM
+                , MOD_ID
+                , MOD_IP
+                , MOD_DTM
+                , TEMP_HP
+                , AGREEMENT_FOR_THIRD_PARTY
+                , MARKETING_INFO_YN
+                , RETRY
+                , INTR_FIELD
+        )
+        SELECT  ID
+                , PWD
+                , UNQ_NO
+                , NAME
+                , SEX
+                , BIRTH
+                , EMAIL
+                , HP
+                , TEL
+                , ZIPCD
+                , ADR
+                , ADR_DTL
+                , SMS_RCV_YN
+                , TEL_RCV_YN
+                , CTLG_RCV_YN
+                , EMAIL_RCV_YN
+                , USE_YN
+                , SYSDATE
+                , DROT_YN
+                , DROT_RSN
+                , DROT_DTM
+                , 'N'
+                , USER_GB
+                , OLD_AUTH_YN
+                , MARKETING_YN
+                , CI
+                , REG_ID
+                , REG_IP
+                , REG_DTM
+                , #{modId}
+                , #{modIp}
+                , SYSDATE
+                , TEMP_HP
+                , AGREEMENT_FOR_THIRD_PARTY
+                , MARKETING_INFO_YN
+                , RETRY
+                , INTR_FIELD
+          FROM MB_QSCN_MEM_MST
+        WHERE ID = #{id}
+        ORDER BY TO_CHAR(LAST_LGN_DTM, 'YYYY-MM-DD') DESC
+   	</update>
+
+    <!--
+         쿼리명 : MBCQscnMemDAO.deleteQscnMemChange
+         설  명 : 휴먼회원을 일반회원으로 전환 후, 휴먼회원테이블에서 삭제
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.02.08   강재석     최초생성
+    -->
+   	<delete id="deleteQscnMemChange" parameterType="emfMap">
+		DELETE MB_QSCN_MEM_MST
+		WHERE ID = #{id}
+   	</delete>
+
+</mapper>

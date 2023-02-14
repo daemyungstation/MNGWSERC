@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DMLifeMemDAO">
+	<!--
+         쿼리명 : DMLifeMemDAO.selectDMLifeMemInf
+         설  명 : 회원 정보를 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.03   김필기     최초 생성
+    -->	
+	<select id="DMLifeMemDAO.selectDMLifeMemInf" parameterType="emfMap" resultType="emfMap">
+		SELECT /* DMLifeMemDAO.selectDMLifeMemInf */
+			   MEM_NO
+			   , REPLACE(CELL, '-', '') AS CELL
+			   , ACCNT_NO
+			   , PROD_NM
+			   , JOIN_DT
+		FROM (
+			SELECT A.MEM_NO
+				   , A.CELL
+				   , A.REG_DM
+				   , B.ACCNT_NO
+				   , NVL(C.PROD_PRT_NM, C.PROD_NM) AS PROD_NM
+				   , B.JOIN_DT
+			  FROM MEMBER A, MEM_PROD_ACCNT B, PRODUCT C
+			 WHERE A.MEM_NO = B.MEM_NO
+			   AND B.PROD_CD = C.PROD_CD
+			   AND A.DEL_FG = 'N'
+			   AND B.DEL_FG = 'N'			   
+			   AND A.MEM_NM IN				
+			<foreach collection="name" item="item" index="index" separator=", " open="(" close=")">
+				#{item}
+			</foreach>
+        ) TBL
+        WHERE REPLACE(CELL, '-', '') IN
+		<foreach collection="cell" item="item" index="index" separator=", " open="(" close=")">
+			#{item}
+		</foreach>
+		ORDER BY JOIN_DT
+	</select>	
+
+	<!--
+         쿼리명 : DMLifeMemDAO.selectDMLifeMemInfByCi
+         설  명 : 회원 정보를 조회한다.(CI_VAL 비교)
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2020.04.10   김은식     최초 생성
+    -->		
+	<select id="DMLifeMemDAO.selectDMLifeMemInfByCi" parameterType="emfMap" resultType="emfMap">
+		SELECT T.* FROM
+		(
+		    SELECT ROWNUM, A.* FROM MEMBER A
+		    WHERE CI_VAL= #{ci}
+		    ORDER BY REG_DM DESC
+		) T
+<![CDATA[		
+		WHERE ROWNUM <=1
+]]>		
+	</select>
+	
+</mapper>            

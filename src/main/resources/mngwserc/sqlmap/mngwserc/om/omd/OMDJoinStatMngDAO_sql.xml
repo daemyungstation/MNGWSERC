@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OMDJoinStatMngDAO">
+
+<!--
+         쿼리명 : OMDJoinStatMngDAO.selectJoinStatMngList
+         설  명 : 외주업체 가입현황관리 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.16   김필기     최초 생성
+    -->
+    <select id="OMDJoinStatMngDAO.selectJoinStatMngList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* OMDJoinStatMngDAO.selectJoinStatMngList */
+	      	   TBL.*
+			   , FN_PROD_NM(TBL.PROD_CD) AS PROD_NM
+			   , ((SELECT COUNT(*) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = TBL.ACCNT_NO) + TBL.NEW_CHAN_GUNSU) AS TOTAL_COUNT
+			   , (SELECT COUNT(*) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = TBL.ACCNT_NO) AS TRUE_COUNT
+			   , DECODE(FN_ACCNT_STAT(TBL.ACCNT_NO), 'Y', '정상', 'R', '해약', 'E', '행사', '청약철회') AS ACC_STAT
+			   , DECODE(FN_ACCNT_STAT(TBL.ACCNT_NO), 'Y', FN_YEN_CHE(TBL.ACCNT_NO), '-') AS PAY_STATE
+			   , NVL(FN_COM_NM('81', TBL.STAT), '') AS HPCALL_STAT
+	    FROM (
+			SELECT ROWNUM AS RNUM, T1.*
+	      	FROM (
+	        	SELECT A.MEM_NM
+					   , B.ACCNT_NO
+	        		   , B.PROD_CD
+	        		   , B.JOIN_DT
+	        		   , TO_CHAR(B.REG_DM, 'yyyy-MM-dd') AS REG_DM
+	        		   , B.NEW_CHAN_GUNSU
+	        		   , B.B2B_EMPLE_NO
+					   , CASE WHEN B.PAY_MTHD = '01' THEN '손수' 
+							  WHEN B.PAY_MTHD = '04' THEN 'CMS' 
+							  ELSE '카드' 
+							   END PAY_MTHD
+					   , D.STAT
+	        		   , E.COM_NM AS B2B_COMP_NM       		
+				  FROM MEMBER A, MEM_PROD_ACCNT B, PRODUCT C, HP_CALL D, B2BCOMCD E
+			  	 WHERE A.MEM_NO = B.MEM_NO
+				   AND B.PROD_CD = C.PROD_CD
+				   AND B.ACCNT_NO = D.ACCNT_NO(+)
+				   AND B.B2B_COMP_CD = E.COM_CD(+)
+				   AND A.DEL_FG = 'N'
+				   AND B.DEL_FG = 'N'
+				<if test="b2bCompCd != null and b2bCompCd != ''">
+					AND B.B2B_COMP_CD IN 
+					<foreach collection="b2bCompCd" item="item" index="index" separator=", " open="(" close=")">
+	            		#{item}
+	        		</foreach>
+        		</if>
+				<if test="saleType != null and saleType != ''">
+					AND E.SALE_TYPE IN 
+					<foreach collection="saleType" item="item" index="index" separator=", " open="(" close=")">
+	            		#{item}
+	        		</foreach>
+        		</if>
+				<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+					AND B.JOIN_DT BETWEEN REPLACE(#{strtDt}, '-', '') AND REPLACE(#{endDt}, '-', '')
+				</if>
+				<if test="q != null and q != ''">	
+					<if test="f == 1">	
+				 		AND A.MEM_NM LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 2">	
+				 		AND B.ACCNT_NO LIKE '%' || #{q} || '%'
+					</if>
+				</if>
+			     ORDER BY B.JOIN_DT DESC				
+			) T1
+		) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}		     
+	     
+	</select>
+	
+	<select id="OMDJoinStatMngDAO.selectJoinStatMngListCnt" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* OMDJoinStatMngDAO.selectJoinStatMngListCnt */ 
+			   COUNT(*) AS CNT 	        		  		
+	 	  FROM MEMBER A, MEM_PROD_ACCNT B, PRODUCT C, HP_CALL D, B2BCOMCD E
+		 WHERE A.MEM_NO = B.MEM_NO
+		   AND B.PROD_CD = C.PROD_CD
+		   AND B.ACCNT_NO = D.ACCNT_NO(+)
+		   AND B.B2B_COMP_CD = E.COM_CD(+)
+		   AND A.DEL_FG = 'N'
+		   AND B.DEL_FG = 'N'
+		<if test="b2bCompCd != null and b2bCompCd != ''">
+			AND B.B2B_COMP_CD IN 
+			<foreach collection="b2bCompCd" item="item" index="index" separator=", " open="(" close=")">
+           		#{item}
+       		</foreach>
+      	</if>
+		<if test="saleType != null and saleType != ''">
+			AND E.SALE_TYPE IN 
+			<foreach collection="saleType" item="item" index="index" separator=", " open="(" close=")">
+           		#{item}
+       		</foreach>
+      	</if>
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+			AND B.JOIN_DT BETWEEN REPLACE(#{strtDt}, '-', '') AND REPLACE(#{endDt}, '-', '')
+		</if>
+		<if test="q != null and q != ''">	
+			<if test="f == 1">	
+				AND A.MEM_NM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 2">	
+				AND B.ACCNT_NO LIKE '%' || #{q} || '%'
+			</if>
+		</if>
+	</select>
+
+	<!--
+         쿼리명 : OMDJoinStatMngDAO.selectJoinStatMngExcelList
+         설  명 : 외주업체 가입현황관리 목록 엑셀 다운로드
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.03.17   김필기     최초 생성
+    -->
+    <select id="OMDJoinStatMngDAO.selectJoinStatMngExcelList" parameterType="emfMap" resultType="emfMap">		
+		SELECT /* OMDJoinStatMngDAO.selectJoinStatMngExcelList */ 
+			   A.MEM_NM
+			   , B.ACCNT_NO
+			   , B.PROD_CD
+			   , FN_PROD_NM(B.PROD_CD) AS PROD_NM
+			   , TO_CHAR(B.REG_DM, 'yyyy-MM-dd') AS REG_DM
+			   , B.JOIN_DT
+			   , ((SELECT COUNT(*) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = B.ACCNT_NO) + B.NEW_CHAN_GUNSU) AS TOTAL_COUNT
+			   , (SELECT COUNT(*) FROM PAY_MNG WHERE DEL_FG = 'N' AND ACCNT_NO = B.ACCNT_NO) AS TRUE_COUNT
+			   , DECODE(FN_ACCNT_STAT(B.ACCNT_NO), 'Y', '정상', 'R', '해약', 'E', '행사', '청약철회') AS ACC_STAT
+			   , DECODE(FN_ACCNT_STAT(B.ACCNT_NO), 'Y', FN_YEN_CHE(B.ACCNT_NO), '-') AS PAY_STATE
+			   , B.B2B_EMPLE_NO
+			   , CASE WHEN B.PAY_MTHD = '01' THEN '손수' 
+					  WHEN B.PAY_MTHD = '04' THEN 'CMS' 
+					  ELSE '카드' 
+					   END PAY_MTHD
+			   , NVL(FN_COM_NM('81', D.STAT), '') AS HPCALL_STAT
+			   , E.COM_NM AS B2B_COMP_NM      	        		
+		  FROM MEMBER A, MEM_PROD_ACCNT B, PRODUCT C, HP_CALL D, B2BCOMCD E
+		 WHERE A.MEM_NO = B.MEM_NO
+		   AND B.PROD_CD = C.PROD_CD
+		   AND B.ACCNT_NO = D.ACCNT_NO(+)
+		   AND B.B2B_COMP_CD = E.COM_CD(+)
+		   AND A.DEL_FG = 'N'
+		   AND B.DEL_FG = 'N'
+		<if test="b2bCompCd != null and b2bCompCd != ''">
+			AND B.B2B_COMP_CD IN 
+			<foreach collection="b2bCompCd" item="item" index="index" separator=", " open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="saleType != null and saleType != ''">
+			AND E.SALE_TYPE IN 
+			<foreach collection="saleType" item="item" index="index" separator=", " open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+			AND B.JOIN_DT BETWEEN REPLACE(#{strtDt}, '-', '') AND REPLACE(#{endDt}, '-', '')
+		</if>
+		<if test="q != null and q != ''">	
+			<if test="f == 1">	
+				AND A.MEM_NM LIKE '%' || #{q} || '%'
+			</if>
+			<if test="f == 2">	
+				AND B.ACCNT_NO LIKE '%' || #{q} || '%'
+			</if>
+		</if>
+		 ORDER BY B.JOIN_DT DESC	
+	</select>
+
+</mapper>

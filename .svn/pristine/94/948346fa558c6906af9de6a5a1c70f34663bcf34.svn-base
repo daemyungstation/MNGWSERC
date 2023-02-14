@@ -1,0 +1,283 @@
+package mngwserc.om.omb.web;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
+import mngwserc.om.omb.service.OMBOrderMngService;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+
+import egovframework.com.cmm.util.EgovUserDetailsHelper;
+import egovframework.com.utl.fcc.service.EgovStringUtil;
+import egovframework.com.utl.sim.service.EgovNetworkState;
+import emf.core.exception.EmfException;
+import emf.core.extend.web.EmfController;
+import emf.core.vo.EmfMap;
+
+/**
+ * <pre> 
+ * 외주업체 발주관리를 위한 Controller
+ * </pre>
+ * 
+ * @ClassName		: OMBOrderMngController.java
+ * @Description		: 외주업체 발주관리 위한 Controller
+ * @author 김필기
+ * @since 2016.02.16
+ * @version 1.0
+ * @see
+ * @Modification Information
+ * <pre>
+ * 		since			author					description
+ *   ===========    ==============    =============================
+ *    2016.02.16		김필기					 최초생성
+ * </pre>
+ */
+@Controller
+@RequestMapping("/mngwserc/omb/order")
+public class OMBOrderMngController extends EmfController {
+	
+	/** 서비스 **/
+	@Resource(name = "oMBOrderMngService")
+    private OMBOrderMngService oMBOrderMngService;
+	
+	/**
+	 * 외주업체 발주관리 목록을 조회한다.
+	 * 
+	 * @param EmfMap 검색할 데이터
+	 * @return String View URL
+	 * @throws 비지니스 로직이나 DAO 처리 중 에러가 발생할 경우 Exception을 Throw 한다.
+	 */
+	@RequestMapping(value="/list.do")
+	public String selectOrderMngList(EmfMap emfMap,  ModelMap modelMap) throws Exception
+	{		
+		String url = "error/blank.error";
+		
+		try
+		{
+			// 로그인 사용자 정보
+	    	EmfMap lgnMap = (EmfMap) EgovUserDetailsHelper.getAuthenticatedUser();
+			
+	    	// 아이디
+	    	String id = lgnMap.getString("id");
+			
+			if("30".equals(lgnMap.getString("authCd")))
+			{
+				if("lgorder".equals(id) || "csvorder".equals(id) || "mmorder".equals(id) || "dyorder".equals(id) || "dhorder".equals(id) || "isollat".equals(id) || "sonoseason".equals(id) || "wmnetwork".equals(id))
+				{
+					
+					EmfMap rtnMap = oMBOrderMngService.selectOrderMngList(emfMap);
+				
+					modelMap.addAttribute("rtnMap", rtnMap);
+					
+					url = "mngwserc/om/omb/OMBOrderList.admin";
+				}
+				else
+				{
+					modelMap.addAttribute("msg", "허용되지 않은 아이디입니다.");
+					modelMap.addAttribute("url", "javascript:history.back();");					
+				}
+			}
+			else
+			{
+				modelMap.addAttribute("msg", "외주업체로 로그인이 되지 않았습니다.");
+				modelMap.addAttribute("url", "javascript:history.back();");				
+			}
+				
+			modelMap.addAttribute("loginId", id);
+		}
+		catch (Exception he) 
+		{
+			if (log.isDebugEnabled()) 
+			{
+				log.debug(he);
+            }
+			
+			throw new EmfException(he.getMessage());
+		} 
+		
+		return url;
+	}
+	
+	/**
+	 * 외주업체 발주관리 목록을 조회한다.
+	 * 
+	 * @param EmfMap 검색할 데이터
+	 * @return String View URL
+	 * @throws 비지니스 로직이나 DAO 처리 중 에러가 발생할 경우 Exception을 Throw 한다.
+	 */
+	@RequestMapping(value="/orderdate/list.do")
+	public String selectOrderDateList(EmfMap emfMap,  ModelMap modelMap) throws Exception
+	{		
+		String url = "error/blank.error";
+		
+		try
+		{
+			emfMap.put("orderdateMng", "Y");
+			
+			EmfMap rtnMap = oMBOrderMngService.selectOrderMngList(emfMap);
+			
+			modelMap.addAttribute("orderdateMng", emfMap.getString("orderdateMng"));
+			modelMap.addAttribute("rtnMap", rtnMap);
+			
+			url = "mngwserc/om/omb/OMBOrderList.admin";
+		}
+		catch (Exception he) 
+		{
+			if (log.isDebugEnabled()) 
+			{
+				log.debug(he);
+            }
+			
+			throw new EmfException(he.getMessage());
+		} 
+		
+		return url;
+	}	
+	
+	/**
+     * 외주업체 발주관리 상세를 조회한다. (뷰 페이지)
+     * 
+     * @param EmfMap 검색할 데이터
+     * @return String View URL
+     * @throws 비지니스 로직이나 DAO 처리 중 에러가 발생할 경우 Exception을 Throw 한다.
+     */    
+    @RequestMapping(value={"/view.do", "/orderdate/view.do"})
+    public String getOrderMngViewPage(EmfMap emfMap, ModelMap modelMap) throws Exception 
+    {
+    	String url = "error/blank.error";
+    	
+		try
+		{
+			// 로그인 사용자 정보
+	    	EmfMap lgnMap = (EmfMap) EgovUserDetailsHelper.getAuthenticatedUser();
+			
+	    	// 아이디
+	    	String id = lgnMap.getString("id");
+	    	
+			EmfMap rtnMap = oMBOrderMngService.selectOrderMng(emfMap);
+			
+			rtnMap.put("id", id);
+			
+			modelMap.addAttribute("rtnMap", rtnMap);
+			
+			url = "mngwserc/om/omb/OMBOrderView.admin";
+		}
+		catch (Exception he) 
+		{
+			if (log.isDebugEnabled()) 
+			{
+				log.debug(he);
+            }
+			
+			if("NOKEY".equals(EgovStringUtil.nullConvert(he.getMessage())))
+			{
+				modelMap.addAttribute("msg", "잘못된 접근입니다.");
+				modelMap.addAttribute("url", "/mngwserc/omb/order/list.do");
+			}
+			else
+			{
+				throw new EmfException(he.getMessage());
+			}			
+		}
+    	
+		return url;   
+    }
+    
+	/**
+	 * 외주업체 발주관리을 수정한다.
+	 * 
+	 * @param EmfMap 검색할 데이터
+	 * @return String View URL
+	 * @throws 비지니스 로직이나 DAO 처리 중 에러가 발생할 경우 Exception을 Throw 한다.
+	 */
+	@RequestMapping(value={"/csv_db.ajax", "/orderdate/csv_db.ajax"}, method=RequestMethod.POST)
+	public ModelAndView updateOrderMng(EmfMap emfMap, ModelMap modelMap) throws Exception
+	{
+		ModelAndView mav = new ModelAndView();
+		
+		try
+		{
+			oMBOrderMngService.updateOrderMng(emfMap);
+			
+			mav.addObject("errorMsg", emfMap.getString("errorMsg"));
+			
+			mav.setViewName("jsonView");
+		}
+		catch (Exception he) 
+		{
+			if (log.isDebugEnabled()) 
+			{
+				log.debug(he);
+            }
+			
+			throw new EmfException(he.getMessage());
+		}
+
+		return mav;  	
+	}
+	
+	/**
+	 * 엑셀다운로드한다.
+	 * 
+	 * @param EmfMap 검색할 데이터
+	 * @return String View URL
+	 * @throws 비지니스 로직이나 DAO 처리 중 에러가 발생할 경우 Exception을 Throw 한다.
+	 */
+	@RequestMapping(value="/excel.do")
+	public String excelDownLoad(EmfMap emfMap, ModelMap modelMap) throws Exception
+	{
+		try
+		{	
+			EmfMap rtnMap = oMBOrderMngService.selectOrderMngExcelList(emfMap);
+			
+			modelMap.addAttribute("rtnMap", rtnMap);
+			modelMap.addAttribute("loginId", rtnMap.getString("id"));
+		}
+		catch (Exception he) 
+		{
+			if (log.isDebugEnabled()) 
+			{
+				log.debug(he);
+            }
+			throw new EmfException(he.getMessage());
+		}
+		
+		return "mngwserc/om/omb/OMBOrderListExcel";
+	}		
+	
+	/**
+	 * 엑셀다운로드한다.
+	 * 
+	 * @param EmfMap 검색할 데이터
+	 * @return String View URL
+	 * @throws 비지니스 로직이나 DAO 처리 중 에러가 발생할 경우 Exception을 Throw 한다.
+	 */
+	@RequestMapping(value="/orderdate/excel.do")
+	public String excelDownLoadOrderDate(EmfMap emfMap, ModelMap modelMap) throws Exception
+	{		
+		try
+		{
+			emfMap.put("orderdateMng", "Y");
+			
+			EmfMap rtnMap = oMBOrderMngService.selectOrderMngExcelList(emfMap);
+			
+			modelMap.addAttribute("rtnMap", rtnMap);
+			modelMap.addAttribute("loginId", rtnMap.getString("id"));
+		}
+		catch (Exception he) 
+		{
+			if (log.isDebugEnabled()) 
+			{
+				log.debug(he);
+            }
+			
+			throw new EmfException(he.getMessage());
+		} 
+		
+		return "mngwserc/om/omb/OMBOrderListExcel";
+	}	
+}

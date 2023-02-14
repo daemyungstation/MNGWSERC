@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="COISnsMngDAO">
+
+	<!--
+         쿼리명 : COISnsMngDAO.selectSnsList
+         설  명 : SNS 속성 정보 목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2019.05.15   이너스    	 최초생성
+    -->	
+    
+	<select id="COISnsMngDAO.selectSnsList" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.* 
+			  FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		                ,SNS_SEQ
+						,TYPE
+						,IMG1_PATH
+						,IMG1_SAVE_FILE_NM
+						,IMG1_REAL_FILE_NM
+						,IMG2_PATH
+						,IMG2_SAVE_FILE_NM
+						,IMG2_REAL_FILE_NM
+						,IMG3_PATH
+						,IMG3_SAVE_FILE_NM
+						,IMG3_REAL_FILE_NM
+						,IMG4_PATH
+						,IMG4_SAVE_FILE_NM
+						,IMG4_REAL_FILE_NM
+						,USE_YN
+						,TO_CHAR(USE_STRT_DTM, 'YYYY-MM-DD') AS USE_STRT_DTM
+						,TO_CHAR(USE_END_DTM, 'YYYY-MM-DD') AS USE_END_DTM
+						,LINK1
+						,LINK1_TYPE
+						,LINK2
+						,LINK2_TYPE
+						,LINK3
+						,LINK3_TYPE
+						,LINK4
+						,LINK4_TYPE
+						,REG_DTM,
+						SNS_ORDER
+		          FROM CO_SNS   
+				<if test="useYn != null and useYn != ''">
+					WHERE USE_YN = #{useYn}
+				</if>
+				 ORDER BY SNS_ORDER ASC, REG_DTM DESC   
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}           
+	</select>	
+	
+	<!--
+         쿼리명 : COISnsMngDAO.selectSns
+         설  명 : SNS 속성 정보를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2019.05.15   이너스    	 최초생성
+    -->
+    
+	<select id="COISnsMngDAO.selectSns" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+			SNS_SEQ,
+			TYPE,
+			IMG1_PATH,
+			IMG1_SAVE_FILE_NM,
+			IMG1_REAL_FILE_NM,
+			IMG2_PATH,
+			IMG2_SAVE_FILE_NM,
+			IMG2_REAL_FILE_NM,
+			IMG3_PATH,
+			IMG3_SAVE_FILE_NM,
+			IMG3_REAL_FILE_NM,
+			IMG4_PATH,
+			IMG4_SAVE_FILE_NM,
+			IMG4_REAL_FILE_NM,
+			USE_YN,
+			TO_CHAR(USE_STRT_DTM, 'YYYY-MM-DD') AS USE_STRT_DTM,
+			TO_CHAR(USE_END_DTM, 'YYYY-MM-DD') AS USE_END_DTM,
+			LINK1,
+			LINK1_TYPE,
+			LINK2,
+			LINK2_TYPE,
+			LINK3,
+			LINK3_TYPE,
+			LINK4,
+			LINK4_TYPE,
+			SNS_ORDER
+		 FROM CO_SNS
+		 WHERE SNS_SEQ = #{snsSeq}
+	</select>
+	
+	<!--
+         쿼리명 : COISnsMngDAO.insertSns
+         설  명 : SNS 속성을 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2019.05.15   이너스    	 최초생성
+    -->
+	<insert id="COISnsMngDAO.insertSns" parameterType="emfMap">
+		INSERT INTO CO_SNS
+			(
+			SNS_SEQ,
+			TYPE,
+			<if test="img1Path != null">
+			IMG1_PATH,
+			IMG1_SAVE_FILE_NM,
+			IMG1_REAL_FILE_NM,
+			</if>
+			<if test="img2Path != null">
+			IMG2_PATH,
+			IMG2_SAVE_FILE_NM,
+			IMG2_REAL_FILE_NM,
+			</if>
+			<if test="img3Path != null">
+			IMG3_PATH,
+			IMG3_SAVE_FILE_NM,
+			IMG3_REAL_FILE_NM,
+			</if>
+			<if test="img4Path != null">
+			IMG4_PATH,
+			IMG4_SAVE_FILE_NM,
+			IMG4_REAL_FILE_NM,
+			</if>
+			USE_YN,
+			USE_STRT_DTM,
+			USE_END_DTM,
+			<if test="link1 != null">
+			LINK1,
+			LINK1_TYPE,
+			</if>
+			<if test="link2 != null">
+			LINK2,
+			LINK2_TYPE,
+			</if>
+			<if test="link3 != null">
+			LINK3,
+			LINK3_TYPE,
+			</if>
+			<if test="link4 != null">
+			LINK4,
+			LINK4_TYPE,
+			</if>
+			<if test="regId != null">
+			REG_ID,
+			</if>
+			REG_IP,
+			REG_DTM
+			)
+		VALUES
+			(
+			#{snsSeq},
+			#{type, jdbcType=VARCHAR},
+			<if test="img1Path != null">
+			#{img1Path, jdbcType=VARCHAR},
+			#{img1SaveFileNm, jdbcType=VARCHAR},
+			#{img1RealFileNm, jdbcType=VARCHAR},
+			</if>
+			<if test="img2Path != null">
+			#{img2Path, jdbcType=VARCHAR},
+			#{img2SaveFileNm, jdbcType=VARCHAR},
+			#{img2RealFileNm, jdbcType=VARCHAR},
+			</if>
+			<if test="img3Path != null">
+			#{img3Path, jdbcType=VARCHAR},
+			#{img3SaveFileNm, jdbcType=VARCHAR},
+			#{img3RealFileNm, jdbcType=VARCHAR},
+			</if>
+			<if test="img4Path != null">
+			#{img4Path, jdbcType=VARCHAR},
+			#{img4SaveFileNm, jdbcType=VARCHAR},
+			#{img4RealFileNm, jdbcType=VARCHAR},
+			</if>
+			#{useYn, jdbcType=VARCHAR},
+			#{useStrtDtm, jdbcType=VARCHAR},
+			#{useEndDtm, jdbcType=VARCHAR},
+			<if test="link1 != null">
+			#{link1, jdbcType=VARCHAR},
+			#{link1Type, jdbcType=VARCHAR},
+			</if>
+			<if test="link2 != null">
+			#{link2, jdbcType=VARCHAR},
+			#{link2Type, jdbcType=VARCHAR},
+			</if>
+			<if test="link3 != null">
+			#{link3, jdbcType=VARCHAR},
+			#{link3Type, jdbcType=VARCHAR},
+			</if>
+			<if test="link4 != null">
+			#{link4, jdbcType=VARCHAR},
+			#{link4Type, jdbcType=VARCHAR},
+			</if>
+			<if test="regId != null">
+			#{regId, jdbcType=VARCHAR},
+			</if>
+			#{regIp, jdbcType=VARCHAR},
+			SYSDATE
+			)					
+	</insert>
+	
+	<!--
+         쿼리명 : COISnsMngDAO.updateSns
+         설  명 : SNS 속성을 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2019.05.15   이너스    	 최초생성
+    -->		
+	<update id="COISnsMngDAO.updateSns" parameterType="emfMap">
+		UPDATE CO_SNS SET
+			TYPE = #{type, jdbcType=VARCHAR},
+			<if test="img1Path != null">
+			IMG1_PATH = #{img1Path, jdbcType=VARCHAR},
+			IMG1_SAVE_FILE_NM = #{img1SaveFileNm, jdbcType=VARCHAR},
+			IMG1_REAL_FILE_NM = #{img1RealFileNm, jdbcType=VARCHAR},
+			</if>
+			<if test="img2Path != null">
+			IMG2_PATH = #{img2Path, jdbcType=VARCHAR},
+			IMG2_SAVE_FILE_NM = #{img2SaveFileNm, jdbcType=VARCHAR},
+			IMG2_REAL_FILE_NM = #{img2RealFileNm, jdbcType=VARCHAR},
+			</if>
+			<if test="img3Path != null">
+			IMG3_PATH = #{img3Path, jdbcType=VARCHAR},
+			IMG3_SAVE_FILE_NM = #{img3SaveFileNm, jdbcType=VARCHAR},
+			IMG3_REAL_FILE_NM = #{img3RealFileNm, jdbcType=VARCHAR},
+			</if>
+			<if test="img4Path != null">
+			IMG4_PATH = #{img4Path, jdbcType=VARCHAR},
+			IMG4_SAVE_FILE_NM = #{img4SaveFileNm, jdbcType=VARCHAR},
+			IMG4_REAL_FILE_NM = #{img4RealFileNm, jdbcType=VARCHAR},
+			</if>
+			USE_YN = #{useYn},
+			USE_STRT_DTM = TO_DATE(#{useStrtDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			USE_END_DTM = TO_DATE(#{useEndDtm}, 'yyyy/mm/dd hh24:mi:ss'),
+			<if test="link1 != null">
+			LINK1 = #{link1, jdbcType=VARCHAR},
+			LINK1_TYPE = #{link1Type, jdbcType=VARCHAR},
+			</if>
+			<if test="link2 != null">
+			LINK2 = #{link2, jdbcType=VARCHAR},
+			LINK2_TYPE = #{link2Type, jdbcType=VARCHAR},
+			</if>
+			<if test="link3 != null">
+			LINK3 = #{link3, jdbcType=VARCHAR},
+			LINK3_TYPE = #{link3Type, jdbcType=VARCHAR},
+			</if>
+			<if test="link4 != null">
+			LINK4 = #{link4, jdbcType=VARCHAR},
+			LINK4_TYPE = #{link4Type, jdbcType=VARCHAR},
+			</if>
+			<if test="modId != null">
+			MOD_ID = #{modId},
+			</if>
+			MOD_IP = #{modIp},
+			MOD_DTM = SYSDATE
+         WHERE SNS_SEQ = #{snsSeq}
+	</update>
+	
+	<!--
+         쿼리명 : COISnsMngDAO.updateSns
+         설  명 : SNS 순서를 수정한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2019.07.15   이너스    	 최초생성
+    -->		
+	<update id="COISnsMngDAO.orderSns" parameterType="emfMap">
+		UPDATE CO_SNS SET
+			SNS_ORDER = #{snsOrder, jdbcType=VARCHAR}
+         WHERE SNS_SEQ = #{snsSeq}
+	</update>
+
+	<!--
+         쿼리명 : COISnsMngDAO.deleteSns
+         설  명 : SNS 속성을 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2019.05.15   이너스    	 최초생성
+    -->		
+	<delete id="COISnsMngDAO.deleteSns" parameterType="emfMap">
+		 DELETE
+		 CO_SNS
+	     WHERE SNS_SEQ = #{snsSeq}
+	</delete>
+
+</mapper>

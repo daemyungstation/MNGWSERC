@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="COCAdmRoleMngDAO">
+
+	<!--
+         쿼리명 : COCAdmRoleMngDAO.selectAdmRoleList
+         설  명 : 관리자 목록을 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+    -->
+	<select id="COCAdmRoleMngDAO.selectAdmRoleList" parameterType="emfMap" resultType="emfMap">	
+	   SELECT /* COCAdmRoleMngDAO.selectAdmRoleList */
+	      	   TBL.*
+	      	    , (SELECT NAME FROM CO_ADM_MST WHERE ID = TBL.REG_ID) AS REG_NM
+			<if test="roleGb == 'AUTH'">
+				, (SELECT COUNT(*) FROM CO_CD_DTL A WHERE CD_ID = 'USER_TYPE' AND USE_YN = 'Y' AND NOT EXISTS(SELECT 'X' FROM CO_ADM_ROLE_MST WHERE ROLE_GB = 'AUTH' AND ROLE_CD = A.CD)) AS AUTH_CNT
+			</if>	      	   
+	    FROM (
+			SELECT ROWNUM AS RNUM, A.*
+	      	FROM (
+	        	SELECT COUNT(*) OVER() AS TOT_CNT
+	        		   , ROLE_CD
+				  	   , ROLE_NM
+				  	   , ROLE_GB
+				  	   , REG_ID
+				  	   , REG_DTM
+			  	  FROM CO_ADM_ROLE_MST
+			  	 WHERE 1=1
+			  	   AND ROLE_GB = #{roleGb, jdbcType=VARCHAR}
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND ROLE_NM LIKE '%' || #{q} || '%'	]]>
+					</if>
+					<if test="f == 2">
+						<![CDATA[	AND REG_ID IN(SELECT ID FROM CO_ADM_MST WHERE NAME LIKE '%' || #{q} || '%')	]]>
+					</if>
+			  	</if>
+			     ORDER BY REG_DTM DESC
+			) A
+		) TBL
+	    WHERE RNUM BETWEEN  #{firstIndex} + 1  AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+
+	<!--
+         쿼리명 : COCAdmRoleMngDAO.selectAdmRole
+         설  명 : 관리자 상세를 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+    -->
+	<select id="COCAdmRoleMngDAO.selectAdmRole" parameterType="emfMap" resultType="emfMap">
+		SELECT /* COCAdmRoleMngDAO.selectAdmRole */
+			   ROLE_CD
+			   , ROLE_NM
+			   , ROLE_GB
+		  FROM CO_ADM_ROLE_MST
+		 WHERE ROLE_CD = #{roleCd, jdbcType=VARCHAR} 
+	</select> 
+	
+	<!--
+         쿼리명 : COCAdmRoleMngDAO.insertAdmRole
+         설  명 : 관리자를 등록한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+    -->
+ 	<insert id="COCAdmRoleMngDAO.insertAdmRole" parameterType="emfMap">
+		INSERT /* COCAdmRoleMngDAO.insertAdmRole */ INTO CO_ADM_ROLE_MST
+			(ROLE_CD
+			, ROLE_NM
+	  		, ROLE_GB
+	  		, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+	  		)
+		VALUES        
+			(#{roleCd, jdbcType=VARCHAR}
+			, #{roleNm, jdbcType=VARCHAR}
+			, #{roleGb, jdbcType=VARCHAR}
+	  		, #{regId, jdbcType=VARCHAR}
+	  		, #{regIp, jdbcType=VARCHAR}
+	  		, SYSDATE
+	  		, #{modId, jdbcType=VARCHAR}
+	  		, #{modIp, jdbcType=VARCHAR}
+	  		, SYSDATE
+			)
+ 	</insert>
+ 	
+ 	<!--
+         쿼리명 : COCAdmRoleMngDAO.updateAdmRole
+         설  명 : 관리자를 수정한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+    -->
+ 	<update id="COCAdmRoleMngDAO.updateAdmRole" parameterType="emfMap">
+ 		UPDATE /* COCAdmRoleMngDAO.updateAdmRole */ CO_ADM_ROLE_MST 
+ 		   SET ROLE_NM = #{roleNm, jdbcType=VARCHAR}
+ 		   	   , MOD_ID = #{modId, jdbcType=VARCHAR}
+ 		   	   , MOD_DTM = SYSDATE
+		  WHERE ROLE_CD = #{roleCd, jdbcType=VARCHAR}
+ 	</update>
+ 	
+ 	<!--
+         쿼리명 : COCAdmRoleMngDAO.deleteAdmRole
+         설  명 : 관리자를 삭제한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.02  박주석     최초 생성
+    -->
+ 	<delete id="COCAdmRoleMngDAO.deleteAdmRole" parameterType="emfMap">
+		DELETE /* COCAdmRoleMngDAO.deleteAdmRole */ 
+		  FROM CO_ADM_ROLE_MST
+		 WHERE ROLE_CD = #{roleCd}
+ 	</delete>
+ 	
+ 	<!--
+         쿼리명 : COCAdmRoleMngDAO.selectAdmUserTypeList
+         설  명 : 관리자 등급을 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.18  안진용     최초 생성
+    -->
+	<select id="COCAdmRoleMngDAO.selectAdmUserTypeList" parameterType="emfMap" resultType="emfMap">
+		SELECT /*COCAdmRoleMngDAO.selectAdmUserTypeList*/ 
+	      	   CD_ID
+	      	   , CD
+	      	   , CD_NM
+	      FROM CO_CD_DTL A
+	     WHERE CD_ID = 'USER_TYPE'
+	       AND USE_YN = 'Y'
+	       AND NOT EXISTS(SELECT 'X' FROM CO_ADM_ROLE_MST WHERE ROLE_GB = 'AUTH' AND ROLE_CD = A.CD)
+	     ORDER BY CD_ORD 
+	</select> 
+	
+ 	<!--
+         쿼리명 : COCAdmRoleMngDAO.insertAdmMenu
+         설  명 : 관리자 권한을 등록한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+    -->
+ 	<insert id="COCAdmRoleMngDAO.insertAdmMenu" parameterType="emfMap">
+ 		INSERT /* COCAdmRoleMngDAO.insertAdmMenu */ INTO CO_ADM_MENU_INF
+			(MENU_SEQ
+			, ROLE_CD
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+  			)
+		VALUES        
+			(#{menuSeq, jdbcType=NUMERIC}
+			, #{roleCd, jdbcType=VARCHAR}
+			, #{regId, jdbcType=VARCHAR}
+			, #{regIp, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{modId, jdbcType=VARCHAR}
+			, #{modIp, jdbcType=VARCHAR}
+			, SYSDATE
+			)
+ 	</insert>
+ 	
+	<!--
+         쿼리명 : COCAdmRoleMngDAO.deleteAdmMenu
+         설  명 : 관리자 메뉴를 삭제한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영    최초 생성
+    -->
+ 	<delete id="COCAdmRoleMngDAO.deleteAdmMenu" parameterType="emfMap">
+ 		DELETE /* COCAdmRoleMngDAO.deleteAdmMenu */
+ 		  FROM CO_ADM_MENU_INF
+		 WHERE ROLE_CD = #{roleCd}	
+ 	</delete>
+	
+</mapper>

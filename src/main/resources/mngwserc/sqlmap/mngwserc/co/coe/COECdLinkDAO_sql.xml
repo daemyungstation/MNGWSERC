@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="COECdLinkDAO">
+	
+	<!--
+         쿼리명 : COECdLinkDAO.selectLinkList
+         설  명 : 링크 목록을 조회한다.
+         수정일     수정자     수정내용 
+        ==========  ======  ============== 
+        2015.11.13  허진영     최초 생성
+    -->
+	<select id="COECdLinkDAO.selectLinkList" parameterType="emfMap" resultType="emfMap">	
+		SELECT /* COECdLinkDAO.selectLinkList */
+	      	   TBL.*
+	      	   , (SELECT CD_ID_NM FROM CO_CD_MST WHERE CD_ID = TBL.HIGHR_CD) AS HIGHR_CD_NM
+	      	   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = TBL.HIGHR_CD AND CD = TBL.HIGHR_DTL_CD) AS HIGHR_DTL_CD_NM
+	      	   , (SELECT CD_ID_NM FROM CO_CD_MST WHERE CD_ID = TBL.LOWR_CD) AS LOWR_CD_NM
+	      	   , (SELECT CD_NM FROM CO_CD_DTL WHERE CD_ID = TBL.LOWR_CD AND CD = TBL.LOWR_DTL_CD) AS LOWR_DTL_CD_NM
+	    FROM (
+			SELECT ROWNUM AS RNUM, A.*
+	      	FROM (
+	        	SELECT COUNT(*) OVER() AS TOT_CNT
+	        		   , HIGHR_CD
+				  	   , HIGHR_DTL_CD
+				  	   , LOWR_CD
+				  	   , LOWR_DTL_CD
+			  	  FROM CO_CD_REL
+			  	 WHERE 1=1
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[ AND ( HIGHR_CD LIKE '%' || #{q} || '%' OR HIGHR_DTL_CD LIKE '%' || #{q} || '%' OR LOWR_CD LIKE '%' || #{q} || '%' OR LOWR_DTL_CD LIKE '%' || #{q} || '%' )]]>
+					</if>
+			  	</if>
+	      		 ORDER BY HIGHR_CD, LOWR_CD
+			) A
+		) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+	
+	<!--
+         쿼리명 : COECdLinkDAO.insertCdLink
+         설  명 : 링크 코드 등록
+  		  수정일		수정자    		 수정내용 
+        ==========      ======  ============= 
+        2015.12.02  	박주석    		 최초 생성
+    -->	
+	<insert id="COECdLinkDAO.insertCdLink" parameterType="emfMap">
+		INSERT /* COOCdLinkDAO.insertCdLink */ INTO CO_CD_REL
+			(HIGHR_CD
+			, HIGHR_DTL_CD
+			, LOWR_CD
+			, LOWR_DTL_CD
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)	
+		VALUES
+			(#{highrCd}
+			, #{highrDtlCd}
+			, #{lowrCd}
+			, #{lowrDtlCd}
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+			)	
+	</insert>
+	
+	<!--
+         쿼리명 : COECdLinkDAO.deleteCdLink
+         설  명 : 링크 코드 삭제
+  		  수정일		수정자    		 수정내용 
+        ==========      ======  ============= 
+        2015.12.02  	박주석    		 최초 생성
+    -->	
+	<delete id="COECdLinkDAO.deleteCdLink" parameterType="emfMap">
+		DELETE /* COOCdLinkDAO.deleteCdLink */
+		  FROM CO_CD_REL
+		 WHERE HIGHR_CD = #{highrCd} 
+		   AND HIGHR_DTL_CD = #{highrDtlCd} 
+		   AND LOWR_CD = #{lowrCd}
+		<if test="lowrDtlCd != null and lowrDtlCd != ''">
+			AND LOWR_DTL_CD = #{lowrDtlCd}
+		</if>
+	</delete>
+</mapper>
+

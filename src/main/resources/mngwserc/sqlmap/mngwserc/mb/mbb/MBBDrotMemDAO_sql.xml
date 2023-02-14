@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MBBDrotMemDAO">
+    
+	<!--
+         쿼리명 : MBBDrotMemDAO.selectDrotMemList
+         설  명 : 탈퇴회원 목록을 조회한다.
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+    <select id="MBBDrotMemDAO.selectDrotMemList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBBDrotMemDAO.selectDrotMemList */
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, A.*
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , ID
+					   , DROT_RSN
+					   , DROT_DTM
+		   		  FROM MB_DROT_MEM_MST
+				     WHERE 1=1
+				<if test="strtDt != null and strtDt != ''">
+					<![CDATA[	AND DROT_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]> 
+				</if>
+				<if test="endDt != null and endDt != ''">
+					<![CDATA[	AND DROT_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]> 
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">
+						<![CDATA[	AND ID = #{q} ]]>
+					</if>
+				</if>
+			     ORDER BY DROT_DTM DESC
+			) A
+		) TBL 
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+    </select>
+
+    <!--
+         쿼리명 : MBBDrotMemDAO.excelDrotMemList
+         설  명 : 탈퇴회원 목록을 조회한다. (엑셀다운로드)
+       	  수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.22   허진영      최초생성
+    -->
+	<select id="MBBDrotMemDAO.excelDrotMemList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* MBBDrotMemDAO.excelDrotMemList */
+			   TBL.* 
+		FROM (
+			SELECT COUNT(*) OVER() AS TOT_CNT
+				   , ID
+				   , DROT_RSN
+				   , DROT_DTM
+			  FROM MB_DROT_MEM_MST
+		   	 WHERE 1=1
+		  	<if test="strtDt != null and strtDt != ''">
+				<![CDATA[	AND DROT_DTM >= TO_DATE(#{strtDt}, 'yyyy-MM-dd')	]]> 
+			</if>
+			<if test="endDt != null and endDt != ''">
+				<![CDATA[	AND DROT_DTM < TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1	]]> 
+			</if>
+			<if test="q != null and q != ''">
+				<if test="f == 1">
+					<![CDATA[	AND ID = #{q}	]]>
+				</if>
+			</if>
+			 ORDER BY DROT_DTM DESC
+		) TBL 
+	</select>
+   	
+</mapper>

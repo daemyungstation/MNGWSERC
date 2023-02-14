@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FairProductCategoryDAO">
+
+	<!--
+         쿼리명 : FairProductCategoryDAO.selectList
+         설  명 : 제품 카테고리 목록 조회
+    -->	
+	<select id="selectList" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			   TBL.* 
+		FROM (
+			SELECT ROWNUM AS RNUM, T1.* 
+			  FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+		                ,FC_SEQ
+						,FC_IMAGE_W_PATH
+						,FC_IMAGE_W_SAVE_NM
+						,FC_IMAGE_W_REAL_NM
+						,FC_IMAGE_M_PATH
+						,FC_IMAGE_M_SAVE_NM
+						,FC_IMAGE_M_REAL_NM
+						,FC_BGCOLOR
+						,FC_TITLE
+						,FC_SUBTITLE
+						,FC_CATEGORY_TITLE
+						,FC_CATEGORY_TITLE_COLOR
+						,FC_ORDER
+						,FC_STIME
+						,FC_ETIME
+						,TO_CHAR(FC_STIME, 'YYYY-MM-DD') AS FC_STIME_DAY
+						,TO_CHAR(FC_STIME, 'HH24') AS FC_STIME_HH
+						,TO_CHAR(FC_STIME, 'MI') AS FC_STIME_MI
+						,TO_CHAR(FC_STIME, 'SS') AS FC_STIME_SS
+						,TO_CHAR(FC_ETIME, 'YYYY-MM-DD') AS FC_ETIME_DAY
+						,TO_CHAR(FC_ETIME, 'HH24') AS FC_ETIME_HH
+						,TO_CHAR(FC_ETIME, 'MI') AS FC_ETIME_MI
+						,TO_CHAR(FC_ETIME, 'SS') AS FC_ETIME_SS
+						,FC_STATUS
+						,FC_MAIN_MAX_COUNT
+		          FROM FAIR_CATEGORY   
+				 ORDER BY FC_ORDER ASC, REG_DTM DESC   
+			) T1
+		) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}           
+	</select>	
+	
+	<!--
+         쿼리명 : FairProductCategoryDAO.select
+         설  명 : 제품 카테고리 상세 조회
+    -->	
+	<select id="select" parameterType="emfMap" resultType="emfMap">
+		SELECT 
+            FC_SEQ
+			,FC_IMAGE_W_PATH
+			,FC_IMAGE_W_SAVE_NM
+			,FC_IMAGE_W_REAL_NM
+			,FC_IMAGE_M_PATH
+			,FC_IMAGE_M_SAVE_NM
+			,FC_IMAGE_M_REAL_NM
+			,FC_BGCOLOR
+			,FC_TITLE
+			,FC_SUBTITLE
+			,FC_CATEGORY_TITLE
+			,FC_CATEGORY_TITLE_COLOR
+			,FC_ORDER
+			,FC_STIME
+			,FC_ETIME
+			,TO_CHAR(FC_STIME, 'YYYY-MM-DD') AS FC_STIME_DAY
+			,TO_CHAR(FC_STIME, 'HH24') AS FC_STIME_HH
+			,TO_CHAR(FC_STIME, 'MI') AS FC_STIME_MI
+			,TO_CHAR(FC_STIME, 'SS') AS FC_STIME_SS
+			,TO_CHAR(FC_ETIME, 'YYYY-MM-DD') AS FC_ETIME_DAY
+			,TO_CHAR(FC_ETIME, 'HH24') AS FC_ETIME_HH
+			,TO_CHAR(FC_ETIME, 'MI') AS FC_ETIME_MI
+			,TO_CHAR(FC_ETIME, 'SS') AS FC_ETIME_SS
+			,FC_STATUS
+			,FC_MAIN_MAX_COUNT
+         FROM FAIR_CATEGORY   
+		 WHERE FC_SEQ = #{seq}   
+	</select>
+	
+	
+	<!--
+         쿼리명 : FairProductCategoryDAO.selectMaxOrder
+         설  명 : 제품 카테고리 MAX ORDER 조회
+    -->	
+	<select id="selectMaxOrder" resultType="emfMap">
+		SELECT 
+        	NVL(max(FC_ORDER), 0) + 1 as FC_ORDER
+        FROM FAIR_CATEGORY   
+	</select>
+	
+	<!--
+         쿼리명 : FairProductCategoryDAO.insert
+         설  명 : 제품 카테고리 등록
+    -->	
+	<insert id="insert" parameterType="emfMap">
+		INSERT INTO FAIR_CATEGORY
+			(
+			FC_SEQ
+			<if test="fcImageWPath != null">
+			,FC_IMAGE_W_PATH
+			,FC_IMAGE_W_SAVE_NM
+			,FC_IMAGE_W_REAL_NM
+			</if>
+			<if test="fcImageMPath != null">
+			,FC_IMAGE_M_PATH
+			,FC_IMAGE_M_SAVE_NM
+			,FC_IMAGE_M_REAL_NM
+			</if>
+			,FC_BGCOLOR
+			,FC_TITLE
+			,FC_SUBTITLE
+			,FC_CATEGORY_TITLE
+			,FC_CATEGORY_TITLE_COLOR
+			,FC_ORDER
+			<if test="fcStime != null">
+			,FC_STIME
+			</if>
+			<if test="fcEtime != null">
+			,FC_ETIME
+			</if>
+			,FC_STATUS
+			,FC_MAIN_MAX_COUNT
+			<if test="regId != null">
+			,REG_ID
+			</if>
+			<if test="regIp != null">
+			,REG_IP
+			</if>
+			,REG_DTM
+			)
+		VALUES
+			(
+			#{fcSeq}
+			<if test="fcImageWPath != null">
+			,#{fcImageWPath, jdbcType=VARCHAR}
+			,#{fcImageWSaveNm, jdbcType=VARCHAR}
+			,#{fcImageWRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fcImageMPath != null">
+			,#{fcImageMPath, jdbcType=VARCHAR}
+			,#{fcImageMSaveNm, jdbcType=VARCHAR}
+			,#{fcImageMRealNm, jdbcType=VARCHAR}
+			</if>
+			,#{fcBgcolor, jdbcType=VARCHAR}
+			,#{fcTitle, jdbcType=VARCHAR}
+			,#{fcSubtitle, jdbcType=VARCHAR}
+			,#{fcCategoryTitle, jdbcType=VARCHAR}
+			,#{fcCategoryTitleColor, jdbcType=VARCHAR}
+			,#{fcOrder}
+			<if test="fcStime != null">
+			,TO_DATE(#{fcStime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="fcEtime != null">
+			,TO_DATE(#{fcEtime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			,#{fcStatus}
+			,#{fcMainMaxCount}
+			<if test="regId != null">
+			,#{regId, jdbcType=VARCHAR}
+			</if>
+			<if test="regIp != null">
+			,#{regIp, jdbcType=VARCHAR}
+			</if>
+			,SYSDATE
+			)					
+	</insert>
+	
+	<!--
+         쿼리명 : FairProductCategoryDAO.update
+         설  명 : 제품 카테고리 수정
+    -->	
+	<update id="update" parameterType="emfMap">
+		UPDATE FAIR_CATEGORY SET
+			FC_STATUS = #{fcStatus}
+			,FC_BGCOLOR = #{fcBgcolor, jdbcType=VARCHAR}
+			,FC_TITLE = #{fcTitle, jdbcType=VARCHAR}
+			,FC_SUBTITLE = #{fcSubtitle, jdbcType=VARCHAR}
+			,FC_CATEGORY_TITLE = #{fcCategoryTitle, jdbcType=VARCHAR}
+			,FC_CATEGORY_TITLE_COLOR = #{fcCategoryTitleColor, jdbcType=VARCHAR}
+			,FC_MAIN_MAX_COUNT = #{fcMainMaxCount}
+			<if test="fcImageWPath != null">
+			,FC_IMAGE_W_PATH = #{fcImageWPath, jdbcType=VARCHAR}
+			,FC_IMAGE_W_SAVE_NM = #{fcImageWSaveNm, jdbcType=VARCHAR}
+			,FC_IMAGE_W_REAL_NM = #{fcImageWRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fcImageMPath != null">
+			,FC_IMAGE_M_PATH = #{fcImageMPath, jdbcType=VARCHAR}
+			,FC_IMAGE_M_SAVE_NM = #{fcImageMSaveNm, jdbcType=VARCHAR}
+			,FC_IMAGE_M_REAL_NM = #{fcImageMRealNm, jdbcType=VARCHAR}
+			</if>
+			<if test="fcStime != null">
+			,FC_STIME = TO_DATE(#{fcStime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="fcEtime != null">
+			,FC_ETIME = TO_DATE(#{fcEtime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="modId != null">
+			,MOD_ID = #{modId}
+			</if>
+			<if test="modIp != null">
+			,MOD_IP = #{modIp}
+			</if>
+			,MOD_DTM = SYSDATE
+         WHERE FC_SEQ = #{fcSeq}
+	</update>
+	
+	<!--
+         쿼리명 : FairProductCategoryDAO.order
+         설  명 : 제품 카테고리 순서변경
+    -->		
+	<update id="order" parameterType="emfMap">
+		UPDATE FAIR_CATEGORY SET
+			FC_ORDER = #{fcOrder}
+        WHERE FC_SEQ = #{fcSeq}
+	</update>
+
+	<!--
+         쿼리명 : FairProductCategoryDAO.delete
+         설  명 : 제품 카테고리 삭제
+    -->		
+	<delete id="delete" parameterType="emfMap">
+		 DELETE FAIR_CATEGORY
+	     WHERE FC_SEQ = #{fcSeq}
+	</delete>
+
+</mapper>

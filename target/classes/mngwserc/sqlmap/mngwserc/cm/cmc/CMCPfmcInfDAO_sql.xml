@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CMCPfmcInfDAO">
+	
+	<!--
+         쿼리명 : CMCPfmcInfDAO.selectPfmcInfList
+         설  명 : 공연정보 목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   정지만      최초생성
+    -->
+    <select id="CMCPfmcInfDAO.selectPfmcInfList" parameterType="emfMap" resultType="emfMap">	
+    	SELECT /* CMCPfmcInfDAO.selectPfmcInfList */
+			   TBL.*
+			   , (SELECT NAME FROM CO_ADM_MST WHERE ID = TBL.REG_ID) AS REG_NM
+		FROM (
+			SELECT ROWNUM AS RNUM, A.*
+			FROM (
+				SELECT COUNT(*) OVER() AS TOT_CNT
+					   , PFMC_SEQ
+					   , PFMC_GB
+					   , PFMC_NM
+					   , PLCE
+					   , PFMC_STRT_DT
+					   , PFMC_END_DT
+					   , REG_ID
+					   , REG_DTM
+			      FROM CM_PFMC_MST
+			     WHERE 1=1
+				<if test="pfmcGb != null and pfmcGb != ''">
+			  		AND PFMC_GB = #{pfmcGb}
+			  	</if>
+		      	<if test="q != null and q != ''">
+		      		<if test="f == 1">
+		      			 <![CDATA[	AND PFMC_NM LIKE '%' || #{q} || '%'	]]>
+		      		</if>
+		      		<if test="f == 2">
+		      			 <![CDATA[	AND REG_ID IN(SELECT ID FROM CO_ADM_MST WHERE NAME LIKE '%' || #{q} || '%')	]]>
+		      		</if>
+              	</if> 
+  				 ORDER BY REG_DTM DESC
+			) A
+	    ) TBL
+	    WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}            
+    </select>
+    
+    <!--
+         쿼리명 : CMCPfmcInfDAO.selectPfmcInf
+         설  명 : 공연정보 상세를 조회한다.
+          수정일     수정자     수정내용 
+        ==========   ======   ============== 
+        2016.02.11   정지만      최초생성
+    -->
+    <select id="CMCPfmcInfDAO.selectPfmcInf" parameterType="emfMap" resultType="emfMap">	
+   		SELECT /* CMCPfmcInfDAO.selectPfmcInf */
+		   	   PFMC_SEQ
+			   , PFMC_GB
+			   , PFMC_NM
+			   , PLCE
+			   , CAST
+			   , VWNG_GRD
+			   , PRDC_CO
+			   , PFMC_STRT_DT
+			   , TO_CHAR(TO_DATE(PFMC_STRT_DT, 'yyyy-MM-dd hh24:mi:ss'), 'DY') AS PFMC_STRT_DAY
+			   , PFMC_END_DT
+			   , TO_CHAR(TO_DATE(PFMC_END_DT, 'yyyy-MM-dd hh24:mi:ss'), 'DY') AS PFMC_END_DAY
+			   , PFMC_TIME
+			   , TCKT_PRC
+			   , DSCNT_PCT
+			   , RSVTN_MNS
+			   , PRCTN
+			   , ATCH_FILE_ID
+			   , SEAT_R_USE_YN
+			   , SEAT_S_USE_YN
+			   , SEAT_A_USE_YN
+		  FROM CM_PFMC_MST
+		 WHERE PFMC_SEQ = #{pfmcSeq}
+    </select>
+    
+    <!--
+         쿼리명 : CMCPfmcInfDAO.insertPfmcInf
+         설  명 : 공연정보를 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   정지만      최초생성
+    -->
+	 <insert id="CMCPfmcInfDAO.insertPfmcInf" parameterType="emfMap">	
+   		INSERT /* CMCPfmcInfDAO.insertPfmcInf */ INTO CM_PFMC_MST 
+			(PFMC_SEQ
+			, PFMC_GB
+			, PFMC_NM
+			, PLCE
+			, CAST
+			, VWNG_GRD
+			, PRDC_CO
+			, PFMC_STRT_DT
+			, PFMC_END_DT
+			, PFMC_TIME
+			, TCKT_PRC
+			, DSCNT_PCT
+			, RSVTN_MNS
+			, PRCTN
+			, ATCH_FILE_ID
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		VALUES        
+			(#{pfmcSeq}
+			, #{pfmcGb}
+			, #{pfmcNm}
+			, #{plce}
+			, #{cast}
+			, #{vwngGrd}
+			, #{prdcCo}
+			, #{pfmcStrtDt}
+			, #{pfmcEndDt}
+			, #{pfmcTime}
+			, #{tcktPrc}
+			, #{dscntPct}
+			, #{rsvtnMns}
+			, #{prctn}
+			, #{atchFileId}
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+			)
+    </insert>
+    <!--
+         쿼리명 : CMCPfmcInfDAO.updatePfmcInf
+         설  명 : 공연 정보를 수정한다
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   정지만      최초생성
+    -->
+	 <update id="CMCPfmcInfDAO.updatePfmcInf" parameterType="emfMap">	
+   		UPDATE /* CMCPfmcInfDAO.updatePfmcInf */ CM_PFMC_MST
+ 		   SET PFMC_GB = #{pfmcGb}
+			   , PFMC_NM = #{pfmcNm}
+			   , PLCE = #{plce}
+			   , CAST = #{cast}
+			   , VWNG_GRD = #{vwngGrd}
+			   , PRDC_CO = #{prdcCo}
+			   , PFMC_STRT_DT = #{pfmcStrtDt}
+			   , PFMC_END_DT = #{pfmcEndDt}
+			   , PFMC_TIME = #{pfmcTime}
+			   , TCKT_PRC = #{tcktPrc}
+			   , DSCNT_PCT = #{dscntPct}
+			   , RSVTN_MNS = #{rsvtnMns}
+			   , PRCTN = #{prctn}
+			   , ATCH_FILE_ID = #{atchFileId}
+			   , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = SYSDATE
+		 WHERE PFMC_SEQ = #{pfmcSeq}
+    </update>
+    
+    <!--
+         쿼리명 : CMCPfmcInfDAO.deletePfmcInf
+         설  명 : 공연정보를 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   정지만      최초생성
+    -->
+	<delete id="CMCPfmcInfDAO.deletePfmcInf" parameterType="emfMap">
+		DELETE /* CMCPfmcInfDAO.deletePfmcInf */ 
+		  FROM CM_PFMC_MST
+		 WHERE PFMC_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+        	#{item}
+        </foreach>
+	</delete>
+	
+	<!--
+         쿼리명 : CMCPfmcInfDAO.deleteRsvtnDtmAll
+         설  명 : 공연예약시간 전체 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.15   정지만      최초생성
+    -->
+	<delete id="CMCPfmcInfDAO.deleteRsvtnDtmAll" parameterType="emfMap">
+		DELETE /* CMCPfmcInfDAO.deleteRsvtnDtmAll */  
+		  FROM CM_RSVTN_DTM_INF
+         WHERE PFMC_SEQ IN
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+        	#{item}
+        </foreach>
+	</delete>
+    
+    <!--
+         쿼리명 : CMCPfmcInfDAO.selectRsvtnDtmList
+         설  명 : 공연예약시간 목록을 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   정지만      최초생성
+    -->
+	<select id="CMCPfmcInfDAO.selectRsvtnDtmList" parameterType="emfMap" resultType="emfMap">
+		SELECT /* CMCPfmcInfDAO.selectRsvtnDtmList */  
+			   RSVTN_DTM_SEQ
+			   , PFMC_SEQ
+			   , RSVTN_DTM 
+		  FROM CM_RSVTN_DTM_INF
+		 WHERE PFMC_SEQ = #{pfmcSeq}
+		 ORDER BY RSVTN_DTM
+	</select>
+    
+	<!--
+         쿼리명 : CMCPfmcInfDAO.updateSeatUseYn
+         설  명 : 공연 정보좌석을 수정 한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.15   정지만      최초생성
+    -->
+	 <update id="CMCPfmcInfDAO.updateSeatUseYn" parameterType="emfMap">	
+   		UPDATE /* CMCPfmcInfDAO.updateSeatUseYn */ CM_PFMC_MST
+ 		   SET SEAT_R_USE_YN = #{seatRUseYn, jdbcType=VARCHAR}
+			   , SEAT_S_USE_YN = #{seatSUseYn, jdbcType=VARCHAR}
+			   , SEAT_A_USE_YN = #{seatAUseYn, jdbcType=VARCHAR}
+			   , MOD_ID = #{modId}
+			   , MOD_IP = #{modIp}
+			   , MOD_DTM = SYSDATE
+		 WHERE PFMC_SEQ = #{pfmcSeq}
+    </update>
+    
+    <!--
+         쿼리명 : CMCPfmcInfDAO.insertRsvtnDtm
+         설  명 : 공연예약시간 등록한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   정지만      최초생성
+    -->
+	<select id="CMCPfmcInfDAO.insertRsvtnDtm" parameterType="emfMap">
+		INSERT /* CMCPfmcInfDAO.insertRsvtnDtm */ INTO CM_RSVTN_DTM_INF 
+			(RSVTN_DTM_SEQ
+			, PFMC_SEQ
+			, RSVTN_DTM
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+			, MOD_ID
+			, MOD_IP
+			, MOD_DTM
+			)
+		VALUES        
+			(#{rsvtnDtmSeq}
+			, #{pfmcSeq}
+			, TO_DATE(#{rsvtnDtm},'yyyy-MM-dd hh24:mi:ss')
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+			, #{modId}
+			, #{modIp}
+			, SYSDATE
+			)
+	</select>
+    
+    <!--
+         쿼리명 : CMCPfmcInfDAO.deleteRsvtnDtm
+         설  명 : 공연예약정보를 삭제한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2016.02.11   정지만      최초생성
+    -->
+	<delete id="CMCPfmcInfDAO.deleteRsvtnDtm" parameterType="emfMap">
+		DELETE /* CMCPfmcInfDAO.deleteRsvtnDtm */  
+		  FROM CM_RSVTN_DTM_INF 
+		 WHERE PFMC_SEQ = #{pfmcSeq}
+	</delete>
+	
+</mapper>

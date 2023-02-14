@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CNABannerDAO">
+
+	<select id="CNABannerDAO.selectBannerList" parameterType="emfMap" resultType="emfMap">
+		SELECT TBL.*
+		  FROM 
+		    (
+		    SELECT ROWNUM AS RNUM, A.*
+		      FROM
+		        (
+                SELECT COUNT(*) OVER() AS TOT_CNT
+                     , BANNER_SEQ
+                     , BANNER_TITLE
+                     , DECODE(LINK_GUBUN, 'URL', '링크',DECODE(LINK_GUBUN, 'ZERO', '제로 초이스',
+                       DECODE(LINK_GUBUN, 'DIRECT', '다이렉트 초이스', '리미티드 초이스'))) AS LINK_GUBUN    
+                     , REG_ID
+                     , TO_CHAR(REG_DTM, 'YYYY-MM-DD') AS REG_DTM
+                     , USE_YN
+                  FROM CN_BANNER_MST
+                 WHERE 1=1
+                   AND BANNER_GUBUN = #{bannerGubun}
+				<if test="strtDt != null and strtDt != ''">
+					AND REG_DTM <![CDATA[>=]]> TO_DATE(#{strtDt}, 'yyyy-MM-dd')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND REG_DTM <![CDATA[<]]> TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">	
+				 		(AND BANNER_TITLE LIKE '%' || #{q} || '%'
+				 		  OR REG_ID '%' || #{q} || '%')
+					</if>
+					<if test="f == 2">	
+				 		AND BANNER_TITLE LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 3">
+						AND REG_ID LIKE '%' || #{q} || '%'
+					</if>
+				</if>
+		         ORDER BY BANNER_SEQ DESC
+		        ) A
+		    ) TBL
+		WHERE RNUM BETWEEN #{firstIndex} + 1 AND #{firstIndex} + #{recordCountPerPage}
+	</select>
+
+	<select id="CNABannerDAO.selectBanner" parameterType="emfMap" resultType="emfMap">
+		SELECT A.BANNER_SEQ
+		     , A.BANNER_TITLE
+		     , A.LINK_GUBUN
+		     , A.USE_YN
+		  FROM CN_BANNER_MST A
+		 WHERE 1=1
+		   AND A.BANNER_GUBUN = #{bannerGubun}
+		   AND A.BANNER_SEQ = #{bannerSeq}
+		 GROUP BY A.BANNER_SEQ
+		     , A.BANNER_TITLE
+		     , A.LINK_GUBUN
+		     , A.USE_YN
+	</select>
+
+	<select id="CNABannerDAO.selectBannerDtlList" parameterType="emfMap" resultType="emfMap">
+		SELECT FILE_SEQ
+		     , GUBUN
+		     , IMAGE_GUBUN
+		     , PHY_PATH
+		     , SAVE_FILE_NM
+		     , REAL_FILE_NM
+		     , FILE_EXTN
+		     , FILE_SIZE
+		     , URL
+		  FROM CN_BANNER_FILE
+		 WHERE CN_BANNER_SEQ = #{bannerSeq}
+	</select>
+
+	<update id="CNABannerDAO.updateBannerMng" parameterType="emfMap">
+		UPDATE /* CNABannerDAO.updateBannerMng */ MC_PROD_CNCL_MST 
+		   SET CNSLR = #{answer}
+			   , COUNSEL_CD = #{callStts}
+			   , CNTN = #{cntn}
+		 WHERE PROD_CNCL_SEQ = #{idx}
+	</update>
+	
+	<insert id="CNABannerDAO.insertBannerDtl" parameterType="emfMap">
+		INSERT INTO MC_PROD_CNCL_DTL
+			(PROD_CNSL_SEQ
+			, NAME
+			, CNTN
+			, IP	
+			, PROD_CNSL_DTL_SEQ
+			)
+		VALUES 
+			(#{idx}
+			, #{answer}
+			, #{cntn}
+			, #{ip}
+			, PROD_CNCL_DTL_SEQ.NEXTVAL
+			)		
+	</insert>
+	
+	<select id="CNABannerDAO.selectBannerExcelList" parameterType="emfMap" resultType="emfMap">
+	    SELECT ROWNUM AS RNUM, A.*
+	      FROM
+	        (
+	        SELECT COUNT(*) OVER() AS TOT_CNT
+	             , PROD_CNCL_SEQ
+	             , CUST_NAME
+	             , CUST_HPHONE
+	             , (SELECT CD_NM FROM CO_CD_DTL A WHERE A.CD_ID = 'MICRO_PROD_GB' AND A.CD = PROD_CD) AS PROD_NM
+	             , CALLTIME
+	             , CNSLR
+	             , (SELECT CD_NM FROM CO_CD_DTL A WHERE A.CD_ID = 'CALL_STTS' AND A.CD = COUNSEL_CD) AS COUNSEL_NM
+	             , CNTN
+	             , TO_CHAR(REG_DTM, 'YYYY-MM-DD') AS REG_DTM
+	          FROM MC_PROD_CNCL_MST
+		         WHERE 1=1
+				<if test="strtDt != null and strtDt != ''">
+					AND REG_DTM <![CDATA[>=]]> TO_DATE(#{strtDt}, 'yyyy-MM-dd')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND REG_DTM <![CDATA[<]]> TO_DATE(#{endDt}, 'yyyy-MM-dd') + 1
+				</if>
+				<if test="q != null and q != ''">
+					<if test="f == 1">	
+				 		AND CUST_NAME LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 2">	
+				 		AND CUST_HPHONE LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 3">	
+				 		AND (SELECT CD_NM FROM CO_CD_DTL A WHERE A.CD_ID = 'MICRO_PROD_GB' AND A.CD = PROD_CD) LIKE '%' || #{q} || '%'
+					</if>
+					<if test="f == 4">
+						AND CNSLR LIKE '%' || #{q} || '%'
+					</if>
+				</if>
+	         ORDER BY PROD_CNCL_SEQ DESC
+	        ) A
+	</select>
+
+		<!--
+         쿼리명 : CNABannerDAO.getBannerPreviewImgPath
+         설  명 : 배너 이미지 미리보기 정보를 조회한다.
+          수정일     수정자      수정내용 
+        ==========   ======   ============== 
+        2018.04.02   XXX      최초생성
+    -->
+	<select id="CNABannerDAO.getBannerPreviewImgPath" parameterType="emfMap" resultType="emfMap">
+		SELECT
+			PHY_PATH,
+			SAVE_FILE_NM,
+			FILE_EXTN
+		FROM
+			CN_BANNER_FILE
+		WHERE
+			FILE_SEQ = #{fileseq}
+	</select>
+
+	<insert id="CNABannerDAO.insertBannerMgr" parameterType="emfMap">
+		<selectKey keyProperty="bannerSeq" resultType="java.lang.Integer" order="BEFORE">
+			SELECT BANNER_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO CN_BANNER_MST(
+			BANNER_SEQ
+			, BANNER_GUBUN
+			, BANNER_TITLE
+			, LINK_GUBUN
+			, USE_YN
+			, REG_ID
+			, REG_IP
+			, REG_DTM
+		) VALUES (
+			#{bannerSeq}
+			, #{bannerGubun}
+			, #{bannerTitle}
+			, #{linkGubun}
+			, #{useYn}
+			, #{regId}
+			, #{regIp}
+			, SYSDATE
+		)
+	</insert>
+
+	<insert id="CNABannerDAO.insertBannerFile" parameterType="emfMap">
+		INSERT ALL /* CNABannerDAO.insertBannerFile */ 
+		<foreach collection="imgFile" item="img" index="index">
+			INTO CN_BANNER_FILE 
+				(FILE_SEQ
+	 			, CN_BANNER_SEQ
+	 			, GUBUN
+	 			, IMAGE_GUBUN
+	 			, PHY_PATH
+	 			, SAVE_FILE_NM
+	 			, REAL_FILE_NM
+	 			, FILE_EXTN
+	 			, FILE_SIZE
+	 			, URL
+	 			, USE_YN
+	 			, REG_DTM
+	 			, REG_ID
+	 			, REG_IP
+	 			)
+			VALUES
+				(#{img.cnFileSeq}
+				, #{img.bannerSeq}
+				, #{img.gubun}
+				, #{img.imageGubun}
+				, #{img.path}
+				, #{img.localFileName}
+				, #{img.fileNm}
+				, #{img.fileType}
+				, #{img.fileSize}
+				<if test="urlText == null">, #{img.urlText}</if>
+				<if test="urlText != null">, #{urlText}</if>
+				, 'Y'
+				, SYSDATE
+				, #{regId}
+				, #{regIp}
+				)
+		</foreach>
+		 SELECT * FROM DUAL
+	</insert>
+
+	<update id="CNABannerDAO.updateBannerMgr" parameterType="emfMap">
+		UPDATE CN_BANNER_MST
+		   SET BANNER_TITLE = #{bannerTitle}
+		     , LINK_GUBUN = #{linkGubun}
+		     , USE_YN = #{useYn}
+ 			 , MOD_DTM = SYSDATE
+ 			 , MOD_ID = #{modId}
+ 			 , MOD_IP = #{modIp}
+		 WHERE BANNER_SEQ = #{bannerSeq}
+	</update>
+
+	<update id="CNABannerDAO.updateBannerFile" parameterType="emfMap">
+		UPDATE /* CNABannerDAO.updateBannerFile */ CN_BANNER_FILE 
+			SET	 REAL_FILE_NM = #{fileInfo.fileNm}
+	 			, FILE_SIZE = #{fileInfo.fileSize}
+	 			, FILE_EXTN = #{fileInfo.fileType}
+	 			, MOD_DTM = SYSDATE
+	 			, MOD_ID = #{modId}
+	 			, PHY_PATH = #{fileInfo.path}
+	 			, SAVE_FILE_NM = #{fileInfo.localFileName}
+	 			, URL = #{urlText}
+	 		WHERE
+				CN_BANNER_SEQ = #{bannerSeq}
+			AND
+				GUBUN = #{fileInfo.gubun}
+			AND
+				IMAGE_GUBUN = #{imageGubun}
+<!-- 			AND
+				USING = #{fileInfo.using} -->
+	</update>
+
+	<update id="CNABannerDAO.updateBannerUrl" parameterType="emfMap">
+		UPDATE /* CNABannerDAO.updateBannerFile */ CN_BANNER_FILE 
+			SET	 URL = #{urlText}
+	 		WHERE
+				CN_BANNER_SEQ = #{bannerSeq}
+			  AND 
+			  	IMAGE_GUBUN = #{imageGubun}
+	</update>
+
+	<delete id="CNABannerDAO.deleteBannerMst" parameterType="emfMap">
+		DELETE 
+			CN_BANNER_MST
+		 WHERE BANNER_SEQ IN   
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+
+	<delete id="CNABannerDAO.deleteBannerImg" parameterType="emfMap">
+		DELETE
+		    CN_BANNER_FILE
+		 WHERE CN_BANNER_SEQ IN   
+		<foreach collection="delSeq" item="item" index="index" separator=", " open="(" close=")">
+            #{item}
+        </foreach>
+	</delete>
+</mapper>

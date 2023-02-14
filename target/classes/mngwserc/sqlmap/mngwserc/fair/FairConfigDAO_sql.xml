@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="FairConfigDAO">
+	
+	<!--
+         쿼리명 : FairConfigDAO.select
+         설  명 : 설정 조회
+    -->	
+	<select id="select" resultType="emfMap">
+		SELECT 
+			 FCFG_SEQ
+			,FCFG_STIME
+			,FCFG_ETIME
+			,TO_CHAR(FCFG_STIME, 'YYYY-MM-DD') AS FCFG_STIME_DAY
+			,TO_CHAR(FCFG_STIME, 'HH24') AS FCFG_STIME_HH
+			,TO_CHAR(FCFG_STIME, 'MI') AS FCFG_STIME_MI
+			,TO_CHAR(FCFG_STIME, 'SS') AS FCFG_STIME_SS
+			,TO_CHAR(FCFG_ETIME, 'YYYY-MM-DD') AS FCFG_ETIME_DAY
+			,TO_CHAR(FCFG_ETIME, 'HH24') AS FCFG_ETIME_HH
+			,TO_CHAR(FCFG_ETIME, 'MI') AS FCFG_ETIME_MI
+			,TO_CHAR(FCFG_ETIME, 'SS') AS FCFG_ETIME_SS
+			,FCFG_TITLE
+			,FCFG_DDAY_TITLE
+			,FCFG_STATUS 
+		FROM FAIR_CONFIG
+		WHERE ROWNUM <![CDATA[<=]]> 1
+		ORDER BY FCFG_SEQ DESC
+	</select>
+	
+	<!--
+         쿼리명 : FairConfigDAO.insert
+         설  명 : 설정 등록
+    -->	
+	<insert id="insert" parameterType="emfMap">
+		INSERT INTO FAIR_CONFIG
+			(
+			FCFG_SEQ
+			<if test="fcfgStime != null">
+			,FCFG_STIME
+			</if>
+			<if test="fcfgEtime != null">
+			,FCFG_ETIME
+			</if>
+			,FCFG_TITLE
+			,FCFG_DDAY_TITLE
+			,FCFG_STATUS 
+			<if test="regId != null">
+			,REG_ID
+			</if>
+			<if test="regIp != null">
+			,REG_IP
+			</if>
+			,REG_DTM
+			)
+		VALUES
+			(
+			#{fcfgSeq}
+			<if test="fcfgStime != null">
+			,TO_DATE(#{fcfgStime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="fcfgEtime != null">
+			,TO_DATE(#{fcfgEtime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			,#{fcfgTitle, jdbcType=VARCHAR}
+			,#{fcfgDdayTitle, jdbcType=VARCHAR}
+			,#{fcfgStatus, jdbcType=VARCHAR}
+			<if test="regId != null">
+			,#{regId, jdbcType=VARCHAR}
+			</if>
+			<if test="regIp != null">
+			,#{regIp, jdbcType=VARCHAR}
+			</if>
+			,SYSDATE
+			)					
+	</insert>
+	
+	<!--
+         쿼리명 : FairConfigDAO.update
+         설  명 : 설정 업데이트
+    -->	
+	<update id="update" parameterType="emfMap">
+		UPDATE FAIR_CONFIG SET
+			 FCFG_TITLE = #{fcfgTitle, jdbcType=VARCHAR}
+			,FCFG_DDAY_TITLE = #{fcfgDdayTitle, jdbcType=VARCHAR}
+			,FCFG_STATUS = #{fcfgStatus, jdbcType=VARCHAR}
+			<if test="fcfgStime != null">
+			,FCFG_STIME = TO_DATE(#{fcfgStime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="fcfgEtime != null">
+			,FCFG_ETIME = TO_DATE(#{fcfgEtime}, 'yyyy/mm/dd hh24:mi:ss')
+			</if>
+			<if test="modId != null">
+			,MOD_ID = #{modId, jdbcType=VARCHAR}
+			</if>
+			<if test="modIp != null">
+			,MOD_IP = #{modIp, jdbcType=VARCHAR}
+			</if>
+			,MOD_DTM = SYSDATE
+		WHERE FCFG_SEQ = #{fcfgSeq}
+	</update>
+
+</mapper>
